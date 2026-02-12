@@ -1,0 +1,79 @@
+<div class="container">
+    <div class="row w-100 mx-0 auth-page">
+        <div class="mx-auto">
+            <div class="card">
+                <div class="row">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                     <th class="text-center">Folio</th>
+                                    <th class="text-center">Nombre</th>
+                                    <th class="text-center">Correo</th>
+                                    <th class="text-center">Teléfono</th>
+                                    <th class="text-center">CURP</th>
+                                    <th class="text-center">Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngIf="persona" class="table-active">
+                                    <td class="text-center">{{ persona.id | slice:0:8 }}</td>
+                                    <td class="text-center">{{persona.nombre}}</td>
+                                    <td class="text-center">{{persona.correo}}</td>
+                                    <td class="text-center">{{persona.telefono}}</td>
+                                    <td class="text-center">{{persona.curp}}</td>
+                                    <td class="text-center">
+                                        <div class="progress">
+                                            <div *ngIf="persona.estatus == 1" [routerLink]="['/registro/add-documentos', persona.id ]"
+                                                class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                                placement="top" ngbTooltip="Pendiente" role="progressbar"
+                                                style="width: 100%">
+                                                <p style="color:black"><strong>Agregar</strong></p>
+                                            </div>
+                                            <div *ngIf="persona.estatus == 2"
+                                                class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                                placement="top" ngbTooltip="Pendiente" role="progressbar"
+                                                style="width: 100%">
+                                                <p style="color:black"><strong>Pendiente</strong></p>
+                                            </div>
+                                            
+                                            <!-- <div *ngIf="persona.estatus == 3" [routerLink]="['/registro/add-documentos']"
+                                                class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                                placement="top" ngbTooltip="Validado" role="progressbar"
+                                                style="width: 100%">
+                                                <p style="color:black"><strong>Validado</strong></p>
+                                            </div> -->
+
+                                            <a *ngIf="persona.estatus == 3" [routerLink]="['/registro/add-documentos', persona.id ]"
+                                                style="display: block; width: 100%; text-decoration: none;">
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                                        placement="top" ngbTooltip="Rechazado" role="progressbar"
+                                                        style="width: 100%;">
+                                                        <p style="color:black"><strong>Validado</strong></p>
+                                                    </div>
+                                                </div>
+                                            </a>
+
+
+                                            <a *ngIf="persona.estatus == 4" [routerLink]="['/registro/add-documentos', persona.id]"
+                                                style="display: block; width: 100%; text-decoration: none;">
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger"
+                                                        placement="top" ngbTooltip="Rechazado" role="progressbar"
+                                                        style="width: 100%;">
+                                                        <p style="color:black"><strong>Rechazado</strong></p>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

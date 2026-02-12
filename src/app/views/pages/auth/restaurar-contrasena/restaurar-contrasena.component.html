@@ -1,0 +1,54 @@
+<div class="container-fluid auth-background min-vh-100 d-flex justify-content-center align-items-center">
+    <div class="card shadow w-100" style="max-width: 500px;">
+        <div class="top-area text-center mb-2">
+            Dirección General de Recursos Materiales
+                </div>
+        <div class="auth-form-wrapper px-4 py-5">
+            <h5 class="fw-bold mb-4 text-center" style="color: #96134b; font-size: 1.2rem;">Olvidé mi contraseña</h5>
+            <form [formGroup]="formRestaura" class="forms-sample" (ngSubmit)="olvideContrasena()">
+
+                <div class="mb-3">
+                    <label class="form-label">Correo Electrónico:*</label>
+                    <input formControlName="correo" type="email" class="form-control"
+                        placeholder="Correo Electrónico" />
+                    <div *ngIf="formRestaura.get('correo')?.invalid && formRestaura.get('correo')?.touched">
+                        <small class="colorsm" *ngIf="formRestaura.get('correo')?.hasError('required') && formRestaura.get('correo')?.touched">
+                            Este campo es <strong>requerido</strong>
+                        </small>
+                        <br />
+                        <small class="colorsm" *ngIf="formRestaura.get('correo')?.hasError('email')">Por favor
+                        <strong>ingresa un correo válido.</strong>
+                        </small>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Confirmar correo electrónico:*</label>
+                    <input formControlName="confirmEmail" type="email" class="form-control"
+                        placeholder="Confirmar correo electrónico" />
+                    <small class="colorsm" *ngIf="formRestaura.hasError('emailsDoNotMatch')">Los correos electrónicos
+                        <strong>no coinciden.</strong></small>
+                    <div *ngIf="formRestaura.get('confirmEmail')?.invalid && formRestaura.get('confirmEmail')?.touched">
+                        <small class="colorsm" *ngIf="formRestaura.get('confirmEmail')?.hasError('required')">Este campo
+                            es
+                            <strong>obligatorio.</strong></small>
+                        <br />
+                        <small class="colorsm" *ngIf="formRestaura.get('confirmEmail')?.hasError('email')">Por favor
+                            <strong>ingresa un correo válido.</strong>
+                        </small>
+                        <br />
+                    </div>
+                </div>
+                <div class="text-start">
+                    <div>
+                        <button  [disabled]="formRestaura.invalid" type="submit" class="btn btn-primary me-2 mb-2 mb-md-0" >
+                            Enviar
+                        </button>
+                        <a type="button" class="btn btn-outline-secondary btn-icon-text mb-2 mb-md-0" (click)="goBack()">
+                            Cancelar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

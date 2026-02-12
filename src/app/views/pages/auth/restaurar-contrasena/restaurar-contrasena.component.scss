@@ -1,0 +1,61 @@
+.auth-background {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f6f3f4; /* neutro/blanco */
+  overflow: hidden;
+}
+
+/* Marca Oficialía Mayor como “watermark” */
+.auth-background::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/images/oficialia_mayor.svg'); /* <-- tu imagen */
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: clamp(900px, 90vw, 1500px) auto;
+
+  opacity: 0.10; /* tenue para no estorbar */
+}
+
+/* Tinte vino suave (opcional) */
+.auth-background::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    rgba(122, 0, 31, 0.10),
+    rgba(122, 0, 31, 0.03),
+    rgba(0, 0, 0, 0)
+  );
+}
+
+.auth-background > * {
+  position: relative;
+  z-index: 100;
+}
+.top-area{
+  margin-top: 16px;      /* <- esto lo baja */
+  margin-bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(122, 0, 31, 0.20);
+  background: rgba(255,255,255,0.85);
+
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #7a001f;
+
+  font-size: .72rem;
+  line-height: 1.2;  /* <-- IMPORTANTE (quita el 3.100) */
+}
+

@@ -1,0 +1,1243 @@
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a routerLink=".">Registro</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Documentos</li>
+    </ol>
+</nav>
+
+<div class="container">
+    <div class="row w-100 mx-0 auth-page">
+        <div class="mx-auto">
+            <div class="row">
+                <div class="col-md-12 grid-margin stretch-card">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title" *ngIf="this.isAdmin">Datos del solicitante</h4>
+                            <p class="text">Nombre completo: {{ this.data?.nombres }} {{ this.data?.ap_paterno }} {{
+                                this.data?.ap_materno }} <br>
+                                Curp: {{ this.data?.curp }} <br>
+                            </p>
+                        </div>
+                        <div class="card-body">
+                            <h4 class="card-title">Indicaciones</h4>
+                            <p>
+                                <strong>1. Formato:</strong> Todos los archivos deberán estar en formato PDF, legibles y
+                                sin restricciones de contraseña.
+                            </p>
+                            <p class=" mt-2">
+                                <strong>2. Tamaño máximo:</strong> Cada documento no deberá exceder los 10 MB de tamaño.
+                            </p>
+                            <p class=" mt-2">
+                                <strong>3. Nomenclatura:</strong> Se recomienda nombrar los archivos de forma clara y
+                                estructurada, incluyendo el nombre del solicitante y el tipo de documento (ejemplo:
+                                JuanPerez_Identificación.pdf).
+                            </p>
+                            <p class=" mt-2">
+                                <strong>4. Legibilidad:</strong> Verifique que los documentos sean completamente
+                                legibles, sin cortes, borrosidad o contenido faltante.
+                            </p>
+                            <p class=" mt-2">
+                                <strong>5. Contenido completo:</strong> Asegúrese de que el documento contenga todas las
+                                páginas requeridas y esté debidamente firmado, en su caso.
+                            </p>
+                            <p class=" mt-2">
+                                <strong>6. Compatibilidad:</strong> Asegúrese de que el archivo no esté dañado o
+                                corrupto; se recomienda abrirlo antes de cargarlo para verificar su integridad.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @if(estatusSoli === 1 || estatusSoli === 4 || estatusSoli === 2){
+            <div class="card">
+                <form [formGroup]="formDoc" (ngSubmit)="sendDoc()">
+                    <div class="row">
+                        <div class="col-md-6 grid-margin stretch-card"
+                            *ngIf="!archivosRechazados['acta_nacimiento'] || archivosRechazados['acta_nacimiento'] === 1 || archivosRechazados['acta_nacimiento'] === 3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="formFile" style="text-align: justify;">
+                                        <strong>I. Tener treinta y cinco años cumplidos, el día de su elección.</strong>
+                                        <p>Documento requerido: Acta de nacimiento en copia certificada o, en su caso,
+                                            documento que acredite la nacionalidad mexicana *:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="acta_nacimiento"
+                                            accept="application/pdf" (change)="onFile7($event, 'acta_nacimiento',15)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('acta_nacimiento')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('acta_nacimiento')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['acta_nacimiento']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['acta_nacimiento']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('acta_nacimiento')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['acta_nacimiento'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['acta_nacimiento']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 grid-margin stretch-card"
+                            *ngIf=" !archivosRechazados['curp'] || archivosRechazados['curp'] === 1 || archivosRechazados['curp'] === 3 ">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="formFile" style="text-align: justify;">
+                                        <strong>II. Ser mexicano en pleno goce y ejercicio de sus derechos políticos y
+                                            civiles.</strong>
+                                        <p>Documento requerido: Clave Única de Registro de Población (CURP)*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="curp" accept="application/pdf"
+                                            (change)="onFile7($event, 'curp',15)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('curp')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('curp')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['curp']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['curp']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" width="40" height="50" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('curp')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['curp'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['curp']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card"
+                            *ngIf="!archivosRechazados['ine'] || archivosRechazados['ine'] === 1 || archivosRechazados['ine'] === 3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="ine" style="text-align: justify;">
+                                        <strong>III. Credencial para votar con fotografía vigente, expedida por el Instituto
+                                            Nacional Electoral en copia legible, de preferencia ampliada al 200% y en
+                                            original para su cotejo.</strong>
+                                        <p>Documento requerido: Credencial para votar con fotografía vigente*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="ine" accept="application/pdf"
+                                            (change)="onFile7($event, 'ine',15)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('ine')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('ine')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['ine']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['ine']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('ine')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['ine'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['ine']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card"
+                            *ngIf="!archivosRechazados['constancia_residencia'] || archivosRechazados['constancia_residencia'] === 1 || archivosRechazados['constancia_residencia'] === 3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="constancia_residencia" style="text-align: justify;">
+                                        <strong>IV. Tener residencia efectiva en el territorio del Estado de México no menor
+                                            de cinco años anteriores al día de su elección.</strong>
+                                        <p>Documento requerido Constancia de residencia en la entidad no menor de cinco
+                                            años anteriores al día de su designación, que podrá acreditarse con
+                                            manifestación bajo protesta de decir verdad sobre su residencia *:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input #fileInputsRef curp class="form-control" type="file" id="constancia_residencia"
+                                            accept="application/pdf"
+                                            (change)="onFile7($event, 'constancia_residencia',15)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('constancia_residencia')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('constancia_residencia')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['constancia_residencia']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['constancia_residencia']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('constancia_residencia')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['constancia_residencia'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['constancia_residencia']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card"
+                            *ngIf="!archivosRechazados['curriculum'] || archivosRechazados['curriculum'] === 1 || archivosRechazados['curriculum'] === 3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="curriculum" style="text-align: justify;">
+                                        <strong>V. Currículum Vitae firmado autógrafamente por la persona aspirante, en el
+                                            que se señale su experiencia laboral, formación académica; especialización
+                                            en derechos humanos; experiencia profesional en el ámbito de la protección,
+                                            observancia, promoción, estudio y divulgación de los derechos humanos; y, en
+                                            su caso, publicaciones en materias relacionadas con los derechos
+                                            humanos.</strong>
+                                        <p>Documento requerido: Currículum Vitae*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="curriculum" accept="application/pdf"
+                                            (change)="onFile7($event, 'curriculum',100)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('curriculum')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('curriculum')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 100 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['curriculum']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['curriculum']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('curriculum')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['curriculum'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['curriculum']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card"
+                            *ngIf="!archivosRechazados['copia_certificada'] || archivosRechazados['copia_certificada'] === 1 || archivosRechazados['copia_certificada'] === 3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="copia_certificada" style="text-align: justify;">
+                                        <strong>VI. Copia certificada de los documentos con los que acredite su título(s) o
+                                            grado(s) académico(s).</strong>
+                                        <p>Documento requerido: Copias certificadas correspondientes*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="copia_certificada"
+                                            accept="application/pdf" (change)="onFile7($event, 'copia_certificada',100)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('copia_certificada')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('copia_certificada')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 100 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['copia_certificada']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['copia_certificada']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('copia_certificada')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['copia_certificada'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['copia_certificada']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card"
+                            *ngIf="!archivosRechazados['informe_no_penales'] || archivosRechazados['informe_no_penales'] === 1 || archivosRechazados['informe_no_penales'] === 3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="informe_no_penales" style="text-align: justify;">
+                                        <strong>VII. Informe de no antecedentes penales, expedido por la Fiscalía General de
+                                            Justicia del Estado de México, con fecha de expedición no mayor a treinta
+                                            días anteriores a la fecha de su presentación.</strong>
+                                        <p>Documento requerido: Informe de no antecedentes penales*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="informe_no_penales"
+                                            accept="application/pdf" (change)="onFile7($event, 'informe_no_penales',15)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('informe_no_penales')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('informe_no_penales')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['informe_no_penales']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['informe_no_penales']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('informe_no_penales')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['informe_no_penales'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['informe_no_penales']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card"
+                            *ngIf="!archivosRechazados['carta_protesta5'] || archivosRechazados['carta_protesta5'] === 1 || archivosRechazados['carta_protesta5'] === 3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="formFile" style="text-align: justify;">
+                                        <strong>VIII. Carta bajo protesta de decir verdad en donde señale: <br>a) No ser ministro de culto, excepto que se haya separado de su ministerio con tres años de anticipación al día de su elección.<br>
+                                            b) No haber desempeñado cargo directivo en algún partido, asociación u organización política, en los tres años anteriores al día de su elección. <br>c) No haber sido sancionado en el desempeño de empleo, cargo o comisión en el servicio público federal, estatal o municipal, con motivo de alguna recomendación emitida por organismos públicos de derechos humanos.<br>
+                                            d) No haber sido objeto de sanción de inhabilitación o destitución administrativas para el desempeño de empleo, cargo o comisión en el servicio público, mediante resolución que haya causado estado.
+                                        </strong>
+                                        <p>Documento requerido: Carta bajo protesta de decir verdad*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="carta_protesta5"
+                                            accept="application/pdf" (change)="onFile7($event, 'carta_protesta5',15)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_protesta5')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_protesta5')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['carta_protesta5']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['carta_protesta5']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('carta_protesta5')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['carta_protesta5'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['carta_protesta5']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card" 
+                        *ngIf="(estatusSoli === 4  && archivosRechazados['titulo_licenciatura'] === 3) || (estatusSoli === 1 && !archivosRechazados['titulo_licenciatura']) || (estatusSoli === 2 && (!archivosRechazados['titulo_licenciatura'] ||  archivosRechazados['titulo_licenciatura'] == 1))">
+
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="formFile" style="text-align: justify;">
+                                        <strong>Otros documentos probatorios o que considere de relevancia para su postulación.</strong>
+                                        <p>Documento requerido: Otros.</p>
+
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="titulo_licenciatura"
+                                            accept="application/pdf"
+                                            (change)="onFile7($event, 'titulo_licenciatura',100)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('titulo_licenciatura')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 100 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['titulo_licenciatura']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['titulo_licenciatura']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('titulo_licenciatura')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['titulo_licenciatura'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['titulo_licenciatura']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- <div class="col-md-6 grid-margin stretch-card"
+                        *ngIf="(estatusSoli === 4  && archivosRechazados['carta_ant_no_penales'] === 3) || (estatusSoli === 1 && !archivosRechazados['carta_ant_no_penales']) ">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="formFile" style="text-align: justify;">
+                                        <strong>Gozar de buena fama pública y no haber sido condenado mediante sentencia
+                                            ejecutoriada, por delito intencional.</strong>
+                                        <p>Documento requerido: Carta bajo protesta de decir verdad y/o carta de
+                                            antecedentes no penales*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="carta_ant_no_penales"
+                                            accept="application/pdf"
+                                            (change)="onFile7($event, 'carta_ant_no_penales',7)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_ant_no_penales')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_ant_no_penales')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 7 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['carta_ant_no_penales']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['carta_ant_no_penales']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('carta_ant_no_penales')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['carta_ant_no_penales'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['carta_ant_no_penales']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> -->
+
+                        
+
+                        
+
+                        <div class="col-md-6 grid-margin stretch-card"
+                            *ngIf="!archivosRechazados['propuesta_programa'] || archivosRechazados['propuesta_programa'] === 1 || archivosRechazados['propuesta_programa'] === 3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="propuesta_programa" style="text-align: justify;">
+                                        <strong>Documento impreso con la propuesta de programa de trabajo con una
+                                            extensión máxima de diez cuartillas, con letra tipo Arial, tamaño número 12
+                                            e interlineado 1.5.</strong>
+                                        <p>Documento requerido: propuesta de programa de trabajo*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="propuesta_programa"
+                                            accept="application/pdf"
+                                            (change)="onFile7($event, 'propuesta_programa',50)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('propuesta_programa')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('propuesta_programa')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 50 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['propuesta_programa']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['propuesta_programa']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('propuesta_programa')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['propuesta_programa'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['propuesta_programa']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                        
+
+                        
+
+                        <div class="col-md-6 grid-margin stretch-card"
+                            *ngIf="!archivosRechazados['carta_motivos'] || archivosRechazados['carta_motivos'] === 1 || archivosRechazados['carta_motivos'] === 3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="carta_motivos" style="text-align: justify;">
+                                        <strong>Carta de exposición de motivos firmada por la persona aspirante y
+                                            descripción de las razones que justifican su idoneidad, con una extensión no
+                                            mayor a tres cuartillas.</strong>
+                                        <p>Documento requerido: Carta de exposición de motivos*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="carta_motivos"
+                                            accept="application/pdf" (change)="onFile7($event, 'carta_motivos',15)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_motivos')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_motivos')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['carta_motivos']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['carta_motivos']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('carta_motivos')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['carta_motivos'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['carta_motivos']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card"
+                            *ngIf="!archivosRechazados['escrito_consentimiento'] || archivosRechazados['escrito_consentimiento'] === 1 || archivosRechazados['escrito_consentimiento'] === 3">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="escrito_consentimiento" style="text-align: justify;">
+                                       <strong>
+                                        Escrito de consentimiento para el tratamiento de datos personales, así como Aviso de Privacidad relativo al tratamiento de los datos personales descritos en la presente Convocatoria. Ambos documentos deberán descargarse de la página 
+                                        <a href="https://legislacion.legislativoedomex.gob.mx/avisosdeprivacidad" target="_blank">
+                                        https://legislacion.legislativoedomex.gob.mx/avisosdeprivacidad
+                                        </a> 
+                                        y deberán ser entregados debidamente firmados por la o el aspirante.
+                                        </strong>
+                                        <p>Documento requerido: Escrito de consentimiento*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="escrito_consentimiento"
+                                            accept="application/pdf"
+                                            (change)="onFile7($event, 'escrito_consentimiento',15)">
+                                    </div>
+                                    <div *ngIf="formDoc.get('escrito_consentimiento')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('escrito_consentimiento')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['escrito_consentimiento']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['escrito_consentimiento']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('escrito_consentimiento')">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['escrito_consentimiento'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['escrito_consentimiento']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div *ngIf="isLoading" class="text-center my-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p>Procesando solicitud...</p>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button [disabled]="formDoc.invalid" type="submit" class="btn btn-primary submit">
+                                        Enviar
+                                    </button>
+                                    <a [routerLink]="isAdmin ? ['/solicitud/registradas'] : ['/registro/documentos']" class="btn btn-secondary">
+                                    Cancelar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                </form>
+            </div>
+            }@else if (estatusSoli === 3) {
+            <div class="card">
+                <form [formGroup]="formDoc" (ngSubmit)="sendDoc()">
+                    <div class="row">
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="formFile" style="text-align: justify;">
+                                        <strong>I. Tener treinta y cinco años cumplidos, el día de su elección.</strong>
+                                        <p>Documento requerido: Acta de nacimiento en copia certificada o, en su caso,
+                                            documento que acredite la nacionalidad mexicana *:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="acta_nacimiento"
+                                            accept="application/pdf" (change)="onFile7($event, 'acta_nacimiento',15)"
+                                            [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('acta_nacimiento')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('acta_nacimiento')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['acta_nacimiento']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['acta_nacimiento']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('acta_nacimiento')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['acta_nacimiento'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['acta_nacimiento']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="formFile" style="text-align: justify;">
+                                        <strong>II. Ser mexicano en pleno goce y ejercicio de sus derechos políticos y
+                                            civiles.</strong>
+                                        <p>Documento requerido: Clave Única de Registro de Población (CURP)*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="curp" accept="application/pdf"
+                                            (change)="onFile7($event, 'curp',15)" [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('curp')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('curp')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['curp']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['curp']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" width="40" height="50" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('curp')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['curp'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['curp']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="ine" style="text-align: justify;">
+                                        <strong>III. Credencial para votar con fotografía vigente, expedida por el Instituto
+                                            Nacional Electoral en copia legible, de preferencia ampliada al 200% y en
+                                            original para su cotejo.</strong>
+                                        <p>Documento requerido: Credencial para votar con fotografía vigente*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="ine" accept="application/pdf"
+                                            (change)="onFile7($event, 'ine',15)" [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('ine')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('ine')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['ine']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['ine']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('ine')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['ine'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['ine']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="constancia_residencia" style="text-align: justify;">
+                                        <strong>IV. Tener residencia efectiva en el territorio del Estado de México no menor
+                                            de cinco años anteriores al día de su elección.</strong>
+                                        <p>Documento requerido Constancia de residencia en la entidad no menor de cinco
+                                            años anteriores al día de su designación, que podrá acreditarse con
+                                            manifestación bajo protesta de decir verdad sobre su residencia *:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input #fileInputsRef curp class="form-control" type="file"
+                                            id="constancia_residencia" accept="application/pdf"
+                                            (change)="onFile7($event, 'constancia_residencia',15)" [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('constancia_residencia')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('constancia_residencia')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['constancia_residencia']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['constancia_residencia']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('constancia_residencia')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['constancia_residencia'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['constancia_residencia']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="curriculum" style="text-align: justify;">
+                                        <strong>V. Currículum Vitae firmado autógrafamente por la persona aspirante, en el
+                                            que se señale su experiencia laboral, formación académica; especialización
+                                            en derechos humanos; experiencia profesional en el ámbito de la protección,
+                                            observancia, promoción, estudio y divulgación de los derechos humanos; y, en
+                                            su caso, publicaciones en materias relacionadas con los derechos
+                                            humanos.</strong>
+                                        <p>Documento requerido: Currículum Vitae*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="curriculum" accept="application/pdf"
+                                            (change)="onFile7($event, 'curriculum',100)" [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('curriculum')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('curriculum')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 100 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['curriculum']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['curriculum']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('curriculum')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['curriculum'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['curriculum']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="copia_certificada" style="text-align: justify;">
+                                        <strong>VI. Copia certificada de los documentos con los que acredite su título(s) o
+                                            grado(s) académico(s).</strong>
+                                        <p>Documento requerido: Copias certificadas correspondientes*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="copia_certificada"
+                                            accept="application/pdf" (change)="onFile7($event, 'copia_certificada',100)"
+                                            [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('copia_certificada')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('copia_certificada')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 100 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['copia_certificada']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['copia_certificada']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('copia_certificada')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['copia_certificada'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['copia_certificada']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="informe_no_penales" style="text-align: justify;">
+                                        <strong>VII. Informe de no antecedentes penales, expedido por la Fiscalía General de
+                                            Justicia del Estado de México, con fecha de expedición no mayor a treinta
+                                            días anteriores a la fecha de su presentación.</strong>
+                                        <p>Documento requerido: Informe de no antecedentes penales*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="informe_no_penales"
+                                            accept="application/pdf" (change)="onFile7($event, 'informe_no_penales',50)"
+                                            [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('informe_no_penales')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('informe_no_penales')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 50 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['informe_no_penales']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['informe_no_penales']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('informe_no_penales')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['informe_no_penales'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['informe_no_penales']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="formFile" style="text-align: justify;">
+                                         <strong>VIII. Carta bajo protesta de decir verdad en donde señale: a) No ser ministro de culto, excepto que se haya separado de su ministerio con tres años de anticipación al día de su elección.
+                                            b) No haber desempeñado cargo directivo en algún partido, asociación u organización política, en los tres años anteriores al día de su elección. c) No haber sido sancionado en el desempeño de empleo, cargo o comisión en el servicio público federal, estatal o municipal, con motivo de alguna recomendación emitida por organismos públicos de derechos humanos.
+                                            d) No haber sido objeto de sanción de inhabilitación o destitución administrativas para el desempeño de empleo, cargo o comisión en el servicio público, mediante resolución que haya causado estado.
+                                        </strong>
+                                        <p>Documento requerido: Carta bajo protesta de decir verdad*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="carta_protesta5"
+                                            accept="application/pdf" (change)="onFile7($event, 'carta_protesta5',7)"
+                                            [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_protesta5')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_protesta5')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 7 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['carta_protesta5']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['carta_protesta5']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('carta_protesta5')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['carta_protesta5'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['carta_protesta5']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="formFile" style="text-align: justify;">
+                                        <strong>Otros documentos probatorios o que considere de relevancia para su postulación.</strong>
+                                        <p>Documento requerido: Otros.</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="titulo_licenciatura"
+                                            accept="application/pdf" (change)="onFile7($event, 'titulo_licenciatura',100)"
+                                            [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('titulo_licenciatura')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 100 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['titulo_licenciatura']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['titulo_licenciatura']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('titulo_licenciatura')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['titulo_licenciatura'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['titulo_licenciatura']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        
+
+                        <!-- <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="formFile" style="text-align: justify;">
+                                        <strong>Gozar de buena fama pública y no haber sido condenado mediante sentencia
+                                            ejecutoriada, por delito intencional.</strong>
+                                        <p>Documento requerido: Carta bajo protesta de decir verdad y/o carta de
+                                            antecedentes no penales*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="carta_ant_no_penales"
+                                            accept="application/pdf"
+                                            (change)="onFile7($event, 'carta_ant_no_penales',7)" [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_ant_no_penales')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_ant_no_penales')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 7 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['carta_ant_no_penales']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['carta_ant_no_penales']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('carta_ant_no_penales')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['carta_ant_no_penales'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['carta_ant_no_penales']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> -->
+                        
+                        
+
+                        
+
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="propuesta_programa" style="text-align: justify;">
+                                        <strong>Documento impreso con la propuesta de programa de trabajo con una
+                                            extensión máxima de diez cuartillas, con letra tipo Arial, tamaño número 12
+                                            e interlineado 1.5.</strong>
+                                        <p>Documento requerido: propuesta de programa de trabajo*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="propuesta_programa"
+                                            accept="application/pdf" (change)="onFile7($event, 'propuesta_programa',50)"
+                                            [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('propuesta_programa')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('propuesta_programa')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 50 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['propuesta_programa']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['propuesta_programa']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('propuesta_programa')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['propuesta_programa'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['propuesta_programa']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        
+                        
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="carta_motivos" style="text-align: justify;">
+                                        <strong>Carta de exposición de motivos firmada por la persona aspirante y
+                                            descripción de las razones que justifican su idoneidad, con una extensión no
+                                            mayor a tres cuartillas.</strong>
+                                        <p>Documento requerido: Carta de exposición de motivos*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="carta_motivos"
+                                            accept="application/pdf" (change)="onFile7($event, 'carta_motivos',15)"
+                                            [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_motivos')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('carta_motivos')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['carta_motivos']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['carta_motivos']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('carta_motivos')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['carta_motivos'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['carta_motivos']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 grid-margin stretch-card">
+                            <div class="card h-100">
+                                <div class="card-body d-flex flex-column">
+                                    <label class="form-label" for="escrito_consentimiento" style="text-align: justify;">
+                                        <strong>
+                                        Escrito de consentimiento para el tratamiento de datos personales, así como Aviso de Privacidad relativo al tratamiento de los datos personales descritos en la presente Convocatoria. Ambos documentos deberán descargarse de la página 
+                                        <a href="https://legislacion.legislativoedomex.gob.mx/avisosdeprivacidad" target="_blank">
+                                        https://legislacion.legislativoedomex.gob.mx/avisosdeprivacidad
+                                        </a> 
+                                        y deberán ser entregados debidamente firmados por la o el aspirante.
+                                        </strong>
+                                        <p>Documento requerido: Escrito de consentimiento*:</p>
+                                    </label>
+                                    <div class="mt-auto">
+                                        <input class="form-control" type="file" id="escrito_consentimiento"
+                                            accept="application/pdf" (change)="onFile7($event, 'escrito_consentimiento',15)"
+                                            [disabled]="true">
+                                    </div>
+                                    <div *ngIf="formDoc.get('escrito_consentimiento')?.hasError('required')">
+                                        <small class="text-danger">Este campo es obligatorio.</small>
+                                    </div>
+                                    <div *ngIf="formDoc.get('escrito_consentimiento')?.hasError('fileSize')">
+                                        <small class="text-danger">El archivo no debe exceder los 15 MB.</small>
+                                    </div>
+                                    <div *ngIf="archivosSubidos['escrito_consentimiento']" class="mt-2">
+                                        <div class="d-flex justify-content-center align-items-center gap-3">
+                                            <a [href]="archivosSubidos['escrito_consentimiento']" target="_blank"
+                                                class="d-flex align-items-center text-decoration-none">
+                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                    height="50" class="me-2" />
+                                            </a>
+                                            <button type="button" class="btn btn-primary btn-icon-text btn-xs"
+                                                (click)="eliminarArchivo('escrito_consentimiento')" [disabled]="true">
+                                                <i class="feather icon-trash btn-icon-prepend"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div *ngIf=" archivosRechazados['escrito_consentimiento'] === 3" class="mt-3">
+                                        <label>Motivo del rechazo:</label>
+                                        <textarea class="form-control"
+                                            readonly>{{this.observac['escrito_consentimiento']?.toLocaleUpperCase('es-ES') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div *ngIf="isLoading" class="text-center my-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p>Procesando solicitud...</p>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button [disabled]="formDoc.invalid || estatusSoli === 3" type="submit"
+                                        class="btn btn-primary submit">
+                                        Enviar
+                                    </button>
+                                    <a routerLink="/registro/documentos" class="btn btn-secondary">
+                                        Cancelar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                </form>
+            </div>
+            }
+
+        </div>
+    </div>
+</div>

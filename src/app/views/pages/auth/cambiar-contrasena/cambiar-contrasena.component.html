@@ -1,0 +1,60 @@
+<div class="container-fluid auth-background min-vh-100 d-flex justify-content-center align-items-center">
+    <div class="card shadow w-100" style="max-width: 500px;">
+        <div class="auth-form-wrapper px-4 py-5">
+            <h5 class="fw-bold mb-4 text-center" style="color: #96134b; font-size: 1.2rem;">Cambiar contraseña</h5>
+            <form [formGroup]="formPassword" class="forms-sample" (ngSubmit)="cambiarContrasena()">
+                <div class="mb-3">
+                    <label for="password1" class="form-label">Contraseña</label>
+                    <div class="input-group">
+                        <input formControlName="password1" [type]="showPassword1 ? 'text' : 'password'"
+                            class="form-control" id="password1" placeholder="Contraseña"  autocomplete="new-password">
+                        <button type="button" class="btn btn-outline-secondary" (click)="togglePassword(1)">
+                            <i class="feather" [ngClass]="showPassword1 ? 'icon-eye-off' : 'icon-eye'"></i>
+                        </button>
+                    </div>
+                    <small class="colorwr" *ngIf="formPassword.get('password1')?.hasError('pattern')">
+                        <strong> La contraseña debe contener al menos un número, una letra mayúscula y una minúscula, un
+                            caracter especial, y una longitud mayor o igual a 8 caracteres.<br />La contraseña no puede
+                            contener espacios.</strong>
+                    </small>
+                    <div *ngIf="formPassword.get('password1')?.invalid && formPassword.get('password1')?.touched">
+                        <small class="colorsm"
+                            *ngIf="formPassword.get('password1')?.hasError('required') && formPassword.get('password1')?.touched">
+                            Este campo es <strong>requerido</strong>
+                        </small>
+                        <br />
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="password2" class="form-label">Confirmar contraseña</label>
+                    <div class="input-group">
+                        <input formControlName="password2" [type]="showPassword2 ? 'text' : 'password'"
+                            class="form-control" id="password2" placeholder="Confirmar contraseña"  autocomplete="new-password">
+                        <button type="button" class="btn btn-outline-secondary" (click)="togglePassword(2)">
+                            <i class="feather" [ngClass]="showPassword2 ? 'icon-eye-off' : 'icon-eye'"></i>
+                        </button>                
+                    </div>
+                    <small class="colorwr" *ngIf="formPassword.get('password2')?.hasError('pattern')">
+                        <strong> La contraseña debe contener al menos un número, una letra mayúscula y una minúscula, un
+                            caracter especial, y una longitud mayor o igual a 8 caracteres.<br />La contraseña no puede
+                            contener espacios.</strong>
+                    </small>
+                    <div *ngIf="formPassword.get('password2')?.invalid && formPassword.get('password2')?.touched">
+                        <small class="colorsm"
+                            *ngIf="formPassword.get('password2')?.hasError('required') && formPassword.get('password2')?.touched">
+                            Este campo es <strong>requerido</strong>
+                        </small>
+                    </div>
+                    <div *ngIf="formPassword.hasError('noMatch') && formPassword.get('password2')?.touched">
+                        <small class="colorsm">
+                            <strong>Las contraseñas no coinciden.</strong>
+                        </small>
+                    </div>
+                </div>
+                <div class="text-start">
+                    <button [disabled]="formPassword.invalid" type="submit" class="btn btn-primary">Enviar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

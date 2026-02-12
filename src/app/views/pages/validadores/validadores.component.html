@@ -1,0 +1,48 @@
+<div class="row">
+  <div class="col-md-12 stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-title">Usuarios validadores</h6>
+        <div class="d-flex justify-content-end mb-3">
+          <button type="button" class="btn btn-primary btn-icon-text" routerLink="/validadores/create">
+            <i class="feather icon-check-square btn-icon-prepend"></i>
+            Agregar
+          </button>
+        </div>
+        <div class="row">
+          <div class="col-xl-3 col-md-4">
+            <input type="text" class="form-control form-control-sm" placeholder="Buscar..."
+              (input)="updateFilter($event)" />
+          </div>
+        </div>
+        <div class="table-responsive">
+          <div *ngIf="rows.length === 0 && !loading" class="text-center my-3">
+            <p><strong>No hay datos para mostrar</strong></p>
+          </div>
+          <ngx-datatable #table class="bootstrap" [rows]="rows" [columnMode]="'force'" [headerHeight]="50"
+            *ngIf="rows.length > 0" [footerHeight]="50" [rowHeight]="'auto'" [limit]="pageSize" [count]="filteredCount"
+            [offset]="page" (page)="setPage($event)" [loadingIndicator]="loading">
+            <ngx-datatable-column [headerClass]="'text-center'" [cellClass]="'text-center'" name="Nombre Completo">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row.datos_user.nombre?.toLocaleUpperCase('es-ES') }} {{ row.datos_user.apaterno?.toLocaleUpperCase('es-ES') }} {{ row.datos_user.amaterno?.toLocaleUpperCase('es-ES') }}
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column [headerClass]="'text-center'" [cellClass]="'text-center'" name="Acciones"
+              [width]="130">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <div class="d-flex justify-content-center gap-2">
+                  <button type="button" class="btn btn-sm btn-outline-dark btn-icon" data-toggle="tooltip" data-placement="top" title="Editar"  routerLink="/validadores/edit/{{row.datos_user.user_id}}">
+                    <i class="feather icon-edit"></i>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-danger btn-icon" data-toggle="tooltip" data-placement="top" title="Eliminar" (click)="eliminarUsuario(row)">
+                    <i class="feather icon-trash-2"></i>
+                  </button>
+                </div>
+              </ng-template>
+            </ngx-datatable-column>
+          </ngx-datatable>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

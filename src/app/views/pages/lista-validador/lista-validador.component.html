@@ -1,0 +1,110 @@
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a routerLink=".">Solicitud</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Tramite</li>
+    </ol>
+  </nav>
+<div class="row">
+    <div class="col-md-12 stretch-card">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">{{titulo}}</h6>
+                <div class="row align-items-center mb-3">
+                    <div class="col-xl-3 col-md-4">
+                        <input type="text" class="form-control form-control-sm" placeholder="Buscar..."
+                            (input)="updateFilter($event)" />
+                    </div>
+                    <div *ngIf="rows.length > 0" class="col text-end">
+                        <button class="btn btn-sm btn-primary" (click)="exportToExcel()">Descargar Excel</button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <div *ngIf="rows.length === 0 && !loading" class="text-center my-3">
+                        <p><strong>No hay datos para mostrar</strong></p>
+                    </div>
+
+                    <ngx-datatable #table class="bootstrap" [rows]="rows" [columnMode]="'force'" [headerHeight]="50"  *ngIf="rows.length > 0"
+                        [externalSorting]="true" (sort)="onSort($event)" 
+                        [externalPaging]="true" [footerHeight]="50" [rowHeight]="'auto'" [limit]="pageSize" [count]="filteredCount"
+                        [offset]="page" (page)="setPage($event)" [loadingIndicator]="loading" >
+                        <ngx-datatable-column [headerClass]="'text-center'" [cellClass]="'text-center'" name="#">
+                        <ng-template let-row="row" let-rowIndex="rowIndex" ngx-datatable-cell-template>
+                            {{ (page * pageSize) + rowIndex + 1 }}
+                        </ng-template>
+                        </ngx-datatable-column>
+                         <ngx-datatable-column prop="fecha_envio"  [headerClass]="'text-center'" [cellClass]="'text-center'" name="Fecha solicitud">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                {{ row.fecha_envio | date:'dd/MM/yyyy' }}
+                            </ng-template>
+                        </ngx-datatable-column>
+                        <ngx-datatable-column [headerClass]="'text-center'" [cellClass]="'text-center'" name="Folio">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                {{ row.id | slice:0:8 }}
+                            </ng-template>
+                        </ngx-datatable-column>
+                        <ngx-datatable-column prop="nombreCompleto" [headerClass]="'text-center'" [cellClass]="'text-center'" name="Nombre">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                {{ row.ap_paterno }} {{ row.ap_materno }} {{ row.nombres }}
+                            </ng-template>
+                        </ngx-datatable-column>
+                        <ngx-datatable-column [headerClass]="'text-center'" [cellClass]="'text-center'" name="Correo" prop="correo"></ngx-datatable-column>
+                        <ngx-datatable-column  [headerClass]="'text-center'"  [cellClass]="'text-center'"name="Telefono" prop="celular"></ngx-datatable-column>
+                        <ngx-datatable-column [headerClass]="'text-center'"  [cellClass]="'text-center'"name="Curp" prop="curp"></ngx-datatable-column>
+                        <ngx-datatable-column [headerClass]="'text-center'" [cellClass]="'text-center'" name="Estatus">
+                            <ng-template let-row="row" ngx-datatable-cell-template>
+                                <div class="text-center">
+                                    <!-- Estatus: Pendiente -->
+                                    <a *ngIf="row.estatusId == 2" [routerLink]="getLink(row)"
+                                    style="display: block; width: 100%; text-decoration: none;">
+                                        <div class="progress">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                                role="progressbar" style="width: 100%;">
+                                                <p style="color:black; margin: 0;"><strong>Pendiente</strong></p>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <!-- Estatus: Validado -->
+                                    <a *ngIf="row.estatusId == 3" [routerLink]="['/solicitud/validacion', row.userId]"
+                                    style="display: block; width: 100%; text-decoration: none;">
+                                        <div class="progress">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                                role="progressbar" style="width: 100%;">
+                                                <p style="color:black; margin: 0;"><strong>Validado</strong></p>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <!-- Estatus: Rechazado (sin acción, solo visual) -->
+                                    <a *ngIf="row.estatusId == 4"
+                                    style="display: block; width: 100%; text-decoration: none;">
+                                        <div class="progress">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-danger"
+                                                role="progressbar" style="width: 100%;">
+                                                <p style="color:black; margin: 0;"><strong>Rechazado</strong></p>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <!-- Estatus: Registrado -->
+                                    <a *ngIf="row.estatusId == 1" [routerLink]="['/registro/add-documentos', row.userId]"
+                                    style="display: block; width: 100%; text-decoration: none;">
+                                        <div class="progress">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                                role="progressbar" style="width: 100%;">
+                                                <p style="color:black; margin: 0;"><strong>Registrado</strong></p>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                </div>
+                            </ng-template>
+                        </ngx-datatable-column>
+                    </ngx-datatable>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- routerLink="/edit/{{row.userId}}" -->

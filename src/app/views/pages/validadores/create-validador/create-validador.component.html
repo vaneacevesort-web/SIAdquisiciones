@@ -1,0 +1,85 @@
+<div class="row">
+  <div class="col-md-12 stretch-card">
+    <div class="card">
+      <div class="card-body">
+        <h6 class="card-title">{{operacion}} validadores</h6>
+        <form [formGroup]="formReg" (ngSubmit)="envio()" class="forms-sample">
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="mb-3">
+                <label class="form-label">Apellido Paterno:*</label>
+                <input formControlName="ap_paterno" type="text" class="form-control" placeholder="Apellido Paterno" />
+                <small class="colorsm" *ngIf="
+                  formReg.get('ap_paterno')?.hasError('required') &&
+                  formReg.get('ap_paterno')?.touched
+                  ">Este campo es <strong>requerido</strong></small>
+              </div>
+            </div>
+
+            <div class="col-sm-6">
+              <div class="mb-3">
+                <label class="form-label">Apellido Materno:*</label>
+                <input formControlName="ap_materno" type="text" class="form-control" placeholder="Apellido Materno" />
+                <small class="colorsm" *ngIf="
+                  formReg.get('ap_materno')?.hasError('required') &&
+                  formReg.get('ap_materno')?.touched
+                  ">Este campo es <strong>requerido</strong></small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="mb-3">
+                <label class="form-label">Nombres:*</label>
+                <input formControlName="nombres" type="text" class="form-control" placeholder="Nombres" />
+                <small class="colorsm" *ngIf="
+                formReg.get('nombres')?.hasError('required') &&
+                formReg.get('nombres')?.touched
+                ">Este campo es <strong>requerido</strong></small>
+              </div>
+            </div>
+            
+            <div class="col-sm-6">
+              <div class="mb-3">
+                <label class="form-label">CURP:*</label>
+                <input formControlName="curp" type="text" class="form-control" placeholder="CURP" maxlength="18" />
+                <small class="colorsm" *ngIf="formReg.get('curp')?.hasError('pattern')">
+                  <strong> CURP inválida o incompleta.</strong>
+                </small>
+                <div *ngIf="formReg.get('curp')?.invalid && formReg.get('curp')?.touched">
+                  <small class="colorsm"
+                    *ngIf="formReg.get('curp')?.hasError('required') && formReg.get('curp')?.touched">
+                    Este campo es <strong>requerido</strong>
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-sm-6">
+              <div class="mb-3">
+                <label class="form-label">Correo Electrónico:*</label>
+                <input formControlName="correo" type="email" class="form-control" placeholder="Correo Electrónico" />
+                <div *ngIf="formReg.get('correo')?.invalid &&formReg.get('correo')?.touched">
+                  <small class="colorsm"
+                    *ngIf="formReg.get('correo')?.hasError('required') &&formReg.get('correo')?.touched">Este campo es
+                    <strong>requerido</strong></small>
+
+                  <small class="colorsm" *ngIf="formReg.get('correo')?.hasError('email')">Por favor
+                    <strong>ingresa un correo válido.</strong></small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br>
+          <div class="d-flex justify-content-center gap-3 mt-3">
+            <button [disabled]="formReg.invalid" type="submit" class="btn btn-primary">Enviar</button>
+            <button type="button" class="btn btn-secondary" routerLink="/validadores">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

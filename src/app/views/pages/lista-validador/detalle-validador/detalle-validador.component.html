@@ -1,0 +1,182 @@
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a routerLink=".">Solicitud</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Validacion</li>
+    </ol>
+</nav>
+<div class="container">
+    <div class="row w-100 mx-0 auth-page">
+        <div class="mx-auto">
+            <div class="row">
+                <div class="col-md-12 grid-margin stretch-card">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Datos del solicitante</h4>
+                            <p class="text">Nombre completo: {{ solicitante?.nombres }} {{ solicitante?.ap_paterno }} {{
+                                solicitante?.ap_materno }} <br>
+                                Curp: {{ solicitante?.curp }} <br>
+                            </p>
+                            <div *ngIf="this.esAdmin || this.esValidador" class="col text-end">
+                                <button class="btn btn-sm btn-primary" (click)="exportarZip()">Descargar Documentos</button>
+                            </div>
+                        </div>
+                       
+                        <div class="card-body" *ngIf="this.esAdmin && validEm !== 'validador2@congresoedomex.gob.mx'">
+                            <ngb-alert [dismissible]="false" [type]="'success'">
+                                <p style="color:black"><strong>Validador asignado:</strong> {{validadorSol}}</p>
+                            </ngb-alert>
+                            <ngb-alert [dismissible]="false" [type]="'secondary'">
+
+                                <h4 class="card-title" style="color:black">Reasignar solicitud</h4>
+                                <div class="form-group">
+                                    <label for="validadorSelect" style="color:black"><strong>Selecciona un
+                                            validador:</strong></label>
+                                    <ng-select [items]="usuariosValidador" bindLabel="datos_user.nombre"
+                                        bindValue="datos_user.user_id" placeholder="Selecciona un validador"
+                                        [(ngModel)]="validadorSeleccionado" (change)="reasignarValidador($event)">
+                                        <ng-template ng-label-tmp let-item="item">
+                                            {{ item.datos_user?.user_id }}
+                                        </ng-template>
+                                        <ng-template ng-option-tmp let-item="item">
+                                            {{ item.datos_user?.nombre }} {{ item.datos_user?.apaterno }} {{
+                                            item.datos_user?.amaterno }}
+                                        </ng-template>
+                                    </ng-select>
+                                </div>
+                            </ngb-alert>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <form>
+                    <div class="row">
+                        @for (doc of documentosRequeridos; track doc.clave) {
+                            <!-- @if (doc.estatus === 1 || doc.estatus === 3 ) { -->
+                             @if (estatusSoli == 1 || estatusSoli == 2 || estatusSoli == 4) {
+                                 <ng-container *ngIf="doc.estatus === 1 || doc.estatus === 3"> <!--  quite esto *ngIf="doc.estatus === 1 || doc.estatus === 3" -->
+                                    <div class="col-md-12 grid-margin stretch-card">
+                                        <div class="card h-100">
+                                            <div class="card-body">
+                                                <div class="row align-items-start">
+
+                                                    <div class="col-md-4">
+                                                        <p class="text-center"><strong>TIPO</strong></p>
+                                                        <br>
+                                                        <label class="form-label">
+                                                            <strong> {{ doc.label }}</strong>
+                                                            <p>{{ doc.txt }}</p>
+                                                        </label>
+                                                    </div>
+
+                                                    <div class="col-md-4 text-center">
+                                                        <p class="text-center"><strong>DOCUMENTO</strong></p>
+                                                        <br>
+                                                        <div *ngIf="archivosSubidos[doc.clave]">
+                                                            <a [href]="archivosSubidos[doc.clave]" target="_blank"
+                                                                class="d-flex justify-content-center text-decoration-none">
+                                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                                    height="50" />
+                                                            </a>
+
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-4 text-center">
+                                                        <p class="text-center"><strong>VALIDACIÓN</strong></p>
+                                                        <br>
+                                                        <mat-slide-toggle [disabled]="esValidador2" [ngModelOptions]="{ standalone: true }"
+                                                            [(ngModel)]="validarrechazar[doc.clave].estado"
+                                                            (ngModelChange)="onToggleChange(doc.clave)">
+                                                        </mat-slide-toggle>
+                                                    </div>
+                                                </div>
+
+                                                <div *ngIf="validarrechazar[doc.clave]?.estado === false" class="mt-3">
+                                                    <label><strong>Motivo del rechazo:</strong></label>
+                                                    <textarea class="form-control" rows="3"
+                                                        [ngModelOptions]="{ standalone: true }"
+                                                        [(ngModel)]="validarrechazar[doc.clave].observaciones"
+                                                        placeholder="Escribe el motivo del rechazo..."></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ng-container>
+                             }@else if(estatusSoli == 3){
+                                 <ng-container> <!--  quite esto *ngIf="doc.estatus === 1 || doc.estatus === 3" -->
+                                    <div class="col-md-12 grid-margin stretch-card">
+                                        <div class="card h-100">
+                                            <div class="card-body">
+                                                <div class="row align-items-start">
+
+                                                    <div class="col-md-4">
+                                                        <p class="text-center"><strong>TIPO</strong></p>
+                                                        <br>
+                                                        <label class="form-label">
+                                                            <strong> {{ doc.label }}</strong>
+                                                            <p>{{ doc.txt }}</p>
+                                                        </label>
+                                                    </div>
+
+                                                    <div class="col-md-4 text-center">
+                                                        <p class="text-center"><strong>DOCUMENTO</strong></p>
+                                                        <br>
+                                                        <div *ngIf="archivosSubidos[doc.clave]">
+                                                            <a [href]="archivosSubidos[doc.clave]" target="_blank"
+                                                                class="d-flex justify-content-center text-decoration-none">
+                                                                <img src="assets/images/pdf.png" alt="PDF" btn-primarywidth="40"
+                                                                    height="50" />
+                                                            </a>
+
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-4 text-center">
+                                                        <p class="text-center"><strong>VALIDACIÓN</strong></p>
+                                                        <br>
+                                                        <mat-slide-toggle [ngModelOptions]="{ standalone: true }"
+                                                            [(ngModel)]="validarrechazar[doc.clave].estado"
+                                                            [disabled]="true">
+                                                            <!-- (ngModelChange)="onToggleChange(doc.clave)" -->
+                                                        </mat-slide-toggle>
+                                                    </div>
+                                                </div>
+
+                                                <div *ngIf="validarrechazar[doc.clave]?.estado === false" class="mt-3">
+                                                    <label><strong>Motivo del rechazo:</strong></label>
+                                                    <textarea class="form-control" rows="3"
+                                                        [ngModelOptions]="{ standalone: true }"
+                                                        [(ngModel)]="validarrechazar[doc.clave].observaciones"
+                                                        placeholder="Escribe el motivo del rechazo..."></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ng-container>
+                             }
+                              
+                            <!-- } -->
+                        }
+
+                        <div class="row mt-2">
+                            <div class="col text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button type="submit" class="btn btn-primary submit" (click)="enviarValidacion()"  [disabled]="(estatusSoli === 3 || esValidador2)">
+                                        Enviar
+                                    </button>
+                                    <a routerLink="/solicitud/tramite" class="btn btn-secondary">
+                                        Cancelar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

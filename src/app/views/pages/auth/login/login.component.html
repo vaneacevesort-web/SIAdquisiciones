@@ -1,0 +1,55 @@
+<div class="container-fluid auth-background">
+  <div class="row w-100 mx-0 auth-page">
+    <div class="col-md-6 col-lg-5 col-xl-4 mx-auto">
+      <div class="card">
+        <div class="row">
+          <!--<div class="col-md-4 pe-md-0">
+            <div class="auth-side-wrapper" [ngStyle]="{ 'background-image': 'url(https://placehold.co/250x650)' }">
+  
+            </div>
+          </div>-->
+            <div class="auth-form-wrapper px-4 py-5">
+              <a routerLink="." class="nobleui-logo d-block mb-2"><span></span></a>
+
+<!-- Encabezado institucional -->
+<div class="brand-block text-center mb-3">
+  <img src="/images/oficialia_mayor.png" alt="Oficialía Mayor" class="brand-logo">
+  <div class="brand-area">Dirección General de Recursos Materiales</div>
+</div>
+
+<!-- Título del sistema (más elegante) -->
+<div class="system-wrap text-center mb-3">
+  <div class="system-title">
+    Sistema de Adquisiciones y Contratación de Servicios
+  </div>
+</div>
+
+<h6 class="login-title text-center">
+  Iniciar sesión
+</h6>
+              <form  #f="ngForm" (ngSubmit)="onLoggedin(f)"  class="forms-sample">
+                <div class="mb-3">
+                  <label for="exampleInputEmail1" class="form-label">Usuario: </label>
+                  
+                  <input class="form-control" type="email" placeholder="ejemplo@example.com"   name="Uemail" ngModel required #Uemail="ngModel" />
+                </div>
+                <div class="mb-3">
+                  <label for="exampleInputPassword1" class="form-label">Contraseña: </label>
+                  <input class="form-control" type="password" placeholder="******"  name="Upassword" ngModel required #Upassword="ngModel" />
+                </div>
+              
+                <div>
+                  <button type="submit" class="btn btn-primary me-2 mb-2 mb-md-0" >Ingresar</button>
+                  <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0"  [routerLink]="['/registrate']">
+                    Registro
+                  </button>
+                </div>
+                <a routerLink="/auth/restaurar-contrasena" class="d-block mt-3 text-secondary">¿Olvidaste tu contraseña? <strong>Restablécela aquí</strong></a>
+              </form>
+            </div>
+         
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,9 @@
+{
+  "development": {
+    "username": "homestead",
+    "password": "secret",
+    "database": "adquisiciones",
+    "host": "192.168.56.56",
+    "dialect": "mysql"
+  }
+}
