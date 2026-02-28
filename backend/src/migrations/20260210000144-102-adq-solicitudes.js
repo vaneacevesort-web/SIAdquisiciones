@@ -153,14 +153,15 @@ module.exports = {
     });
 
     // FKs a users (UUID char36)
-    await queryInterface.addConstraint('adq_solicitudes', {
+    /*await queryInterface.addConstraint('adq_solicitudes', {
       fields: ['created_by'],
       type: 'foreign key',
       name: 'fk_adq_sol_created_by',
       references: { table: 'users', field: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT'
-    });
+    }); */
+
 
     await queryInterface.addConstraint('adq_solicitudes', {
       fields: ['updated_by'],
