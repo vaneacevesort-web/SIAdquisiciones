@@ -10,7 +10,7 @@ module.exports = {
     
     await queryInterface.bulkInsert('users', [{
       id: uuidv4(), // Genera automáticamente el UUID con uuidv4()
-      name: 'SAGM990220',
+      name: 'AEOG990921',
       email: 'vane.aceves@oficialia.gob.mx',
       password: hashedPassword,
       createdAt: new Date(),

@@ -85,11 +85,11 @@ module.exports = {
     });
 
     // Índices útiles
-    await queryInterface.addIndex('adq_solicitudes', ['fecha_ingreso'], { name: 'idx_adq_sol_fecha' });
-    await queryInterface.addIndex('adq_solicitudes', ['id_dependencia', 'id_centro_costo'], { name: 'idx_adq_sol_dep_cc' });
+    //await queryInterface.addIndex('adq_solicitudes', ['fecha_ingreso'], { name: 'idx_adq_sol_fecha' });
+    //await queryInterface.addIndex('adq_solicitudes', ['id_dependencia', 'id_centro_costo'], { name: 'idx_adq_sol_dep_cc' });
 
     // FKs a catálogos
-    await queryInterface.addConstraint('adq_solicitudes', {
+    /*await queryInterface.addConstraint('adq_solicitudes', {
       fields: ['id_origen_recurso'],
       type: 'foreign key',
       name: 'fk_adq_sol_origen',
@@ -134,7 +134,7 @@ module.exports = {
       onDelete: 'RESTRICT'
     });
 
-    await queryInterface.addConstraint('adq_solicitudes', {
+    /*await queryInterface.addConstraint('adq_solicitudes', {
       fields: ['id_giro'],
       type: 'foreign key',
       name: 'fk_adq_sol_giro',
@@ -150,7 +150,7 @@ module.exports = {
       references: { table: 'adq_cat_subgiros', field: 'id_subgiro' },
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT'
-    });
+    });*/
 
     // FKs a users (UUID char36)
     /*await queryInterface.addConstraint('adq_solicitudes', {
@@ -163,14 +163,14 @@ module.exports = {
     }); */
 
 
-    await queryInterface.addConstraint('adq_solicitudes', {
+    /*await queryInterface.addConstraint('adq_solicitudes', {
       fields: ['updated_by'],
       type: 'foreign key',
       name: 'fk_adq_sol_updated_by',
       references: { table: 'users', field: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL'
-    });
+    });*/
   },
 
   async down(queryInterface) {

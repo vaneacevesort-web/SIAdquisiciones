@@ -28,7 +28,7 @@ module.exports = {
       updated_at: { type: Sequelize.DATE, allowNull: true }
     });
 
-    await queryInterface.addConstraint('adq_estudio_mercado', {
+    /*await queryInterface.addConstraint('adq_estudio_mercado', {
       fields: ['id_solicitud'],
       type: 'foreign key',
       name: 'fk_adq_em_sol',
@@ -78,7 +78,7 @@ module.exports = {
       fields: ['id_estudio', 'anio'],
       type: 'unique',
       name: 'uk_adq_em_anio'
-    });
+    });*/
 
     // =========================
     // 2) AFECTACIÓN PRESUPUESTAL
@@ -108,7 +108,7 @@ module.exports = {
       updated_at: { type: Sequelize.DATE, allowNull: true }
     });
 
-    await queryInterface.addConstraint('adq_afectacion_presupuestal', {
+    /*await queryInterface.addConstraint('adq_afectacion_presupuestal', {
       fields: ['id_solicitud'],
       type: 'foreign key',
       name: 'fk_adq_ap_sol',
@@ -142,7 +142,7 @@ module.exports = {
       references: { table: 'users', field: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL'
-    });
+    });*/
 
     // =========================
     // 3) BIENES Y SERVICIOS
@@ -171,7 +171,7 @@ module.exports = {
       updated_at: { type: Sequelize.DATE, allowNull: true }
     });
 
-    await queryInterface.addConstraint('adq_bienes_servicios', {
+    /*await queryInterface.addConstraint('adq_bienes_servicios', {
       fields: ['id_solicitud'],
       type: 'foreign key',
       name: 'fk_adq_bs_sol',
@@ -196,7 +196,7 @@ module.exports = {
       references: { table: 'users', field: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL'
-    });
+    });*/
   },
 
   async down(queryInterface) {
