@@ -1,10 +1,10 @@
 {
   "development": {
-    "username": "root",
-    "password": null,
-    "database": "adquisiciones",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
+  "username": "homestead",
+  "password": "secret",
+  "database": "adquisiciones",
+  "host": "192.168.56.56",
+  "dialect": "mysql"
   },
   "test": {
     "username": "root",

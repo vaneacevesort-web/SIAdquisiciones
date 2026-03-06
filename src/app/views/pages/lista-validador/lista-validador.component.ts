@@ -50,6 +50,7 @@ export class ListaValidadorComponent {
       this.titulo='Solicitudes registradas'
       this.tipoEstatus = 5;
     }
+    console.log(this.tipoEstatus)
 
     const payload: any = {};
     if (this._userService.currentUserValue?.id !== undefined) {

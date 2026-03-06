@@ -17,6 +17,10 @@
                     <div *ngIf="rows.length > 0" class="col text-end">
                         <button class="btn btn-sm btn-primary" (click)="exportToExcel()">Descargar Excel</button>
                     </div>
+                    <div *ngIf="tipoEstatus == 2" class="col text-end">
+                        <button class="btn btn-sm btn-primary" routerLink="/solicitud/nuevo">Nueva solicitud</button>
+                    </div>
+                    
                 </div>
                 <div class="table-responsive">
                     <div *ngIf="rows.length === 0 && !loading" class="text-center my-3">

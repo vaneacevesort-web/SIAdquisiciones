@@ -19,6 +19,10 @@ export default [
         loadComponent: () => import('./lista-validador.component').then(c => c.ListaValidadorComponent)
       },
       {
+        path: 'nuevo',
+        loadComponent: () => import('./solicitud-create/solicitud-create.component').then(c => c.SolicitudCreateComponent)
+      },
+      {
         path: 'validacion/:id',
         loadComponent: () => import('./detalle-validador/detalle-validador.component').then(c => c.DetalleValidadorComponent)
       }

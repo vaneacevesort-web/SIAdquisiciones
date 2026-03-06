@@ -1,0 +1,78 @@
+<div class="card">
+  <div class="card-body">
+
+    <h5 class="mb-4">Solicitud</h5>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="forms-sample">
+      <div class="row g-3">
+
+        <!-- 1) Folio -->
+        <div class="col-12 col-md-6 col-lg-4">
+          <label class="form-label">Folio de Solicitud (Interno)</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Escriba su respuesta"
+            formControlName="folioInterno"
+          />
+          <small class="text-danger" *ngIf="hasError('folioInterno','required')">
+            Este campo es <strong>requerido</strong>.
+          </small>
+          <small class="text-danger" *ngIf="hasError('folioInterno','maxlength')">
+            Máximo 50 caracteres.
+          </small>
+        </div>
+
+        <!-- 2) Fecha -->
+        <div class="col-12 col-md-6 col-lg-4">
+          <label class="form-label">Fecha Ingreso de Solicitud</label>
+          <div class="input-group">
+            <input
+              type="date"
+              class="form-control"
+              formControlName="fechaIngreso"
+            />
+            <span class="input-group-text">
+              <i class="feather icon-calendar"></i>
+            </span>
+          </div>
+          <small class="text-danger" *ngIf="hasError('fechaIngreso','required')">
+            Este campo es <strong>requerido</strong>.
+          </small>
+        </div>
+
+        <!-- 3) Origen de recurso -->
+        <div class="col-12 col-md-12 col-lg-4">
+          <label class="form-label d-block">Origen de Recurso</label>
+
+          <div class="d-flex flex-column gap-2">
+            <div class="form-check" *ngFor="let opt of origenOptions; index as i">
+              <input
+                class="form-check-input"
+                type="radio"
+                [id]="'origen_' + i"
+                formControlName="origenRecurso"
+                [value]="opt.value"
+              />
+              <label class="form-check-label" [for]="'origen_' + i">
+                {{ opt.label }}
+              </label>
+            </div>
+          </div>
+
+          <small class="text-danger" *ngIf="hasError('origenRecurso','required')">
+            Selecciona una opción.
+          </small>
+        </div>
+
+      </div>
+
+      <!-- Botones -->
+      <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="form.reset()">Limpiar</button>
+      </div>
+
+    </form>
+  </div>
+</div>
