@@ -3,76 +3,240 @@
 
     <h5 class="mb-4">Solicitud</h5>
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="forms-sample">
-      <div class="row g-3">
+    <form [formGroup]="form" class="forms-sample">
 
-        <!-- 1) Folio -->
-        <div class="col-12 col-md-6 col-lg-4">
-          <label class="form-label">Folio de Solicitud (Interno)</label>
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Escriba su respuesta"
-            formControlName="folioInterno"
-          />
-          <small class="text-danger" *ngIf="hasError('folioInterno','required')">
-            Este campo es <strong>requerido</strong>.
-          </small>
-          <small class="text-danger" *ngIf="hasError('folioInterno','maxlength')">
-            Máximo 50 caracteres.
-          </small>
-        </div>
+      <!-- ================== PASO 1 ================== -->
+      <div *ngIf="currentStep === 1">
 
-        <!-- 2) Fecha -->
-        <div class="col-12 col-md-6 col-lg-4">
-          <label class="form-label">Fecha Ingreso de Solicitud</label>
-          <div class="input-group">
+        <div class="row g-3">
+
+          <!-- 1) Folio -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <label class="form-label">Folio de Solicitud (Interno)</label>
             <input
-              type="date"
+              type="text"
               class="form-control"
-              formControlName="fechaIngreso"
+              placeholder="Escriba su respuesta"
+              formControlName="folioInterno"
             />
-            <span class="input-group-text">
-              <i class="feather icon-calendar"></i>
-            </span>
+            <small class="text-danger" *ngIf="hasError('folioInterno','required')">
+              Este campo es <strong>requerido</strong>.
+            </small>
+            <small class="text-danger" *ngIf="hasError('folioInterno','maxlength')">
+              Máximo 50 caracteres.
+            </small>
           </div>
-          <small class="text-danger" *ngIf="hasError('fechaIngreso','required')">
-            Este campo es <strong>requerido</strong>.
-          </small>
+
+          <!-- 2) Fecha -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <label class="form-label">Fecha Ingreso de Solicitud</label>
+            <div class="input-group">
+              <input type="date" class="form-control" formControlName="fechaIngreso" />
+              <span class="input-group-text">
+                <i class="feather icon-calendar"></i>
+              </span>
+            </div>
+            <small class="text-danger" *ngIf="hasError('fechaIngreso','required')">
+              Este campo es <strong>requerido</strong>.
+            </small>
+          </div>
+
+          <!-- 3) Origen de recurso (SELECT) -->
+          <div class="col-12 col-md-12 col-lg-4">
+            <label class="form-label">Origen de Recurso</label>
+
+            <select class="form-select" formControlName="origenRecurso">
+              <option [ngValue]="null" disabled>Selecciona la respuesta</option>
+              <option *ngFor="let opt of origenOptions" [ngValue]="opt.value">
+                {{ opt.label }}
+              </option>
+            </select>
+
+            <small class="text-danger" *ngIf="hasError('origenRecurso','required')">
+              Selecciona una opción.
+            </small>
+          </div>
+
+          <!-- 4) Dependencia -->
+          <div class="col-12 col-md-6 col-lg-6">
+            <label class="form-label">Dependencia</label>
+            <select class="form-select" formControlName="dependencia">
+              <option [ngValue]="null" disabled>Selecciona la respuesta</option>
+              <option *ngFor="let dep of dependenciaOptions" [ngValue]="dep">
+                {{ dep }}
+              </option>
+            </select>
+            <small class="text-danger" *ngIf="hasError('dependencia','required')">
+              Selecciona una opción.
+            </small>
+          </div>
+
         </div>
 
-        <!-- 3) Origen de recurso -->
-        <div class="col-12 col-md-12 col-lg-4">
-          <label class="form-label d-block">Origen de Recurso</label>
+        <!-- PANEL OPDS -->
+        <div class="row g-3 mt-3" *ngIf="form.get('dependencia')?.value === 'Organismos OPDS'">
+          <div class="col-12">
+            <div class="opds-panel">
+              <div class="opds-title">Organismos OPDS</div>
 
-          <div class="d-flex flex-column gap-2">
-            <div class="form-check" *ngFor="let opt of origenOptions; index as i">
-              <input
-                class="form-check-input"
-                type="radio"
-                [id]="'origen_' + i"
-                formControlName="origenRecurso"
-                [value]="opt.value"
-              />
-              <label class="form-check-label" [for]="'origen_' + i">
-                {{ opt.label }}
-              </label>
+              <div class="row g-3 mt-1">
+                <div class="col-12 col-lg-6">
+                  <label class="form-label">Organismos Descentralizados</label>
+                  <select class="form-select" formControlName="opdsDescentralizado">
+                    <option [ngValue]="null" disabled>Selecciona la respuesta</option>
+                    <option *ngFor="let o of opdsDescentralizadosOptions" [ngValue]="o">{{ o }}</option>
+                  </select>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                  <label class="form-label">Órganos Desconcentrados</label>
+                  <select class="form-select" formControlName="organoDesconcentrado">
+                    <option [ngValue]="null" disabled>Selecciona la respuesta</option>
+                    <option *ngFor="let o of organosDesconcentradosOptions" [ngValue]="o">{{ o }}</option>
+                  </select>
+                </div>
+              </div>
+
             </div>
           </div>
+        </div>
 
-          <small class="text-danger" *ngIf="hasError('origenRecurso','required')">
-            Selecciona una opción.
-          </small>
+        <!-- PANEL CENTRO DE COSTO -->
+        <div class="row g-3 mt-3"
+             *ngIf="form.get('dependencia')?.value && form.get('dependencia')?.value !== 'Organismos OPDS'">
+          <div class="col-12">
+            <div class="cc-panel">
+              <div class="cc-title">Centro de Costo de la Unidad Administrativa</div>
+              <div class="cc-subtitle">{{ form.get('dependencia')?.value }}</div>
+
+              <div class="mt-2">
+                <label class="form-label">{{ form.get('dependencia')?.value }} (Centros de Costo)</label>
+
+                <select class="form-select" formControlName="centroCosto">
+                  <option [ngValue]="null" disabled>Selecciona la respuesta</option>
+                  <option *ngFor="let c of centroCostoOptions" [ngValue]="c">
+                    {{ c }}
+                  </option>
+                </select>
+
+                <small class="text-danger" *ngIf="hasError('centroCosto','required')">
+                  Selecciona una opción.
+                </small>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTONES PASO 1 -->
+        <div class="mt-4 d-flex gap-2">
+          <button type="button" class="btn btn-primary" (click)="nextStep()">Siguiente</button>
+          <button type="button" class="btn btn-outline-secondary" (click)="form.reset()">Limpiar</button>
         </div>
 
       </div>
+      <!-- ================== FIN PASO 1 ================== -->
 
-      <!-- Botones -->
-      <div class="mt-4 d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <button type="button" class="btn btn-outline-secondary" (click)="form.reset()">Limpiar</button>
+    <!-- ================== PASO 2 (CAPÍTULO) ================== -->
+<div *ngIf="currentStep === 2">
+
+  <div class="cap-panel mt-3">
+    <div class="cap-title">Sistema de Seguimiento</div>
+    <div class="cap-subtitle">Estudio de Mercado</div>
+
+    <div class="row g-3 mt-2">
+      <div class="col-12 col-lg-6">
+        <label class="form-label">Capítulo:</label>
+
+        <select class="form-select" formControlName="capitulo">
+          <option [ngValue]="null" disabled>Selecciona la respuesta</option>
+          <option *ngFor="let c of capituloOptions" [ngValue]="c.value">
+            {{ c.label }}
+          </option>
+        </select>
+
+        <small class="text-danger" *ngIf="hasError('capitulo','required')">
+          Selecciona una opción.
+        </small>
       </div>
+    </div>
+  </div>
+
+  <!-- BOTONES PASO 2 -->
+  <div class="mt-4 d-flex gap-2">
+    <button type="button" class="btn btn-outline-secondary" (click)="prevStep()">Atrás</button>
+    <button type="button" class="btn btn-primary" (click)="nextStep()">Siguiente</button>
+  </div>
+
+  <!-- PROGRESO -->
+  <div class="mt-3 d-flex justify-content-between align-items-center">
+    <small class="text-muted">Página {{ currentStep }} de {{ totalPages }}</small>
+    <small class="text-muted">{{ progressPercent }}%</small>
+  </div>
+
+  <div class="progress step-progress">
+    <div class="progress-bar" role="progressbar" [style.width.%]="progressPercent"></div>
+  </div>
+
+</div>
+<div class="row g-3 mt-2">
+
+  <!-- Capítulo -->
+  <div class="col-12 col-lg-6">
+    <label class="form-label">Capítulo:</label>
+    <select class="form-select" formControlName="capitulo">
+      <option [ngValue]="null" disabled>Selecciona la respuesta</option>
+      <option *ngFor="let c of capituloOptions" [ngValue]="c.value">
+        {{ c.label }}
+      </option>
+    </select>
+    <small class="text-danger" *ngIf="hasError('capitulo','required')">
+      Selecciona una opción.
+    </small>
+  </div>
+
+  <!-- (opcional) espacio para que se vea como Forms -->
+  <div class="col-12 col-lg-6"></div>
+
+  <!-- Giro -->
+  <div class="col-12 col-lg-6">
+    <label class="form-label">Giro</label>
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Escriba su respuesta"
+      formControlName="giro"
+    />
+    <small class="text-danger" *ngIf="hasError('giro','required')">
+      Este campo es <strong>requerido</strong>.
+    </small>
+    <small class="text-danger" *ngIf="hasError('giro','maxlength')">
+      Máximo 150 caracteres.
+    </small>
+  </div>
+
+  <!-- SubGiro -->
+  <div class="col-12 col-lg-6">
+    <label class="form-label">SubGiro</label>
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Escriba su respuesta"
+      formControlName="subGiro"
+    />
+    <small class="text-danger" *ngIf="hasError('subGiro','required')">
+      Este campo es <strong>requerido</strong>.
+    </small>
+    <small class="text-danger" *ngIf="hasError('subGiro','maxlength')">
+      Máximo 150 caracteres.
+    </small>
+  </div>
+
+</div>
+
+<!-- ================== FIN PASO 2 ================== -->
 
     </form>
+
   </div>
 </div>

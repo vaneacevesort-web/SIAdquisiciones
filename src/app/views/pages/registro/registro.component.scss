@@ -6,7 +6,7 @@
   color: #fa0000;
 }
 
-/* Fondo tipo login (no "cover" gigante) */
+/* Fondo tipo login */
 .auth-background{
   min-height: 100vh;
   display: flex;
@@ -20,29 +20,24 @@
   background: #f7f2f4; /* base clara con toque vino */
 }
 
-/* Marca de agua centrada y MÁS PEQUEÑA */
+/* ✅ Marca de agua (OFICIALIA MAYOR) */
 .auth-background::before{
   content: '';
   position: absolute;
   inset: 0;
 
-  /* usa SVG si lo tienes, se ve mejor que PNG */
   background-image: url('/images/oficialia_mayor.svg');
-  /* si NO tienes svg, usa png:
-  background-image: url('/images/oficialia_mayor.png');
-  */
-
   background-repeat: no-repeat;
-  background-position: center center;
 
-  /* esto hace el fondo “más pequeño” (NO cover) */
-  background-size: clamp(650px, 75vw, 1100px) auto;
+  /* aquí está la clave para que “se vea abajo” */
+  background-position: center;
+  background-size: clamp(900px, 90vw, 1500px) auto;
 
-  opacity: 0.10; /* súbelo a 0.12 si lo quieres más visible */
+  opacity: 0.10;
   pointer-events: none;
 }
 
-/* Tinte vino suave como login */
+/* ✅ Tinte vino suave */
 .auth-background::after{
   content: '';
   position: absolute;
@@ -62,26 +57,22 @@
   z-index: 1;
 }
 
-/* Tarjeta blanca GRANDE */
+/* ✅ Card responsive */
 .card{
-  width: 100% !important;
-  max-width: 1600px !important;  /* <-- aquí crece el recuadro */
+  width: 100%;
+  max-width: 720px;  /* ideal en pantalla grande */
   margin: 0 auto;
   border-radius: 18px;
-
 }
 
-/* Más espacio dentro (para que los campos no se vean apretados) */
+/* Espacio interno */
 .auth-form-wrapper{
-  padding: 36px 48px !important;
+  padding: 32px 40px !important;
 }
 
-/* Responsive */
-@media (max-width: 768px){
-  .card{
-    max-width: 560px !important;
-  }
+/* Móvil */
+@media (max-width: 576px){
   .auth-form-wrapper{
-    padding: 24px !important;
+    padding: 22px 18px !important;
   }
 }
