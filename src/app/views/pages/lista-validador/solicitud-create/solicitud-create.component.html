@@ -1,204 +1,199 @@
 <div class="card">
   <div class="card-body">
 
-    <h5 class="mb-4">Solicitud</h5>
+    <!-- ✅ TITULO GENERAL -->
+    <div class="page-header mb-4">
+  <h5 class="mb-1">Nueva Solicitud</h5>
+  <div class="page-subtitle-1">Datos Generales del Órgano Usuario</div>
+  <div class="page-subtitle-2">Estudio de Mercado</div>
+</div>
 
-    <form [formGroup]="form" class="forms-sample">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="forms-sample">
 
-      <!-- ================== PASO 1 ================== -->
-      <ng-container *ngIf="currentStep === 1">
+      <!-- ================== DATOS GENERALES ================== -->
+      <div class="row g-3">
 
-        <div class="row g-3">
-
-          <!-- 1) Folio -->
-          <div class="col-12 col-md-6 col-lg-4">
-            <label class="form-label">Folio de Solicitud (Interno)</label>
-            <input
-              type="text"
-              class="form-control"
-              placeholder="Escriba su respuesta"
-              formControlName="folioInterno"
-            />
-            <small class="text-danger" *ngIf="hasError('folioInterno','required')">
-              Este campo es <strong>requerido</strong>.
-            </small>
-            <small class="text-danger" *ngIf="hasError('folioInterno','maxlength')">
-              Máximo 50 caracteres.
-            </small>
-          </div>
-
-          <!-- 2) Fecha -->
-          <div class="col-12 col-md-6 col-lg-4">
-            <label class="form-label">Fecha Ingreso de Solicitud</label>
-            <div class="input-group">
-              <input type="date" class="form-control" formControlName="fechaIngreso" />
-              <span class="input-group-text">
-                <i class="feather icon-calendar"></i>
-              </span>
-            </div>
-            <small class="text-danger" *ngIf="hasError('fechaIngreso','required')">
-              Este campo es <strong>requerido</strong>.
-            </small>
-          </div>
-
-          <!-- 3) Origen de recurso (SELECT) -->
-          <div class="col-12 col-md-12 col-lg-4">
-            <label class="form-label">Origen de Recurso</label>
-            <select class="form-select" formControlName="origenRecurso">
-              <option [ngValue]="null" disabled>Selecciona la respuesta</option>
-              <option *ngFor="let opt of origenOptions" [ngValue]="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
-            <small class="text-danger" *ngIf="hasError('origenRecurso','required')">
-              Selecciona una opción.
-            </small>
-          </div>
-
-          <!-- 4) Dependencia -->
-          <div class="col-12 col-md-6 col-lg-6">
-            <label class="form-label">Dependencia</label>
-            <select class="form-select" formControlName="dependencia">
-              <option [ngValue]="null" disabled>Selecciona la respuesta</option>
-              <option *ngFor="let dep of dependenciaOptions" [ngValue]="dep">
-                {{ dep }}
-              </option>
-            </select>
-            <small class="text-danger" *ngIf="hasError('dependencia','required')">
-              Selecciona una opción.
-            </small>
-          </div>
-
+        <!-- Folio -->
+        <div class="col-12 col-md-6 col-lg-4">
+          <label class="form-label">Folio de Solicitud (Interno)</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Escriba su respuesta"
+            formControlName="folioInterno"
+          />
+          <small class="text-danger" *ngIf="hasError('folioInterno','required')">
+            Este campo es <strong>requerido</strong>.
+          </small>
+          <small class="text-danger" *ngIf="hasError('folioInterno','maxlength')">
+            Máximo 50 caracteres.
+          </small>
         </div>
 
-        <!-- PANEL OPDS -->
-        <div class="row g-3 mt-3" *ngIf="form.get('dependencia')?.value === 'Organismos OPDS'">
-          <div class="col-12">
-            <div class="opds-panel">
-              <div class="opds-title">Organismos OPDS</div>
+        <!-- Fecha -->
+        <div class="col-12 col-md-6 col-lg-4">
+          <label class="form-label">Fecha Ingreso de Solicitud</label>
+          <div class="input-group">
+            <input type="date" class="form-control" formControlName="fechaIngreso" />
+            <span class="input-group-text">
+              <i class="feather icon-calendar"></i>
+            </span>
+          </div>
+          <small class="text-danger" *ngIf="hasError('fechaIngreso','required')">
+            Este campo es <strong>requerido</strong>.
+          </small>
+        </div>
 
-              <div class="row g-3 mt-1">
-                <div class="col-12 col-lg-6">
-                  <label class="form-label">Organismos Descentralizados</label>
-                  <select class="form-select" formControlName="opdsDescentralizado">
-                    <option [ngValue]="null" disabled>Selecciona la respuesta</option>
-                    <option *ngFor="let o of opdsDescentralizadosOptions" [ngValue]="o">{{ o }}</option>
-                  </select>
-                </div>
+        <!-- Origen -->
+        <div class="col-12 col-md-12 col-lg-4">
+          <label class="form-label">Origen de Recurso</label>
+          <select class="form-select" formControlName="origenRecurso">
+            <option value="" disabled>Selecciona la respuesta</option>
+            <option *ngFor="let opt of origenOptions" [value]="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+          <small class="text-danger" *ngIf="hasError('origenRecurso','required')">
+            Selecciona una opción.
+          </small>
+        </div>
 
-                <div class="col-12 col-lg-6">
-                  <label class="form-label">Órganos Desconcentrados</label>
-                  <select class="form-select" formControlName="organoDesconcentrado">
-                    <option [ngValue]="null" disabled>Selecciona la respuesta</option>
-                    <option *ngFor="let o of organosDesconcentradosOptions" [ngValue]="o">{{ o }}</option>
-                  </select>
-                </div>
+        <!-- Dependencia -->
+        <div class="col-12 col-md-6 col-lg-6">
+          <label class="form-label">Dependencia</label>
+          <select class="form-select" formControlName="dependencia">
+            <option value="" disabled>Selecciona la respuesta</option>
+            <option *ngFor="let dep of dependenciaOptions" [value]="dep">
+              {{ dep }}
+            </option>
+          </select>
+          <small class="text-danger" *ngIf="hasError('dependencia','required')">
+            Selecciona una opción.
+          </small>
+        </div>
+
+      </div>
+
+      <!-- ================== OPDS ================== -->
+      <div class="row g-3 mt-3" *ngIf="form.get('dependencia')?.value === 'Organismos OPDS'">
+        <div class="col-12">
+          <div class="opds-panel">
+            <div class="opds-title">Organismos OPDS</div>
+
+            <div class="row g-3 mt-1">
+              <div class="col-12 col-lg-6">
+                <label class="form-label">Organismos Descentralizados</label>
+                <select class="form-select" formControlName="opdsDescentralizado">
+                  <option value="" disabled>Selecciona la respuesta</option>
+                  <option *ngFor="let o of opdsDescentralizadosOptions" [value]="o">{{ o }}</option>
+                </select>
               </div>
 
+              <div class="col-12 col-lg-6">
+                <label class="form-label">Órganos Desconcentrados</label>
+                <select class="form-select" formControlName="organoDesconcentrado">
+                  <option value="" disabled>Selecciona la respuesta</option>
+                  <option *ngFor="let o of organosDesconcentradosOptions" [value]="o">{{ o }}</option>
+                </select>
+              </div>
             </div>
+
+            <small class="text-danger mt-2 d-block" *ngIf="showOpdsRequiredError()">
+              Selecciona un organismo descentralizado <strong>o</strong> un órgano desconcentrado.
+            </small>
+
           </div>
         </div>
+      </div>
 
-        <!-- PANEL CENTRO DE COSTO -->
-        <div class="row g-3 mt-3"
-             *ngIf="form.get('dependencia')?.value && form.get('dependencia')?.value !== 'Organismos OPDS'">
-          <div class="col-12">
-            <div class="cc-panel">
-              <div class="cc-title">Centro de Costo de la Unidad Administrativa</div>
-              <div class="cc-subtitle">{{ form.get('dependencia')?.value }}</div>
+      <!-- ================== CENTRO DE COSTO (SECRETARÍAS) ================== -->
+      <div class="row g-3 mt-3"
+           *ngIf="form.get('dependencia')?.value && form.get('dependencia')?.value !== 'Organismos OPDS'">
+        <div class="col-12">
+          <div class="cc-panel">
+            <div class="cc-title">Centro de Costo de la Unidad Administrativa</div>
+            <div class="cc-subtitle">{{ form.get('dependencia')?.value }}</div>
 
-              <div class="mt-2">
-                <label class="form-label">{{ form.get('dependencia')?.value }} (Centros de Costo)</label>
+            <div class="mt-2">
+              <label class="form-label">{{ form.get('dependencia')?.value }} (Centros de Costo)</label>
+              <select class="form-select" formControlName="centroCosto">
+                <option value="" disabled>Selecciona la respuesta</option>
+                <option *ngFor="let c of centroCostoOptions" [value]="c">{{ c }}</option>
+              </select>
 
-                <select class="form-select" formControlName="centroCosto">
-                  <option [ngValue]="null" disabled>Selecciona la respuesta</option>
-                  <option *ngFor="let c of centroCostoOptions" [ngValue]="c">
-                    {{ c }}
+              <small class="text-danger" *ngIf="hasError('centroCosto','required')">
+                Selecciona una opción.
+              </small>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ TITULO DE SECCIÓN (FUERA DEL PANEL) -->
+      <div class="row mt-4">
+        <div class="col-12">
+        </div>
+      </div>
+
+      <!-- ================== ESTUDIO DE MERCADO ================== -->
+      <div class="row g-3 mt-2">
+        <div class="col-12">
+          <div class="cc-panel">
+
+
+            <div class="row g-3">
+
+              <!-- Capítulo -->
+              <div class="col-12">
+                <label class="form-label">Capítulo:</label>
+                <select class="form-select" formControlName="capitulo">
+                  <option value="" disabled>Selecciona la respuesta</option>
+                  <option *ngFor="let c of capituloOptions" [value]="c.value">
+                    {{ c.label }}
                   </option>
                 </select>
+                <small class="text-danger" *ngIf="hasError('capitulo','required')">
+                  Selecciona una opción.
+                </small>
+              </div>
 
-                <small class="text-danger" *ngIf="hasError('centroCosto','required')">
+              <!-- Giro -->
+              <div class="col-12 col-lg-6">
+                <label class="form-label">Giro</label>
+                <select class="form-select" formControlName="giro">
+                  <option value="" disabled>Selecciona la respuesta</option>
+                  <option *ngFor="let g of giroOptions" [value]="g">{{ g }}</option>
+                </select>
+                <small class="text-danger" *ngIf="hasError('giro','required')">
+                  Selecciona una opción.
+                </small>
+              </div>
+
+              <!-- SubGiro -->
+              <div class="col-12 col-lg-6">
+                <label class="form-label">SubGiro</label>
+                <select class="form-select" formControlName="subGiro">
+                  <option value="" disabled>Selecciona la respuesta</option>
+                  <option *ngFor="let s of subGiroOptions" [value]="s">{{ s }}</option>
+                </select>
+                <small class="text-danger" *ngIf="hasError('subGiro','required')">
                   Selecciona una opción.
                 </small>
               </div>
 
             </div>
-          </div>
-        </div>
-
-        <!-- BOTONES PASO 1 -->
-        <div class="mt-4 d-flex gap-2">
-          <button type="button" class="btn btn-primary" (click)="nextStep()">Siguiente</button>
-          <button type="button" class="btn btn-outline-secondary" (click)="form.reset()">Limpiar</button>
-        </div>
-
-      </ng-container>
-      <!-- ================== FIN PASO 1 ================== -->
-
-
-      <!-- ================== PASO 2 ================== -->
-      <ng-container *ngIf="currentStep === 2">
-
-        <div class="cc-panel mt-3">
-          <div class="cc-title">Sistema de Seguimiento</div>
-          <div class="cc-subtitle">Estudio de Mercado</div>
-
-          <div class="row g-3 mt-2">
-
-            <!-- Capítulo -->
-            <div class="col-12">
-              <label class="form-label">Capítulo</label>
-              <select class="form-select" formControlName="capitulo">
-                <option [ngValue]="null" disabled>Selecciona la respuesta</option>
-                <option *ngFor="let c of capituloOptions" [ngValue]="c.value">
-                  {{ c.label }}
-                </option>
-              </select>
-              <small class="text-danger" *ngIf="hasError('capitulo','required')">
-                Selecciona una opción.
-              </small>
-            </div>
-
-            <!-- Giro -->
-            <div class="col-12 col-lg-6">
-              <label class="form-label">Giro</label>
-              <select class="form-select" formControlName="giro">
-                <option [ngValue]="null" disabled>Selecciona la respuesta</option>
-                <option *ngFor="let g of giroOptions" [ngValue]="g">
-                  {{ g }}
-                </option>
-              </select>
-              <small class="text-danger" *ngIf="hasError('giro','required')">
-                Selecciona una opción.
-              </small>
-            </div>
-
-            <!-- Subgiro -->
-            <div class="col-12 col-lg-6">
-              <label class="form-label">Subgiro</label>
-              <select class="form-select" formControlName="subGiro">
-                <option [ngValue]="null" disabled>Selecciona la respuesta</option>
-                <option *ngFor="let sg of subGiroOptions" [ngValue]="sg">
-                  {{ sg }}
-                </option>
-              </select>
-              <small class="text-danger" *ngIf="hasError('subGiro','required')">
-                Selecciona una opción.
-              </small>
-            </div>
 
           </div>
         </div>
+      </div>
 
-        <!-- BOTONES PASO 2 -->
-        <div class="mt-4 d-flex gap-2">
-          <button type="button" class="btn btn-outline-secondary" (click)="prevStep()">Atrás</button>
-          <button type="button" class="btn btn-primary" (click)="nextStep()">Siguiente</button>
-        </div>
-
-      </ng-container>
-      <!-- ================== FIN PASO 2 ================== -->
+      <!-- ================== BOTONES ================== -->
+      <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="onClear()">Limpiar</button>
+      </div>
 
     </form>
-
   </div>
+</div>

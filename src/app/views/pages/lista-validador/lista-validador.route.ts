@@ -1,13 +1,13 @@
 import { Routes } from "@angular/router";
 
 export default [
-    { path: '', redirectTo: 'tramite', pathMatch: 'full' },
+    { path: '', redirectTo: 'estudiodemercado', pathMatch: 'full' },
     {
-        path: 'tramite',
+        path: 'estudiodemercado',
         loadComponent: () => import('./lista-validador.component').then(c => c.ListaValidadorComponent)
       },
       {
-        path: 'finalizados',
+        path: 'afectacionpresupuestal',
         loadComponent: () => import('./lista-validador.component').then(c => c.ListaValidadorComponent)
       },
       {

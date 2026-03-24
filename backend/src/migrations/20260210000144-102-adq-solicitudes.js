@@ -27,50 +27,10 @@ module.exports = {
         allowNull: false
       },
 
-      // Dependencia y centro de costo
-      id_dependencia: {
-        type: Sequelize.INTEGER.UNSIGNED,
-        allowNull: false
-      },
-      id_centro_costo: {
-        type: Sequelize.INTEGER.UNSIGNED,
-        allowNull: false
-      },
-
-      // Clasificador presupuestal
-      id_capitulo: {
-        type: Sequelize.INTEGER.UNSIGNED,
-        allowNull: false
-      },
-      id_partida: {
-        type: Sequelize.INTEGER.UNSIGNED,
-        allowNull: false
-      },
-
-      // Giro/Subgiro
-      id_giro: {
-        type: Sequelize.INTEGER.UNSIGNED,
-        allowNull: false
-      },
-      id_subgiro: {
-        type: Sequelize.INTEGER.UNSIGNED,
-        allowNull: false
-      },
-
       // Tipo de solicitud
       tipo_solicitud: {
         type: Sequelize.ENUM('BIEN', 'SERVICIO'),
         allowNull: false
-      },
-
-      // Auditoría básica (tu users.id es CHAR(36) / UUID)
-      created_by: {
-        type: Sequelize.CHAR(36),
-        allowNull: false
-      },
-      updated_by: {
-        type: Sequelize.CHAR(36),
-        allowNull: true
       },
 
       created_at: {

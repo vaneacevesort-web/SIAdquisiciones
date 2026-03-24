@@ -13,12 +13,12 @@ export const MENU: MenuItem[] = [
             isTitle: true,
           },
           {
-            label: 'En tramite',
-            link: '/solicitud/tramite'
+            label: 'Estudio de mercado',
+            link: '/solicitud/estudiodemercado'
           },
           {
-            label: 'Finalizadas',
-            link: '/solicitud/finalizados'
+            label: 'Afectación presupuestal',
+            link: '/solicitud/afectacionpresupuestal'
           },
           {
             label: 'Rechazadas',

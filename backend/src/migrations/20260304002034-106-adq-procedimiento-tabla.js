@@ -88,23 +88,23 @@ module.exports = {
     });
 
     // FK users
-    await queryInterface.addConstraint('adq_procedimiento_adquisitivo', {
+    /*await queryInterface.addConstraint('adq_procedimiento_adquisitivo', {
       fields: ['created_by'],
       type: 'foreign key',
       name: 'fk_adq_proc_created_by',
       references: { table: 'users', field: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT'
-    });
+    });*/
 
-    await queryInterface.addConstraint('adq_procedimiento_adquisitivo', {
+    /*await queryInterface.addConstraint('adq_procedimiento_adquisitivo', {
       fields: ['updated_by'],
       type: 'foreign key',
       name: 'fk_adq_proc_updated_by',
       references: { table: 'users', field: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'SET NULL'
-    });
+    });*/
 
     // Índices útiles
     await queryInterface.addIndex('adq_procedimiento_adquisitivo', ['fecha_fallo'], { name: 'idx_adq_proc_fallo' });

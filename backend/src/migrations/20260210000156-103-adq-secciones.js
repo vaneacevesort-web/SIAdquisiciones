@@ -12,6 +12,38 @@ module.exports = {
       // 1 a 1 con solicitud
       id_solicitud: { type: Sequelize.BIGINT.UNSIGNED, allowNull: false, unique: true },
 
+      // Dependencia y centro de costo
+      id_dependencia: {
+        type: Sequelize.INTEGER.UNSIGNED,
+        allowNull: false
+      },
+      
+      id_centro_costo: {
+        type: Sequelize.INTEGER.UNSIGNED,
+        allowNull: false
+      },
+
+      // Clasificador presupuestal
+      id_capitulo: {
+        type: Sequelize.INTEGER.UNSIGNED,
+        allowNull: false
+      },
+      id_partida: {
+        type: Sequelize.INTEGER.UNSIGNED,
+        allowNull: false
+      },
+
+      // Giro/Subgiro
+      id_giro: {
+        type: Sequelize.INTEGER.UNSIGNED,
+        allowNull: false
+      },
+
+      id_subgiro: {
+        type: Sequelize.INTEGER.UNSIGNED,
+        allowNull: false
+      },
+
       valor_estudio_mercado: { type: Sequelize.DECIMAL(18, 2), allowNull: true },
 
       estatus_estudio: {

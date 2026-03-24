@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
-const bcrypt_1 = __importDefault(require("bcrypt"));
 const solicitud_1 = __importDefault(require("../models/solicitud"));
 const user_1 = __importDefault(require("../models/user"));
 const role_users_1 = __importDefault(require("../models/role_users"));
@@ -21,11 +20,10 @@ const nodemailer = require('nodemailer');
 const dotenv_1 = __importDefault(require("dotenv"));
 const validadorsolicitud_1 = __importDefault(require("../models/validadorsolicitud"));
 dotenv_1.default.config();
-const mailer_1 = require("../utils/mailer");
 const PDFDocument = require('pdfkit');
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const AdqSolicitudes_1 = __importDefault(require("../models/AdqSolicitudes"));
 const getRegistros = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const listSolicitudes = yield solicitud_1.default.findAll();
+    const listSolicitudes = yield AdqSolicitudes_1.default.findAll();
     return res.json({
         msg: `List de exitosamente`,
         data: listSolicitudes
@@ -63,86 +61,26 @@ const deleteRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.deleteRegistro = deleteRegistro;
 const saveRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { body } = req;
-    function generateRandomPassword(length = 10) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$!';
-        let password = '';
-        for (let i = 0; i < length; i++) {
-            password += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return password;
-    }
-    const solicitud = yield user_1.default.findOne({
-        where: { email: body.correo }
-    });
-    if (solicitud) {
-        return res.status(400).json({
-            estatus: 400,
-            mensaje: 'Ya existe un registro con el mismo correo o cédula profesional',
-            correo: (solicitud === null || solicitud === void 0 ? void 0 : solicitud.email) || null,
-        });
-    }
+    console.log(body);
     try {
-        const Upassword = generateRandomPassword(12);
-        const UpasswordHash = yield bcrypt_1.default.hash(Upassword, 10);
-        const newUser = yield user_1.default.create({
-            name: body.curp,
-            email: body.correo,
-            password: UpasswordHash,
-            rol_users: {
-                role_id: 3,
-            },
-        }, {
-            include: [{ model: role_users_1.default, as: 'rol_users' }],
+        const solicitud = yield AdqSolicitudes_1.default.create({
+            folio: body.folioInterno,
+            fecha_ingreso: body.fechaIngreso,
+            id_origen_recurso: 1, // este debe venir numérico
+            tipo_solicitud: 'BIEN'
         });
-        const token = jsonwebtoken_1.default.sign({
-            email: body.correo,
-            userId: newUser.id,
-        }, process.env.JWT_SECRET || 'sUP3r_s3creT_ClavE-4321!', { expiresIn: '2d' });
-        const enlace = `https://dev5.siasaf.gob.mx/auth/cambiar-contrasena?token=${token}`;
-        //  https://dev5.siasaf.gob.mx             
-        body.userId = newUser.id;
-        body.estatusId = 1;
-        yield solicitud_1.default.create(body);
-        (() => __awaiter(void 0, void 0, void 0, function* () {
-            try {
-                const meses = [
-                    "enero", "febrero", "marzo", "abril", "mayo", "junio",
-                    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-                ];
-                const hoy = new Date();
-                const fechaFormateada = `Toluca de Lerdo, México; a ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}.`;
-                const contenido = `
-           <div class="container">
-            <p  class="pderecha" >${fechaFormateada}</p>
-            <p>C. ${body.nombres} ${body.ap_paterno} ${body.ap_materno},</p>
-            <p>Por este medio le informamos que su cuenta de usuario ha sido generada exitosamente para el proceso de registro. A continuación, se proporcionan sus credenciales de acceso:</p>
-            <div class="credentials">
-              <strong>Usuario:</strong> ${body.correo} <br>
-            <strong>Contraseña:</strong> <a href="${enlace}">Establecer mi contraseña</a>
-            </div>
-            <p>Podrá iniciar su proceso de registro a través del siguiente enlace durante el periodo comprendido del <strong>27 junio al 03 de julio de 2025</strong>:</p>
-            <a href="https://dev5.siasaf.gob.mx/auth/login" class="button" target="_blank">Iniciar registro</a>
-            <p class="footer">
-              Si tiene problemas para hacer clic en el botón, copie y pegue esta URL en su navegador:<br>
-               ${enlace}
-            </p>
-            <p>Atentamente,<br><strong>Poder Legislativo del Estado de México</strong></p>
-          </div>
-        `;
-                let htmlContent = generarHtmlCorreo(contenido);
-                yield (0, mailer_1.sendEmail)(body.correo, 'Tus credenciales de acceso', htmlContent);
-                console.log('Correo enviado correctamente');
-            }
-            catch (err) {
-                console.error('Error al enviar correo:', err);
-            }
-        }))();
-        return res.json({ msg: `Agregado con éxito y correo enviado`, correo: body.correo });
+        res.json({
+            msg: `Agregado con exito`,
+            data: solicitud
+        });
     }
     catch (error) {
-        console.error(error);
-        return res.status(500).json({ msg: `Ocurrió un error al registrar` });
+        console.log(error);
+        res.json({
+            msg: `Ocurrio un error al cargar `,
+        });
     }
+    ;
 });
 exports.saveRegistro = saveRegistro;
 const putRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

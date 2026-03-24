@@ -10,10 +10,11 @@ dotenv.config();
 import { sendEmail } from '../utils/mailer';
 const PDFDocument = require('pdfkit');
 import jwt from 'jsonwebtoken';
+import AdqSolicitudes from '../models/AdqSolicitudes'
 
 
 export const getRegistros = async (req: Request, res: Response): Promise<any> => {
-    const listSolicitudes = await Solicitudes.findAll()
+    const listSolicitudes = await AdqSolicitudes.findAll()
     return res.json({
         msg: `List de exitosamente`,
         data: listSolicitudes
@@ -52,106 +53,28 @@ export const deleteRegistro = async (req: Request, res: Response): Promise<any> 
 
 export const saveRegistro = async (req: Request, res: Response): Promise<any> => {
   const { body } = req;
-
-  function generateRandomPassword(length: number = 10): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$!';
-    let password = '';
-    for (let i = 0; i < length; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
-  }
-
-  const solicitud = await User.findOne({
-    where: { email: body.correo }  
-  });
-
-
-  if (solicitud) {
-  return res.status(400).json({
-    estatus: 400,
-    mensaje: 'Ya existe un registro con el mismo correo o cédula profesional',
-    correo: solicitud?.email || null,
-  });
-}
-
-  try {
-    const Upassword = generateRandomPassword(12);
-    const UpasswordHash = await bcrypt.hash(Upassword, 10);
-    const newUser = await User.create({
-      name: body.curp,
-      email: body.correo,
-      password: UpasswordHash,
-      rol_users: {
-        role_id: 3,  
-      },
-    }, {
-      include: [{ model: RolUsers, as: 'rol_users' }],
+ console.log(body)
+ try {    
+    const solicitud = await AdqSolicitudes.create({
+      folio: body.folioInterno,
+      fecha_ingreso: body.fechaIngreso,
+      id_origen_recurso: 1, // este debe venir numérico
+      tipo_solicitud: 'BIEN'
     });
-
-    const token = jwt.sign(
-      {
-        email: body.correo,
-        userId: newUser.id,
-      },
-      process.env.JWT_SECRET || 'sUP3r_s3creT_ClavE-4321!', 
-      { expiresIn: '2d' } 
-    );
-    const enlace = `https://dev5.siasaf.gob.mx/auth/cambiar-contrasena?token=${token}`;
-      //  https://dev5.siasaf.gob.mx             
-    body.userId = newUser.id;
-    body.estatusId = 1;
-    await Solicitudes.create(body);
+      res.json({
+          msg: `Agregado con exito`,
+          data: solicitud
+      });
+  }catch (error){
+      console.log(error);
+      res.json({
+          msg: `Ocurrio un error al cargar `,
+      }); 
     
-    (async () => {
-      try {
-         const meses = [
-            "enero", "febrero", "marzo", "abril", "mayo", "junio",
-            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-            ];
-         const hoy = new Date();
-         const fechaFormateada = `Toluca de Lerdo, México; a ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}.`;
-        const contenido = `
-           <div class="container">
-            <p  class="pderecha" >${fechaFormateada}</p>
-            <p>C. ${body.nombres} ${body.ap_paterno} ${body.ap_materno},</p>
-            <p>Por este medio le informamos que su cuenta de usuario ha sido generada exitosamente para el proceso de registro. A continuación, se proporcionan sus credenciales de acceso:</p>
-            <div class="credentials">
-              <strong>Usuario:</strong> ${body.correo} <br>
-            <strong>Contraseña:</strong> <a href="${enlace}">Establecer mi contraseña</a>
-            </div>
-            <p>Podrá iniciar su proceso de registro a través del siguiente enlace durante el periodo comprendido del <strong>27 junio al 03 de julio de 2025</strong>:</p>
-            <a href="https://dev5.siasaf.gob.mx/auth/login" class="button" target="_blank">Iniciar registro</a>
-            <p class="footer">
-              Si tiene problemas para hacer clic en el botón, copie y pegue esta URL en su navegador:<br>
-               ${enlace}
-            </p>
-            <p>Atentamente,<br><strong>Poder Legislativo del Estado de México</strong></p>
-          </div>
-        `;
-        let htmlContent = generarHtmlCorreo(contenido);
-        await sendEmail(
-          body.correo,
-          'Tus credenciales de acceso',
-           htmlContent
-        );
 
-        console.log('Correo enviado correctamente');
-      } catch (err) {
-        console.error('Error al enviar correo:', err);
-      }
-    })();
+  };  
 
-    return res.json({ msg: `Agregado con éxito y correo enviado`, correo: body.correo } );
-
-  } catch (error) {
-    
-    console.error(error);
-    return res.status(500).json({ msg: `Ocurrió un error al registrar` });
-
-  }
-
-};
+} 
 
   export const putRegistro = async (req: Request, res: Response): Promise<any> => {
       return res.status(404).json({

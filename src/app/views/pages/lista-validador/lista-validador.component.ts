@@ -8,6 +8,7 @@ import { ColumnMode, DatatableComponent, NgxDatatableModule } from '@siemens/ngx
 import { RouterModule } from '@angular/router';
 import * as XLSX from 'xlsx';
 import * as FileSaver from 'file-saver';
+import { RegistroService } from '../../../service/registro.service';
 
 @Component({
   selector: 'app-lista-validador',
@@ -28,6 +29,8 @@ export class ListaValidadorComponent {
   tipoEstatus: number = 0;
   public _userService = inject(UserService);
   public _validadorService = inject(ValidadorService);
+  public _registroService = inject(RegistroService);
+
   @ViewChild('table') table: DatatableComponent;
 
 
@@ -35,11 +38,11 @@ export class ListaValidadorComponent {
 
   ngOnInit(): void {
     this.rutaActual = this.router.url;
-    if (this.rutaActual.includes('tramite')) {
+    if (this.rutaActual.includes('estudiodemercado')) {
       this.titulo = 'Solicitudes en tramite'
       this.tipoEstatus = 2;
 
-    } else if (this.rutaActual.includes('finalizados')) {
+    } else if (this.rutaActual.includes('afectacionpresupuestal')) {
       this.titulo = 'Solicitudes finalizadas'
       this.tipoEstatus = 3;
 
@@ -60,7 +63,7 @@ export class ListaValidadorComponent {
       payload.id = this.tipoEstatus;
     }
 
-    this._validadorService.getSolicitudes(payload).subscribe({
+    this._registroService.getRegistros().subscribe({
       next: (response: any) => {
         this.originalData = [...response.data];
         this.temp = [...this.originalData];

@@ -37,7 +37,7 @@ module.exports = {
       uploaded_at: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') }
     });
 
-    await queryInterface.addConstraint('adq_adjuntos', {
+    /*await queryInterface.addConstraint('adq_adjuntos', {
       fields: ['id_solicitud'],
       type: 'foreign key',
       name: 'fk_adq_adj_sol',
@@ -53,7 +53,7 @@ module.exports = {
       references: { table: 'users', field: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT'
-    });
+    });*/
 
     await queryInterface.addIndex('adq_adjuntos', ['id_solicitud'], { name: 'idx_adq_adj_sol' });
     await queryInterface.addIndex('adq_adjuntos', ['tipo_adjunto'], { name: 'idx_adq_adj_tipo' });
@@ -81,7 +81,7 @@ module.exports = {
       fecha_evento: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.fn('NOW') }
     });
 
-    await queryInterface.addConstraint('adq_audit_log', {
+    /*await queryInterface.addConstraint('adq_audit_log', {
       fields: ['id_solicitud'],
       type: 'foreign key',
       name: 'fk_adq_audit_sol',
@@ -97,7 +97,7 @@ module.exports = {
       references: { table: 'users', field: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT'
-    });
+    });*/
 
     await queryInterface.addIndex('adq_audit_log', ['id_solicitud', 'fecha_evento'], { name: 'idx_adq_audit_sol_fecha' });
     await queryInterface.addIndex('adq_audit_log', ['id_usuario', 'fecha_evento'], { name: 'idx_adq_audit_user_fecha' });

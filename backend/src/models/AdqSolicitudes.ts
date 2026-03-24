@@ -16,8 +16,6 @@ class AdqSolicitudes extends Model<
   declare fecha_ingreso: string;
   declare id_origen_recurso: number;
   declare tipo_solicitud: 'BIEN' | 'SERVICIO';
-  declare created_by: string;
-  declare updated_by: string | null;
   declare created_at: CreationOptional<Date>;
   declare updated_at: Date | null;
 }
@@ -46,14 +44,6 @@ AdqSolicitudes.init(
     tipo_solicitud: {
       type: DataTypes.ENUM('BIEN', 'SERVICIO'),
       allowNull: false,
-    },
-    created_by: {
-      type: DataTypes.CHAR(36),
-      allowNull: false,
-    },
-    updated_by: {
-      type: DataTypes.CHAR(36),
-      allowNull: true,
     },
     created_at: {
       type: DataTypes.DATE,

@@ -18,12 +18,16 @@ export class RegistroService {
 
   }
 
-  saveRegistro(registro: Registro): Observable<string> {
-    return this.http.post<string>(`${this.myAppUrl}${this.myAPIUrl}/create`,registro)
+  saveRegistro(data: any): Observable<string> {
+    return this.http.post<string>(`${this.myAppUrl}${this.myAPIUrl}/create`,data)
   }
 
   getStatus(user: String): Observable<void> {
     return this.http.get<void>(`${this.myAppUrl}${this.myAPIUrl}/getestatus/${user}`)
+  }
+
+  getRegistros(): Observable<void> {
+    return this.http.get<void>(`${this.myAppUrl}${this.myAPIUrl}/read`)
   }
 
 }
