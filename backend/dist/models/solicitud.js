@@ -5,45 +5,54 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const sequelize_1 = require("sequelize");
 const connection_1 = __importDefault(require("../database/connection"));
-const documentos_1 = __importDefault(require("./documentos"));
-const validadorsolicitud_1 = __importDefault(require("./validadorsolicitud"));
-const user_1 = __importDefault(require("./user"));
-class Solicitudes extends sequelize_1.Model {
+class AdqSolicitudes extends sequelize_1.Model {
 }
-Solicitudes.init({
-    id: {
-        type: sequelize_1.DataTypes.UUID,
-        defaultValue: sequelize_1.DataTypes.UUIDV4,
+AdqSolicitudes.init({
+    id_solicitud: {
+        type: sequelize_1.DataTypes.BIGINT.UNSIGNED,
+        autoIncrement: true,
         primaryKey: true,
         allowNull: false,
     },
-    userId: {
-        type: sequelize_1.DataTypes.UUID,
+    folio: {
+        type: sequelize_1.DataTypes.STRING(30),
+        allowNull: false,
+        unique: true,
+    },
+    fecha_ingreso: {
+        type: sequelize_1.DataTypes.DATEONLY,
         allowNull: false,
     },
-    estatusId: {
-        type: sequelize_1.DataTypes.INTEGER,
+    id_origen_recurso: {
+        type: sequelize_1.DataTypes.TINYINT.UNSIGNED,
         allowNull: false,
     },
-    ap_paterno: sequelize_1.DataTypes.STRING,
-    ap_materno: sequelize_1.DataTypes.STRING,
-    nombres: sequelize_1.DataTypes.STRING,
-    correo: sequelize_1.DataTypes.STRING,
-    celular: sequelize_1.DataTypes.STRING,
-    curp: sequelize_1.DataTypes.STRING,
-    cedula_profesional: sequelize_1.DataTypes.STRING,
-    aviso_privacidad: sequelize_1.DataTypes.BOOLEAN,
-    fecha_envio: sequelize_1.DataTypes.DATE,
-    fecha_validacion: sequelize_1.DataTypes.DATE,
-    deletedAt: sequelize_1.DataTypes.DATE,
+    tipo_solicitud: {
+        type: sequelize_1.DataTypes.ENUM('BIEN', 'SERVICIO'),
+        allowNull: false,
+    },
+    created_by: {
+        type: sequelize_1.DataTypes.CHAR(36),
+        allowNull: false,
+    },
+    updated_by: {
+        type: sequelize_1.DataTypes.CHAR(36),
+        allowNull: true,
+    },
+    created_at: {
+        type: sequelize_1.DataTypes.DATE,
+        allowNull: false,
+        defaultValue: sequelize_1.DataTypes.NOW,
+    },
+    updated_at: {
+        type: sequelize_1.DataTypes.DATE,
+        allowNull: true,
+    },
 }, {
     sequelize: connection_1.default,
-    tableName: 'solicituds',
+    tableName: 'adq_solicitudes',
     timestamps: true,
-    paranoid: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
 });
-// Relaciones
-Solicitudes.hasMany(documentos_1.default, { foreignKey: 'solicitudId', as: 'documentos' });
-Solicitudes.hasOne(validadorsolicitud_1.default, { foreignKey: 'solicitudId', as: 'validasolicitud' });
-Solicitudes.belongsTo(user_1.default, { foreignKey: 'userId', as: 'usuario' });
-exports.default = Solicitudes;
+exports.default = AdqSolicitudes;
