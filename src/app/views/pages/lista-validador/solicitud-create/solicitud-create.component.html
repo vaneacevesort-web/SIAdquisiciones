@@ -1,19 +1,16 @@
 <div class="card">
   <div class="card-body">
 
-    <!-- ✅ TITULO GENERAL -->
     <div class="page-header mb-4">
-  <h5 class="mb-1">Nueva Solicitud</h5>
-  <div class="page-subtitle-1">Datos Generales del Órgano Usuario</div>
-  <div class="page-subtitle-2">Estudio de Mercado</div>
-</div>
+      <h5 class="mb-1">Nueva Solicitud</h5>
+      <div class="page-subtitle-1">Datos Generales del Órgano Usuario</div>
+      <div class="page-subtitle-2">Estudio de Mercado</div>
+    </div>
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="forms-sample">
 
-      <!-- ================== DATOS GENERALES ================== -->
       <div class="row g-3">
 
-        <!-- Folio -->
         <div class="col-12 col-md-6 col-lg-4">
           <label class="form-label">Folio de Solicitud (Interno)</label>
           <input
@@ -30,7 +27,6 @@
           </small>
         </div>
 
-        <!-- Fecha -->
         <div class="col-12 col-md-6 col-lg-4">
           <label class="form-label">Fecha Ingreso de Solicitud</label>
           <div class="input-group">
@@ -44,7 +40,6 @@
           </small>
         </div>
 
-        <!-- Origen -->
         <div class="col-12 col-md-12 col-lg-4">
           <label class="form-label">Origen de Recurso</label>
           <select class="form-select" formControlName="origenRecurso">
@@ -58,13 +53,12 @@
           </small>
         </div>
 
-        <!-- Dependencia -->
         <div class="col-12 col-md-6 col-lg-6">
           <label class="form-label">Dependencia</label>
           <select class="form-select" formControlName="dependencia">
             <option value="" disabled>Selecciona la respuesta</option>
-            <option *ngFor="let dep of dependenciaOptions" [value]="dep">
-              {{ dep }}
+            <option *ngFor="let dep of dependenciaOptions" [value]="dep.id_dependencia">
+              {{ dep.nombre }}
             </option>
           </select>
           <small class="text-danger" *ngIf="hasError('dependencia','required')">
@@ -74,8 +68,7 @@
 
       </div>
 
-      <!-- ================== OPDS ================== -->
-      <div class="row g-3 mt-3" *ngIf="form.get('dependencia')?.value === 'Organismos OPDS'">
+      <div class="row g-3 mt-3" *ngIf="esOrganismosOPDS()">
         <div class="col-12">
           <div class="opds-panel">
             <div class="opds-title">Organismos OPDS</div>
@@ -85,7 +78,9 @@
                 <label class="form-label">Organismos Descentralizados</label>
                 <select class="form-select" formControlName="opdsDescentralizado">
                   <option value="" disabled>Selecciona la respuesta</option>
-                  <option *ngFor="let o of opdsDescentralizadosOptions" [value]="o">{{ o }}</option>
+                  <option *ngFor="let o of opdsDescentralizadosOptions" [value]="o.id_organismo_opds">
+                    {{ o.nombre }} ({{ o.codigo }})
+                  </option>
                 </select>
               </div>
 
@@ -93,8 +88,10 @@
                 <label class="form-label">Órganos Desconcentrados</label>
                 <select class="form-select" formControlName="organoDesconcentrado">
                   <option value="" disabled>Selecciona la respuesta</option>
-                  <option *ngFor="let o of organosDesconcentradosOptions" [value]="o">{{ o }}</option>
-                </select>
+                 <option *ngFor="let o of organosDesconcentradosOptions" [value]="o.id_organo_desconcentrado">
+                     {{ o.nombre }} ({{ o.codigo }})
+                 </option>
+               </select>
               </div>
             </div>
 
@@ -106,19 +103,24 @@
         </div>
       </div>
 
-      <!-- ================== CENTRO DE COSTO (SECRETARÍAS) ================== -->
-      <div class="row g-3 mt-3"
-           *ngIf="form.get('dependencia')?.value && form.get('dependencia')?.value !== 'Organismos OPDS'">
+      <div class="row g-3 mt-3" *ngIf="form.get('dependencia')?.value && !esOrganismosOPDS()">
         <div class="col-12">
           <div class="cc-panel">
             <div class="cc-title">Centro de Costo de la Unidad Administrativa</div>
-            <div class="cc-subtitle">{{ form.get('dependencia')?.value }}</div>
+            <div class="cc-subtitle">
+              {{ getDependenciaSeleccionadaNombre() }}
+            </div>
 
             <div class="mt-2">
-              <label class="form-label">{{ form.get('dependencia')?.value }} (Centros de Costo)</label>
+              <label class="form-label">
+                {{ getDependenciaSeleccionadaNombre() }} (Centros de Costo)
+              </label>
+
               <select class="form-select" formControlName="centroCosto">
                 <option value="" disabled>Selecciona la respuesta</option>
-                <option *ngFor="let c of centroCostoOptions" [value]="c">{{ c }}</option>
+                <option *ngFor="let c of centroCostoOptions" [value]="c.id_centro_costo">
+                  {{ c.nombre }} ({{ c.codigo }})
+                </option>
               </select>
 
               <small class="text-danger" *ngIf="hasError('centroCosto','required')">
@@ -130,21 +132,16 @@
         </div>
       </div>
 
-      <!-- ✅ TITULO DE SECCIÓN (FUERA DEL PANEL) -->
       <div class="row mt-4">
-        <div class="col-12">
-        </div>
+        <div class="col-12"></div>
       </div>
 
-      <!-- ================== ESTUDIO DE MERCADO ================== -->
       <div class="row g-3 mt-2">
         <div class="col-12">
           <div class="cc-panel">
 
-
             <div class="row g-3">
 
-              <!-- Capítulo -->
               <div class="col-12">
                 <label class="form-label">Capítulo:</label>
                 <select class="form-select" formControlName="capitulo">
@@ -158,7 +155,6 @@
                 </small>
               </div>
 
-              <!-- Giro -->
               <div class="col-12 col-lg-6">
                 <label class="form-label">Giro</label>
                 <select class="form-select" formControlName="giro">
@@ -170,7 +166,6 @@
                 </small>
               </div>
 
-              <!-- SubGiro -->
               <div class="col-12 col-lg-6">
                 <label class="form-label">SubGiro</label>
                 <select class="form-select" formControlName="subGiro">
@@ -188,7 +183,6 @@
         </div>
       </div>
 
-      <!-- ================== BOTONES ================== -->
       <div class="mt-4 d-flex gap-2">
         <button type="submit" class="btn btn-primary">Guardar</button>
         <button type="button" class="btn btn-outline-secondary" (click)="onClear()">Limpiar</button>

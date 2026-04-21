@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Registro } from '../interfaces/registro';
-import { Injectable, signal, inject, computed } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
@@ -10,24 +9,38 @@ export class RegistroService {
 
   private myAppUrl: string;
   private myAPIUrl: string;
-  private http = inject( HttpClient );
+  private http = inject(HttpClient);
 
   constructor() {
-    this.myAppUrl = 'http://localhost:3001/'; //'https://dev4.siasaf.gob.mx/'  //'http://localhost:3001/' AQUI VAN LAS CONEXIONES CONEXIONES A TU BACKEND
+    this.myAppUrl = 'http://localhost:3001/';
     this.myAPIUrl = 'api/solicitud';
-
   }
 
-  saveRegistro(data: any): Observable<string> {
-    return this.http.post<string>(`${this.myAppUrl}${this.myAPIUrl}/create`,data)
+  saveRegistro(data: any): Observable<any> {
+    return this.http.post<any>(`${this.myAppUrl}${this.myAPIUrl}/create`, data);
   }
 
-  getStatus(user: String): Observable<void> {
-    return this.http.get<void>(`${this.myAppUrl}${this.myAPIUrl}/getestatus/${user}`)
+  getStatus(user: string): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/getestatus/${user}`);
   }
 
-  getRegistros(): Observable<void> {
-    return this.http.get<void>(`${this.myAppUrl}${this.myAPIUrl}/read`)
+  getRegistros(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/read`);
   }
 
+  getDependencias(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}api/catalogos/dependencias`);
+  }
+
+  getCentrosCosto(idDependencia: number): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}api/catalogos/centros-costo/${idDependencia}`);
+  }
+
+  getOrganismosOPDS(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}api/catalogos/organismos-opds`);
+  }
+
+  getOrganosDesconcentrados(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}api/catalogos/organos-desconcentrados`);
+  }
 }

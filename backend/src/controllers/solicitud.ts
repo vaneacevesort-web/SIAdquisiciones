@@ -53,28 +53,30 @@ export const deleteRegistro = async (req: Request, res: Response): Promise<any> 
 
 export const saveRegistro = async (req: Request, res: Response): Promise<any> => {
   const { body } = req;
- console.log(body)
- try {    
+  console.log('BODY RECIBIDO:', body);
+
+  try {
     const solicitud = await AdqSolicitudes.create({
       folio: body.folioInterno,
       fecha_ingreso: body.fechaIngreso,
-      id_origen_recurso: 1, // este debe venir numérico
-      tipo_solicitud: 'BIEN'
+      id_origen_recurso: 1,
+      tipo_solicitud: 'BIEN',
+      user_id: body.userId,
+      estatus_id: 1
     });
-      res.json({
-          msg: `Agregado con exito`,
-          data: solicitud
-      });
-  }catch (error){
-      console.log(error);
-      res.json({
-          msg: `Ocurrio un error al cargar `,
-      }); 
-    
 
-  };  
-
-} 
+    return res.json({
+      msg: 'Agregado con exito',
+      data: solicitud
+    });
+  } catch (error) {
+    console.log('ERROR EN saveRegistro:', error);
+    return res.status(500).json({
+      msg: 'Ocurrio un error al cargar',
+      error
+    });
+  }
+}; 
 
   export const putRegistro = async (req: Request, res: Response): Promise<any> => {
       return res.status(404).json({

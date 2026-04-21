@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const catalogos_1 = require("../controllers/catalogos");
+const router = (0, express_1.Router)();
+router.get('/dependencias', catalogos_1.getDependencias);
+router.get('/centros-costo/:id_dependencia', catalogos_1.getCentrosCosto);
+router.get('/organismos-opds', catalogos_1.getOrganismosOPDS);
+router.get('/organos-desconcentrados', catalogos_1.getOrganosDesconcentrados);
+exports.default = router;

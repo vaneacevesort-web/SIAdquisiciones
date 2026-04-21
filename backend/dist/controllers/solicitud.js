@@ -61,26 +61,28 @@ const deleteRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.deleteRegistro = deleteRegistro;
 const saveRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { body } = req;
-    console.log(body);
+    console.log('BODY RECIBIDO:', body);
     try {
         const solicitud = yield AdqSolicitudes_1.default.create({
             folio: body.folioInterno,
             fecha_ingreso: body.fechaIngreso,
-            id_origen_recurso: 1, // este debe venir numérico
-            tipo_solicitud: 'BIEN'
+            id_origen_recurso: 1,
+            tipo_solicitud: 'BIEN',
+            user_id: body.userId,
+            estatus_id: 1
         });
-        res.json({
-            msg: `Agregado con exito`,
+        return res.json({
+            msg: 'Agregado con exito',
             data: solicitud
         });
     }
     catch (error) {
-        console.log(error);
-        res.json({
-            msg: `Ocurrio un error al cargar `,
+        console.log('ERROR EN saveRegistro:', error);
+        return res.status(500).json({
+            msg: 'Ocurrio un error al cargar',
+            error
         });
     }
-    ;
 });
 exports.saveRegistro = saveRegistro;
 const putRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
