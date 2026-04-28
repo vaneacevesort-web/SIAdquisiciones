@@ -43,4 +43,20 @@ export class RegistroService {
   getOrganosDesconcentrados(): Observable<any> {
     return this.http.get<any>(`${this.myAppUrl}api/catalogos/organos-desconcentrados`);
   }
+
+  getCapitulos(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}api/catalogos/capitulos`);
+  }
+
+  getSubcapitulos(idCapitulo: number): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}api/catalogos/subcapitulos/${idCapitulo}`);
+  }
+
+  getPartidasGenericas(idSubcapitulo: number): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}api/catalogos/partidas-genericas/${idSubcapitulo}`);
+  }
+
+  getPartidasEspecificas(idPartidaGenerica: number): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}api/catalogos/partidas-especificas/${idPartidaGenerica}`);
+  }
 }

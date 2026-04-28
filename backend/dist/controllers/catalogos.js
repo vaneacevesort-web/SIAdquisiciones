@@ -12,11 +12,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrganosDesconcentrados = exports.getOrganismosOPDS = exports.getCentrosCosto = exports.getDependencias = void 0;
+exports.getPartidasEspecificas = exports.getPartidasGenericas = exports.getSubcapitulos = exports.getCapitulos = exports.getOrganosDesconcentrados = exports.getOrganismosOPDS = exports.getCentrosCosto = exports.getDependencias = void 0;
 const AdqDependencias_1 = __importDefault(require("../models/AdqDependencias"));
 const AdqCentrosCosto_1 = __importDefault(require("../models/AdqCentrosCosto"));
 const AdqOrganismosOPDS_1 = __importDefault(require("../models/AdqOrganismosOPDS"));
 const AdqOrganosDesconcentrados_1 = __importDefault(require("../models/AdqOrganosDesconcentrados"));
+const AdqCatCapitulos_1 = __importDefault(require("../models/AdqCatCapitulos"));
+const AdqCatSubcapitulos_1 = __importDefault(require("../models/AdqCatSubcapitulos"));
+const AdqCatPartidasGenericas_1 = __importDefault(require("../models/AdqCatPartidasGenericas"));
+const AdqCatPartidasEspecificas_1 = __importDefault(require("../models/AdqCatPartidasEspecificas"));
 const getDependencias = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const dependencias = yield AdqDependencias_1.default.findAll({
@@ -91,3 +95,81 @@ const getOrganosDesconcentrados = (req, res) => __awaiter(void 0, void 0, void 0
     }
 });
 exports.getOrganosDesconcentrados = getOrganosDesconcentrados;
+const getCapitulos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const capitulos = yield AdqCatCapitulos_1.default.findAll({
+            order: [['codigo', 'ASC']]
+        });
+        return res.json({
+            msg: 'Capítulos obtenidos',
+            data: capitulos
+        });
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            msg: 'Error al obtener capítulos'
+        });
+    }
+});
+exports.getCapitulos = getCapitulos;
+const getSubcapitulos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id_capitulo } = req.params;
+    try {
+        const subcapitulos = yield AdqCatSubcapitulos_1.default.findAll({
+            where: { id_capitulo },
+            order: [['codigo', 'ASC']]
+        });
+        return res.json({
+            msg: 'Subcapítulos obtenidos',
+            data: subcapitulos
+        });
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            msg: 'Error al obtener subcapítulos'
+        });
+    }
+});
+exports.getSubcapitulos = getSubcapitulos;
+const getPartidasGenericas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id_subcapitulo } = req.params;
+    try {
+        const partidas = yield AdqCatPartidasGenericas_1.default.findAll({
+            where: { id_subcapitulo },
+            order: [['codigo', 'ASC']]
+        });
+        return res.json({
+            msg: 'Partidas genéricas obtenidas',
+            data: partidas
+        });
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            msg: 'Error al obtener partidas genéricas'
+        });
+    }
+});
+exports.getPartidasGenericas = getPartidasGenericas;
+const getPartidasEspecificas = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id_partida_generica } = req.params;
+    try {
+        const partidas = yield AdqCatPartidasEspecificas_1.default.findAll({
+            where: { id_partida_generica },
+            order: [['codigo', 'ASC']]
+        });
+        return res.json({
+            msg: 'Partidas específicas obtenidas',
+            data: partidas
+        });
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            msg: 'Error al obtener partidas específicas'
+        });
+    }
+});
+exports.getPartidasEspecificas = getPartidasEspecificas;
