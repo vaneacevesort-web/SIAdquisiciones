@@ -31,6 +31,47 @@ AdqSolicitudes.init({
         type: sequelize_1.DataTypes.ENUM('BIEN', 'SERVICIO'),
         allowNull: false,
     },
+    id_dependencia: {
+        type: sequelize_1.DataTypes.BIGINT.UNSIGNED,
+        allowNull: true,
+    },
+    id_opd: {
+        type: sequelize_1.DataTypes.BIGINT.UNSIGNED,
+        allowNull: true,
+    },
+    id_organo_desconcentrado: {
+        type: sequelize_1.DataTypes.BIGINT.UNSIGNED,
+        allowNull: true,
+    },
+    id_centro_costo: {
+        type: sequelize_1.DataTypes.BIGINT.UNSIGNED,
+        allowNull: true,
+    },
+    id_capitulo: {
+        type: sequelize_1.DataTypes.BIGINT.UNSIGNED,
+        allowNull: true,
+    },
+    id_subcapitulo: {
+        type: sequelize_1.DataTypes.BIGINT.UNSIGNED,
+        allowNull: true,
+    },
+    id_partida_generica: {
+        type: sequelize_1.DataTypes.BIGINT.UNSIGNED,
+        allowNull: true,
+    },
+    id_partida_especifica: {
+        type: sequelize_1.DataTypes.BIGINT.UNSIGNED,
+        allowNull: true,
+    },
+    user_id: {
+        type: sequelize_1.DataTypes.STRING(36),
+        allowNull: true,
+    },
+    estatus_id: {
+        type: sequelize_1.DataTypes.TINYINT.UNSIGNED,
+        allowNull: false,
+        defaultValue: 1,
+    },
     created_at: {
         type: sequelize_1.DataTypes.DATE,
         allowNull: false,

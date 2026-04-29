@@ -11,7 +11,7 @@ import  DatosUser  from '../models/datos_user'
 // import { JwtPayload } from 'jsonwebtoken';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import Solicitudes from '../models/solicitud'
+//import Solicitudes from '../models/solicitud'
 
 export const ReadUser = async (req: Request, res: Response): Promise<any> => {
     const listUser = await User.findAll();
@@ -20,8 +20,6 @@ export const ReadUser = async (req: Request, res: Response): Promise<any> => {
         data: listUser
     });
 }
-
-
 
 export const CreateUser = async (req: Request, res: Response,  next: NextFunction) => {
 
@@ -452,77 +450,84 @@ export const updatepassword = async (req: Request, res: Response): Promise<any> 
 
 export const resetpassword = async (req: Request, res: Response): Promise<any> => {
   const { correo } = req.body;
-  
+
   const usuario = await User.findOne({
-    where: { email: correo }  
+    where: { email: correo }
   });
-  
-  
-  if(usuario){
+
+  if (usuario) {
     try {
-    const solicitud: any = await Solicitudes.findOne({ where: { userId: usuario.id } });
-    const token = jwt.sign(
-          {
-            email: correo,
-            userId: usuario.id,
-          },
-          process.env.JWT_SECRET || 'sUP3r_s3creT_ClavE-4321!', 
-          { expiresIn: '2d' } 
-        );
-        const enlace = `https://dev5.siasaf.gob.mx/auth/cambiar-contrasena?token=${token}`;
+      const token = jwt.sign(
+        {
+          email: correo,
+          userId: usuario.id,
+        },
+        process.env.JWT_SECRET || 'sUP3r_s3creT_ClavE-4321!',
+        { expiresIn: '2d' }
+      );
 
-    // https://dev5.siasaf.gob.mx/
-    const nombreCompleto =  `${solicitud.nombres} ${solicitud.ap_paterno} ${solicitud.ap_materno}`.trim();
-  //         console.log(nombreCompleto);
-  // return (500);
-    (async () => {
-      try {
-        const meses = [
-            "enero", "febrero", "marzo", "abril", "mayo", "junio",
-            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-            ];
+      const enlace = `https://dev5.siasaf.gob.mx/auth/cambiar-contrasena?token=${token}`;
 
-        const hoy = new Date();
-        const fechaFormateada = `Toluca de Lerdo, México; a ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}.`;
-        const contenido = `
-          <div class="container">
-            <p  class="pderecha" >${fechaFormateada}</p>
-            <p>C. ${nombreCompleto}</p>
-            <p>Hemos recibido una solicitud para restablecer la contraseña de su cuenta. Para establecer una nueva contraseña, haga clic en el siguiente enlace:</p>
-            <p>
-              <a href="${enlace}">Restablecer mi contraseña</a>
-            </p>
-            <p>Si no solicitó este cambio, ignore este mensaje.</p>
-            <p class="footer">
-              Si tiene problemas para hacer clic en el botón, copie y pegue esta URL en su navegador:<br>
-               ${enlace}
-            </p>
-            <p>Atentamente,<br><strong>Poder Legislativo del Estado de México</strong></p>
-          </div> 
+      const nombreCompleto = usuario.name || usuario.email || 'Usuario';
 
-          </p>
-        `;
-        let htmlContent = generarHtmlCorreo(contenido);
-        await sendEmail(
-                    correo,
-                    'Restablecer contraseña',
-                    htmlContent
-        );
+      (async () => {
+        try {
+          const meses = [
+            'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+            'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+          ];
 
-        console.log('Correo enviado correctamente');
-      } catch (err) {
-        console.error('Error al enviar correo:', err);
-      }
-    })();
+          const hoy = new Date();
+          const fechaFormateada = `Toluca de Lerdo, México; a ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}.`;
 
-    return res.json({valid: true, msg: `enviado correctamente`, correo: correo } );
+          const contenido = `
+            <div class="container">
+              <p class="pderecha">${fechaFormateada}</p>
+              <p>C. ${nombreCompleto}</p>
+              <p>Hemos recibido una solicitud para restablecer la contraseña de su cuenta. Para establecer una nueva contraseña, haga clic en el siguiente enlace:</p>
+              <p>
+                <a href="${enlace}">Restablecer mi contraseña</a>
+              </p>
+              <p>Si no solicitó este cambio, ignore este mensaje.</p>
+              <p class="footer">
+                Si tiene problemas para hacer clic en el botón, copie y pegue esta URL en su navegador:<br>
+                ${enlace}
+              </p>
+              <p>Atentamente,<br><strong>Poder Legislativo del Estado de México</strong></p>
+            </div>
+          `;
 
-  } catch (error) {
-    console.error(error);
-    return res.status(400).json({ msg: `Ocurrió un error al registrar` });
-  }
+          const htmlContent = generarHtmlCorreo(contenido);
 
-  }else{
-     return res.json({ valid: false, estatus: `400`, correo: correo } );
+          await sendEmail(
+            correo,
+            'Restablecer contraseña',
+            htmlContent
+          );
+
+          console.log('Correo enviado correctamente');
+        } catch (err) {
+          console.error('Error al enviar correo:', err);
+        }
+      })();
+
+      return res.json({
+        valid: true,
+        msg: 'enviado correctamente',
+        correo: correo
+      });
+
+    } catch (error) {
+      console.error(error);
+      return res.status(400).json({
+        msg: 'Ocurrió un error al registrar'
+      });
+    }
+  } else {
+    return res.json({
+      valid: false,
+      estatus: '400',
+      correo: correo
+    });
   }
 };

@@ -1,4 +1,4 @@
-import { Component,inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
@@ -27,282 +27,334 @@ export class SolicitudCreateComponent {
   public _registroService = inject(RegistroService);
   public _userService = inject(UserService);
 
-  // Origen de recurso (select)
-  origenOptions = [
-    { value: 'Estatal', label: 'Estatal' },
-    { value: 'Federal', label: 'Federal' },
-    { value: 'Fideicomiso', label: 'Fideicomiso' },
-    { value: 'Concurrente o Propio', label: 'Concurrente o Propio' },
-  ];
+origenOptions = [
+  { value: 1, label: 'Estatal' },
+  { value: 2, label: 'Federal' },
+  { value: 3, label: 'Fideicomiso' },
+  { value: 4, label: 'Concurrente o Propio' },
+];
 
-  // Capítulos
-  capituloOptions = [
-    { value: '1000', label: '1000 Servicios Personales' },
-    { value: '2000', label: '2000 Materiales Y Suministros' },
-    { value: '3000', label: '3000 Servicios Generales' },
-    { value: '4000', label: '4000 Transferencias, Asignaciones, Subsidios Y Otras Ayudas' },
-    { value: '5000', label: '5000 Bienes Muebles, Inmuebles E Intangibles' },
-    { value: '6000', label: '6000 Inversión Pública' },
-    { value: '7000', label: '7000 Inversiones Financieras Y Otras Provisiones' },
-    { value: '8000', label: '8000 Participaciones Y Aportaciones' },
-    { value: '9000', label: '9000 Deuda Pública' },
-  ];
-
-  // Giro / Subgiro (ejemplo: cambia por tu catálogo real)
-  giroOptions: string[] = ['Bienes', 'Servicios', 'Arrendamientos'];
-
-  subGiroByGiro: Record<string, string[]> = {
-    Bienes: ['Papelería', 'Mobiliario', 'Equipo de cómputo'],
-    Servicios: ['Mantenimiento', 'Limpieza', 'Consultoría'],
-    Arrendamientos: ['Inmuebles', 'Vehículos'],
-  };
-
-  get subGiroOptions(): string[] {
-    const g = this.form?.get('giro')?.value;
-    return g ? this.subGiroByGiro[g] ?? [] : [];
-  }
-
-  // Dependencias debe BD
   dependenciaOptions: any[] = [];
-  centroCostoOptionsApi: any[] = []; 
+  centroCostoOptionsApi: any[] = [];
   opdsDescentralizadosOptions: any[] = [];
   organosDesconcentradosOptions: any[] = [];
+
+  capituloOptionsApi: any[] = [];
+  subcapituloOptionsApi: any[] = [];
+  partidaGenericaOptionsApi: any[] = [];
+  partidaEspecificaOptionsApi: any[] = [];
+
   get centroCostoOptions(): any[] {
     return this.centroCostoOptionsApi;
   }
 
+  get capituloOptions(): any[] {
+    return this.capituloOptionsApi;
+  }
+
+  get subcapituloOptions(): any[] {
+    return this.subcapituloOptionsApi;
+  }
+
+  get partidaGenericaOptions(): any[] {
+    return this.partidaGenericaOptionsApi;
+  }
+
+  get partidaEspecificaOptions(): any[] {
+    return this.partidaEspecificaOptionsApi;
+  }
+
   getDependenciaSeleccionadaNombre(): string {
-  const dep = this.form?.get('dependencia')?.value;
+    const dep = this.form?.get('dependencia')?.value;
 
-  const encontrada = this.dependenciaOptions.find(
-    (d) => String(d.id_dependencia) === String(dep)
-  );
+    const encontrada = this.dependenciaOptions.find(
+      (d) => String(d.id_dependencia) === String(dep)
+    );
 
-  return encontrada?.nombre || '';
-}
-
-esOrganismosOPDS(): boolean {
-  return this.getDependenciaSeleccionadaNombre() === 'Organismos OPDS';
-}
-
-  constructor(private fb: FormBuilder, private router: Router,) {
-  this.form = this.fb.group(
-    {
-      folioInterno: ['', [Validators.required, Validators.maxLength(50)]],
-      fechaIngreso: ['', Validators.required],
-      origenRecurso: ['', Validators.required],
-      dependencia: ['', Validators.required],
-      // OPDS
-      opdsDescentralizado: [''],
-      organoDesconcentrado: [''],
-      // Secretarías
-      centroCosto: [''],
-      // Estudio de Mercado
-      capitulo: ['', Validators.required],
-      giro: ['', Validators.required],
-      subGiro: ['', Validators.required],
-    },
-    { validators: [this.opdsSelectionValidator.bind(this)] }
-  );
-
-  // Cargar dependencias desde BD
-  this._registroService.getDependencias().subscribe({
-  next: (resp) => {
-    console.log('RESPUESTA COMPLETA DEPENDENCIAS =>', resp);
-    console.log('RESP.DATA =>', resp?.data);
-
-    this.dependenciaOptions = resp?.data || [];
-
-    console.log('DEPENDENCIAS DESDE BD =>', this.dependenciaOptions);
-  },
-  error: (err) => {
-    console.log('Error al cargar Dependencias', err);
+    return encontrada?.nombre || '';
   }
-});
 
-// Cargar OPDS Descentralizados desde BD
-this._registroService.getOrganismosOPDS().subscribe({
-  next: (resp) => {
-    console.log('RESPUESTA COMPLETA OPDS =>', resp);
-    console.log('RESP.DATA OPDS =>', resp?.data);
-
-    this.opdsDescentralizadosOptions = resp?.data || [];
-
-    console.log('OPDS DESDE BD =>', this.opdsDescentralizadosOptions);
-  },
-  error: (err) => {
-    console.log('Error al cargar OPDS Descentralizados', err);
+  esOrganismosOPDS(): boolean {
+    return this.getDependenciaSeleccionadaNombre() === 'Organismos OPDS';
   }
-});
 
-this._registroService.getOrganosDesconcentrados().subscribe({
-  next: (resp) => {
-    console.log('RESPUESTA COMPLETA DESCONCENTRADOS =>', resp);
-    console.log('RESP.DATA DESCONCENTRADOS =>', resp?.data);
+  constructor(private fb: FormBuilder, private router: Router) {
+    this.form = this.fb.group(
+      {
+        folioInterno: ['', [Validators.required, Validators.maxLength(50)]],
+        fechaIngreso: ['', Validators.required],
+        origenRecurso: ['', Validators.required],
+        dependencia: ['', Validators.required],
 
-    this.organosDesconcentradosOptions = resp?.data || [];
+        opdsDescentralizado: [''],
+        organoDesconcentrado: [''],
+        centroCosto: [''],
 
-    console.log('DESCONCENTRADOS DESDE BD =>', this.organosDesconcentradosOptions);
-  },
-  error: (err) => {
-    console.log('Error al cargar órganos desconcentrados', err);
+        capitulo: ['', Validators.required],
+        subcapitulo: [{ value: '', disabled: true }, Validators.required],
+        partidaGenerica: [{ value: '', disabled: true }, Validators.required],
+        partidaEspecifica: [{ value: '', disabled: true }, Validators.required],
+      },
+      { validators: [this.opdsSelectionValidator.bind(this)] }
+    );
+
+    this._registroService.getDependencias().subscribe({
+      next: (resp) => {
+        this.dependenciaOptions = resp?.data || [];
+        console.log('DEPENDENCIAS DESDE BD =>', this.dependenciaOptions);
+      },
+      error: (err) => {
+        console.log('Error al cargar Dependencias', err);
+      }
+    });
+
+    this._registroService.getOrganismosOPDS().subscribe({
+      next: (resp) => {
+        this.opdsDescentralizadosOptions = resp?.data || [];
+        console.log('OPDS DESDE BD =>', this.opdsDescentralizadosOptions);
+      },
+      error: (err) => {
+        console.log('Error al cargar OPDS Descentralizados', err);
+      }
+    });
+
+    this._registroService.getOrganosDesconcentrados().subscribe({
+      next: (resp) => {
+        this.organosDesconcentradosOptions = resp?.data || [];
+        console.log('DESCONCENTRADOS DESDE BD =>', this.organosDesconcentradosOptions);
+      },
+      error: (err) => {
+        console.log('Error al cargar órganos desconcentrados', err);
+      }
+    });
+
+    this._registroService.getCapitulos().subscribe({
+      next: (resp) => {
+        this.capituloOptionsApi = resp?.data || [];
+        console.log('CAPÍTULOS DESDE BD =>', this.capituloOptionsApi);
+      },
+      error: (err) => {
+        console.log('Error al cargar capítulos', err);
+      }
+    });
+
+    this.form.get('opdsDescentralizado')?.disable({ emitEvent: false });
+    this.form.get('organoDesconcentrado')?.disable({ emitEvent: false });
+    this.form.get('centroCosto')?.disable({ emitEvent: false });
+
+    this.form.get('dependencia')?.valueChanges.subscribe((dep) => {
+      const desc = this.form.get('opdsDescentralizado')!;
+      const desconc = this.form.get('organoDesconcentrado')!;
+      const cc = this.form.get('centroCosto')!;
+
+      desc.setValue('', { emitEvent: false });
+      desconc.setValue('', { emitEvent: false });
+      cc.setValue('', { emitEvent: false });
+
+      this.centroCostoOptionsApi = [];
+
+      const dependenciaSeleccionada = this.dependenciaOptions.find(
+        (d) => String(d.id_dependencia) === String(dep)
+      );
+
+      const nombreDependencia = dependenciaSeleccionada?.nombre;
+
+      if (!dep) {
+        desc.disable({ emitEvent: false });
+        desconc.disable({ emitEvent: false });
+
+        cc.disable({ emitEvent: false });
+        cc.clearValidators();
+        cc.updateValueAndValidity({ emitEvent: false });
+
+        this.form.updateValueAndValidity({ emitEvent: false });
+        return;
+      }
+
+      if (nombreDependencia === 'Organismos OPDS') {
+        desc.enable({ emitEvent: false });
+        desconc.enable({ emitEvent: false });
+
+        cc.disable({ emitEvent: false });
+        cc.clearValidators();
+        cc.updateValueAndValidity({ emitEvent: false });
+      } else {
+        desc.disable({ emitEvent: false });
+        desconc.disable({ emitEvent: false });
+
+        cc.enable({ emitEvent: false });
+        cc.setValidators([Validators.required]);
+        cc.updateValueAndValidity({ emitEvent: false });
+
+        this._registroService.getCentrosCosto(Number(dep)).subscribe({
+          next: (resp) => {
+            this.centroCostoOptionsApi = resp.data || [];
+            console.log('CENTROS COSTO DESDE BD =>', this.centroCostoOptionsApi);
+          },
+          error: (err) => {
+            console.log('Error al cargar centros de costo', err);
+          }
+        });
+      }
+
+      this.form.updateValueAndValidity({ emitEvent: false });
+    });
+
+    this.form.get('opdsDescentralizado')?.valueChanges.subscribe((val) => {
+      const desconc = this.form.get('organoDesconcentrado');
+      if (!desconc) return;
+
+      if (val) {
+        desconc.setValue('', { emitEvent: false });
+        desconc.disable({ emitEvent: false });
+      } else {
+        const dep = this.form.get('dependencia')?.value;
+        const dependenciaSeleccionada = this.dependenciaOptions.find(
+          (d) => String(d.id_dependencia) === String(dep)
+        );
+        if (dependenciaSeleccionada?.nombre === 'Organismos OPDS') {
+          desconc.enable({ emitEvent: false });
+        }
+      }
+
+      this.form.updateValueAndValidity({ emitEvent: false });
+    });
+
+    this.form.get('organoDesconcentrado')?.valueChanges.subscribe((val) => {
+      const desc = this.form.get('opdsDescentralizado');
+      if (!desc) return;
+
+      if (val) {
+        desc.setValue('', { emitEvent: false });
+        desc.disable({ emitEvent: false });
+      } else {
+        const dep = this.form.get('dependencia')?.value;
+        const dependenciaSeleccionada = this.dependenciaOptions.find(
+          (d) => String(d.id_dependencia) === String(dep)
+        );
+        if (dependenciaSeleccionada?.nombre === 'Organismos OPDS') {
+          desc.enable({ emitEvent: false });
+        }
+      }
+
+      this.form.updateValueAndValidity({ emitEvent: false });
+    });
+
+    this.form.get('capitulo')?.valueChanges.subscribe((idCapitulo) => {
+      const subcapitulo = this.form.get('subcapitulo')!;
+      const partidaGenerica = this.form.get('partidaGenerica')!;
+      const partidaEspecifica = this.form.get('partidaEspecifica')!;
+
+      subcapitulo.setValue('', { emitEvent: false });
+      partidaGenerica.setValue('', { emitEvent: false });
+      partidaEspecifica.setValue('', { emitEvent: false });
+
+      subcapitulo.disable({ emitEvent: false });
+      partidaGenerica.disable({ emitEvent: false });
+      partidaEspecifica.disable({ emitEvent: false });
+
+      this.subcapituloOptionsApi = [];
+      this.partidaGenericaOptionsApi = [];
+      this.partidaEspecificaOptionsApi = [];
+
+      if (!idCapitulo) return;
+
+      this._registroService.getSubcapitulos(Number(idCapitulo)).subscribe({
+        next: (resp) => {
+          this.subcapituloOptionsApi = resp?.data || [];
+          subcapitulo.enable({ emitEvent: false });
+          console.log('SUBCAPÍTULOS DESDE BD =>', this.subcapituloOptionsApi);
+        },
+        error: (err) => {
+          console.log('Error al cargar subcapítulos', err);
+        }
+      });
+    });
+
+    this.form.get('subcapitulo')?.valueChanges.subscribe((idSubcapitulo) => {
+      const partidaGenerica = this.form.get('partidaGenerica')!;
+      const partidaEspecifica = this.form.get('partidaEspecifica')!;
+
+      partidaGenerica.setValue('', { emitEvent: false });
+      partidaEspecifica.setValue('', { emitEvent: false });
+
+      partidaGenerica.disable({ emitEvent: false });
+      partidaEspecifica.disable({ emitEvent: false });
+
+      this.partidaGenericaOptionsApi = [];
+      this.partidaEspecificaOptionsApi = [];
+
+      if (!idSubcapitulo) return;
+
+      this._registroService.getPartidasGenericas(Number(idSubcapitulo)).subscribe({
+        next: (resp) => {
+          this.partidaGenericaOptionsApi = resp?.data || [];
+          partidaGenerica.enable({ emitEvent: false });
+          console.log('PARTIDAS GENÉRICAS DESDE BD =>', this.partidaGenericaOptionsApi);
+        },
+        error: (err) => {
+          console.log('Error al cargar partidas genéricas', err);
+        }
+      });
+    });
+
+    this.form.get('partidaGenerica')?.valueChanges.subscribe((idPartidaGenerica) => {
+      const partidaEspecifica = this.form.get('partidaEspecifica')!;
+
+      partidaEspecifica.setValue('', { emitEvent: false });
+      partidaEspecifica.disable({ emitEvent: false });
+
+      this.partidaEspecificaOptionsApi = [];
+
+      if (!idPartidaGenerica) return;
+
+      this._registroService.getPartidasEspecificas(Number(idPartidaGenerica)).subscribe({
+        next: (resp) => {
+          this.partidaEspecificaOptionsApi = resp?.data || [];
+          partidaEspecifica.enable({ emitEvent: false });
+          console.log('PARTIDAS ESPECÍFICAS DESDE BD =>', this.partidaEspecificaOptionsApi);
+        },
+        error: (err) => {
+          console.log('Error al cargar partidas específicas', err);
+        }
+      });
+    });
   }
-});
 
-  // Estado inicial
-  this.form.get('opdsDescentralizado')?.disable({ emitEvent: false });
-  this.form.get('organoDesconcentrado')?.disable({ emitEvent: false });
-  this.form.get('centroCosto')?.disable({ emitEvent: false });
-
-  // SubGiro depende del Giro
-  this.form.get('subGiro')?.disable({ emitEvent: false });
-
-  // Dependencia: OPDS vs Secretarías
-  this.form.get('dependencia')?.valueChanges.subscribe((dep) => {
-    const desc = this.form.get('opdsDescentralizado')!;
-    const desconc = this.form.get('organoDesconcentrado')!;
-    const cc = this.form.get('centroCosto')!;
-
-    desc.setValue('', { emitEvent: false });
-    desconc.setValue('', { emitEvent: false });
-    cc.setValue('', { emitEvent: false });
-
-    this.centroCostoOptionsApi = [];
+  private opdsSelectionValidator(group: AbstractControl): ValidationErrors | null {
+    const dep = group.get('dependencia')?.value;
 
     const dependenciaSeleccionada = this.dependenciaOptions.find(
       (d) => String(d.id_dependencia) === String(dep)
     );
 
-    const nombreDependencia = dependenciaSeleccionada?.nombre;
+    if (dependenciaSeleccionada?.nombre !== 'Organismos OPDS') return null;
 
-    if (!dep) {
-      desc.disable({ emitEvent: false });
-      desconc.disable({ emitEvent: false });
+    const d = group.get('opdsDescentralizado')?.value;
+    const o = group.get('organoDesconcentrado')?.value;
 
-      cc.disable({ emitEvent: false });
-      cc.clearValidators();
-      cc.updateValueAndValidity({ emitEvent: false });
-
-      this.form.updateValueAndValidity({ emitEvent: false });
-      return;
-    }
-
-    if (nombreDependencia === 'Organismos OPDS') {
-      desc.enable({ emitEvent: false });
-      desconc.enable({ emitEvent: false });
-
-      cc.disable({ emitEvent: false });
-      cc.clearValidators();
-      cc.updateValueAndValidity({ emitEvent: false });
-    } else {
-      desc.disable({ emitEvent: false });
-      desconc.disable({ emitEvent: false });
-
-      cc.enable({ emitEvent: false });
-      cc.setValidators([Validators.required]);
-      cc.updateValueAndValidity({ emitEvent: false });
-
-      this._registroService.getCentrosCosto(Number(dep)).subscribe({
-        next: (resp) => {
-          this.centroCostoOptionsApi = resp.data;
-          console.log('CENTROS COSTO DESDE BD =>', this.centroCostoOptionsApi);
-        },
-        error: (err) => {
-          console.log('Error al cargar centros de costo', err);
-        }
-      });
-    }
-
-    this.form.updateValueAndValidity({ emitEvent: false });
-  });
-
-  // OPDS: si eligen Descentralizado => bloquea Desconcentrado
-  this.form.get('opdsDescentralizado')?.valueChanges.subscribe((val) => {
-    const desconc = this.form.get('organoDesconcentrado');
-    if (!desconc) return;
-
-    if (val) {
-      desconc.setValue('', { emitEvent: false });
-      desconc.disable({ emitEvent: false });
-    } else {
-      const dep = this.form.get('dependencia')?.value;
-      const dependenciaSeleccionada = this.dependenciaOptions.find(
-        (d) => String(d.id_dependencia) === String(dep)
-      );
-      if (dependenciaSeleccionada?.nombre === 'Organismos OPDS') {
-        desconc.enable({ emitEvent: false });
-      }
-    }
-    this.form.updateValueAndValidity({ emitEvent: false });
-  });
-
-  // OPDS: si eligen Desconcentrado => bloquea Descentralizado
-  this.form.get('organoDesconcentrado')?.valueChanges.subscribe((val) => {
-    const desc = this.form.get('opdsDescentralizado');
-    if (!desc) return;
-
-    if (val) {
-      desc.setValue('', { emitEvent: false });
-      desc.disable({ emitEvent: false });
-    } else {
-      const dep = this.form.get('dependencia')?.value;
-      const dependenciaSeleccionada = this.dependenciaOptions.find(
-        (d) => String(d.id_dependencia) === String(dep)
-      );
-      if (dependenciaSeleccionada?.nombre === 'Organismos OPDS') {
-        desc.enable({ emitEvent: false });
-      }
-    }
-    this.form.updateValueAndValidity({ emitEvent: false });
-  });
-
-  // Giro -> habilita SubGiro y lo limpia
-  this.form.get('giro')?.valueChanges.subscribe((g) => {
-    const sub = this.form.get('subGiro');
-    if (!sub) return;
-
-    sub.setValue('', { emitEvent: false });
-
-    if (g) sub.enable({ emitEvent: false });
-    else sub.disable({ emitEvent: false });
-  });
-}
-  // ✅ Form-level validator: si dependencia=OPDS debe elegir al menos uno
- private opdsSelectionValidator(group: AbstractControl): ValidationErrors | null {
-  const dep = group.get('dependencia')?.value;
-
-  const dependenciaSeleccionada = this.dependenciaOptions.find(
-    (d) => String(d.id_dependencia) === String(dep)
-  );
-
-  if (dependenciaSeleccionada?.nombre !== 'Organismos OPDS') return null;
-
-  const d = group.get('opdsDescentralizado')?.value;
-  const o = group.get('organoDesconcentrado')?.value;
-
-  if (!d && !o) return { opdsRequired: true };
-  return null;
-}
+    if (!d && !o) return { opdsRequired: true };
+    return null;
+  }
 
   hasError(name: string, err: string) {
     const c = this.form.get(name);
     return !!(c && c.touched && c.hasError(err));
   }
 
- showOpdsRequiredError(): boolean {
-  const dep = this.form.get('dependencia')?.value;
-  const dependenciaSeleccionada = this.dependenciaOptions.find(
-    (d) => String(d.id_dependencia) === String(dep)
-  );
+  showOpdsRequiredError(): boolean {
+    const dep = this.form.get('dependencia')?.value;
+    const dependenciaSeleccionada = this.dependenciaOptions.find(
+      (d) => String(d.id_dependencia) === String(dep)
+    );
 
-  if (dependenciaSeleccionada?.nombre !== 'Organismos OPDS') return false;
+    if (dependenciaSeleccionada?.nombre !== 'Organismos OPDS') return false;
 
-  const touched =
-    this.form.get('opdsDescentralizado')?.touched ||
-    this.form.get('organoDesconcentrado')?.touched;
+    const touched =
+      this.form.get('opdsDescentralizado')?.touched ||
+      this.form.get('organoDesconcentrado')?.touched;
 
-  return !!(touched && this.form.hasError('opdsRequired'));
-
+    return !!(touched && this.form.hasError('opdsRequired'));
   }
 
   onClear() {
@@ -316,23 +368,27 @@ this._registroService.getOrganosDesconcentrados().subscribe({
         organoDesconcentrado: '',
         centroCosto: '',
         capitulo: '',
-        giro: '',
-        subGiro: '',
+        subcapitulo: '',
+        partidaGenerica: '',
+        partidaEspecifica: '',
       },
       { emitEvent: false }
     );
 
-    // vuelve al estado inicial
     this.form.get('opdsDescentralizado')?.disable({ emitEvent: false });
     this.form.get('organoDesconcentrado')?.disable({ emitEvent: false });
     this.form.get('centroCosto')?.disable({ emitEvent: false });
-    this.form.get('subGiro')?.disable({ emitEvent: false });
+    this.form.get('subcapitulo')?.disable({ emitEvent: false });
+    this.form.get('partidaGenerica')?.disable({ emitEvent: false });
+    this.form.get('partidaEspecifica')?.disable({ emitEvent: false });
 
-    // centroCosto deja de ser requerido hasta elegir dependencia
-   this.form.get('centroCosto')?.clearValidators();
+    this.form.get('centroCosto')?.clearValidators();
     this.form.get('centroCosto')?.updateValueAndValidity({ emitEvent: false });
 
     this.centroCostoOptionsApi = [];
+    this.subcapituloOptionsApi = [];
+    this.partidaGenericaOptionsApi = [];
+    this.partidaEspecificaOptionsApi = [];
 
     this.form.updateValueAndValidity({ emitEvent: false });
   }
@@ -342,14 +398,29 @@ this._registroService.getOrganosDesconcentrados().subscribe({
       this.form.markAllAsTouched();
       return;
     }
-    console.log('GUARDAR =>', this.form.value);
+
+    const formValue = this.form.getRawValue();
 
     const data = {
-      ...this.form.getRawValue(),
+      folio: formValue.folioInterno,
+      fecha_ingreso: formValue.fechaIngreso,
+
+      id_origen_recurso: formValue.origenRecurso,
+
+      id_dependencia: formValue.dependencia,
+      id_opd: formValue.opdsDescentralizado || null,
+      id_organo_desconcentrado: formValue.organoDesconcentrado || null,
+      id_centro_costo: formValue.centroCosto || null,
+
+      id_capitulo: formValue.capitulo,
+      id_subcapitulo: formValue.subcapitulo,
+      id_partida_generica: formValue.partidaGenerica,
+      id_partida_especifica: formValue.partidaEspecifica,
+
       userId: this._userService.currentUserValue?.id
     };
 
-      console.log('DATA ENVIADA =>', data);
+    console.log('DATA ENVIADA LIMPIA =>', data);
 
     this._registroService.saveRegistro(data).subscribe({
       next: (response: any) => {
@@ -358,34 +429,39 @@ this._registroService.getOrganosDesconcentrados().subscribe({
             position: 'center',
             icon: 'success',
             title: '¡Solicitud registrada satisfactoriamente!',
-            text: `Para continuar con el trámite.`,
+            text: 'Para continuar con el trámite.',
             showConfirmButton: false,
             timer: 10000
           });
+
           this.router.navigate(['/']);
         }
       },
-      error: (e: HttpErrorResponse) => {
-        if (e.error && e.error.msg) {
-          Swal.fire({
-            position: 'center',
-            icon: 'error',
-            title: e.error.msg + ': ' + e.error.correo,
-            showConfirmButton: false,
-            timer: 3000
-          });
-          this.router.navigate(['/']);
-        } else {
-          Swal.fire({
-            position: 'center',
-            icon: 'error',
-            title: 'Error desconocido: ' + e,
-            showConfirmButton: false,
-            timer: 3000
-          });
-          this.router.navigate(['/']);
-        }
-      }
+     error: (e: HttpErrorResponse) => {
+  console.error('ERROR AL GUARDAR =>', e);
+
+  if (e.error && e.error.msg) {
+    Swal.fire({
+      position: 'center',
+      icon: 'error',
+      title: e.error.msg + ': ' + e.error.correo,
+      showConfirmButton: false,
+      timer: 3000
+    });
+
+    // this.router.navigate(['/']);
+  } else {
+    Swal.fire({
+      position: 'center',
+      icon: 'error',
+      title: 'Error desconocido: ' + e.message,
+      showConfirmButton: false,
+      timer: 3000
+    });
+
+    // this.router.navigate(['/']);
+  }
+}
     });
   }
 }

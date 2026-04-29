@@ -29,7 +29,9 @@ export const saveDocumentos = async (req: Request, res: Response): Promise<any> 
         return res.status(400).json({ message: 'Archivo no recibido' });
     }
 
-    const solicitud: any = await Solicitudes.findOne({ where: { userId: usuario } });
+    const solicitud: any = await Solicitudes.findOne({ 
+      where: { userId: usuario } as any
+    });
     if (!solicitud) {
         return res.status(404).json({ message: 'Solicitud no encontrada' });
     }
@@ -86,7 +88,7 @@ export const getDocumentos = async (req: Request, res: Response): Promise<any> =
     const { id } = req.params;
 
     const solicitudConDocumentos = await Solicitudes.findOne({
-      where: { userId: id },
+      where: { userId: id } as any,
       include: [
         {
           model: Documentos,
@@ -132,7 +134,7 @@ export const envSolicitud = async (req: Request, res: Response): Promise<any> =>
     const { id } = req.params;
 
     const solicitud: any = await Solicitudes.findOne({ 
-      where: { userId: id },
+      where: { userId: id }as any,
       include: [
         {
           model: User,
@@ -278,7 +280,9 @@ export const envSolicitud = async (req: Request, res: Response): Promise<any> =>
 export const deleteDoc = async (req: Request, res: Response): Promise<any> => {
     const { tipo, usuario } = req.body;
     
-    const solicitud: any = await Solicitudes.findOne({ where: { userId: usuario } });
+    const solicitud: any = await Solicitudes.findOne({ 
+      where: { userId: usuario }as any
+     });
     const documentoExistente = await Documentos.findOne({
         where: { solicitudId: solicitud.id },
         include: [
@@ -325,8 +329,8 @@ export const estatusDoc = async (req: Request, res: Response): Promise<any> => {
     const userId = req.params.id;
     const Documentos2 = req.body;
 
-    const solicitud = await Solicitudes.findOne({
-      where: { userId },
+    const solicitud: any = await Solicitudes.findOne({
+      where: { userId} as any,
       include: [
         {
           model: User,

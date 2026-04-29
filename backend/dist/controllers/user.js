@@ -23,7 +23,7 @@ const mailer_1 = require("../utils/mailer");
 const datos_user_1 = __importDefault(require("../models/datos_user"));
 // import { JwtPayload } from 'jsonwebtoken';
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const solicitud_1 = __importDefault(require("../models/solicitud"));
+//import Solicitudes from '../models/solicitud'
 const ReadUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const listUser = yield user_1.default.findAll();
     return res.json({
@@ -422,43 +422,37 @@ const resetpassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     });
     if (usuario) {
         try {
-            const solicitud = yield solicitud_1.default.findOne({ where: { userId: usuario.id } });
             const token = jsonwebtoken_1.default.sign({
                 email: correo,
                 userId: usuario.id,
             }, process.env.JWT_SECRET || 'sUP3r_s3creT_ClavE-4321!', { expiresIn: '2d' });
             const enlace = `https://dev5.siasaf.gob.mx/auth/cambiar-contrasena?token=${token}`;
-            // https://dev5.siasaf.gob.mx/
-            const nombreCompleto = `${solicitud.nombres} ${solicitud.ap_paterno} ${solicitud.ap_materno}`.trim();
-            //         console.log(nombreCompleto);
-            // return (500);
+            const nombreCompleto = usuario.name || usuario.email || 'Usuario';
             (() => __awaiter(void 0, void 0, void 0, function* () {
                 try {
                     const meses = [
-                        "enero", "febrero", "marzo", "abril", "mayo", "junio",
-                        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+                        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
                     ];
                     const hoy = new Date();
                     const fechaFormateada = `Toluca de Lerdo, México; a ${hoy.getDate()} de ${meses[hoy.getMonth()]} de ${hoy.getFullYear()}.`;
                     const contenido = `
-          <div class="container">
-            <p  class="pderecha" >${fechaFormateada}</p>
-            <p>C. ${nombreCompleto}</p>
-            <p>Hemos recibido una solicitud para restablecer la contraseña de su cuenta. Para establecer una nueva contraseña, haga clic en el siguiente enlace:</p>
-            <p>
-              <a href="${enlace}">Restablecer mi contraseña</a>
-            </p>
-            <p>Si no solicitó este cambio, ignore este mensaje.</p>
-            <p class="footer">
-              Si tiene problemas para hacer clic en el botón, copie y pegue esta URL en su navegador:<br>
-               ${enlace}
-            </p>
-            <p>Atentamente,<br><strong>Poder Legislativo del Estado de México</strong></p>
-          </div> 
-
-          </p>
-        `;
-                    let htmlContent = generarHtmlCorreo(contenido);
+            <div class="container">
+              <p class="pderecha">${fechaFormateada}</p>
+              <p>C. ${nombreCompleto}</p>
+              <p>Hemos recibido una solicitud para restablecer la contraseña de su cuenta. Para establecer una nueva contraseña, haga clic en el siguiente enlace:</p>
+              <p>
+                <a href="${enlace}">Restablecer mi contraseña</a>
+              </p>
+              <p>Si no solicitó este cambio, ignore este mensaje.</p>
+              <p class="footer">
+                Si tiene problemas para hacer clic en el botón, copie y pegue esta URL en su navegador:<br>
+                ${enlace}
+              </p>
+              <p>Atentamente,<br><strong>Poder Legislativo del Estado de México</strong></p>
+            </div>
+          `;
+                    const htmlContent = generarHtmlCorreo(contenido);
                     yield (0, mailer_1.sendEmail)(correo, 'Restablecer contraseña', htmlContent);
                     console.log('Correo enviado correctamente');
                 }
@@ -466,15 +460,25 @@ const resetpassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     console.error('Error al enviar correo:', err);
                 }
             }))();
-            return res.json({ valid: true, msg: `enviado correctamente`, correo: correo });
+            return res.json({
+                valid: true,
+                msg: 'enviado correctamente',
+                correo: correo
+            });
         }
         catch (error) {
             console.error(error);
-            return res.status(400).json({ msg: `Ocurrió un error al registrar` });
+            return res.status(400).json({
+                msg: 'Ocurrió un error al registrar'
+            });
         }
     }
     else {
-        return res.json({ valid: false, estatus: `400`, correo: correo });
+        return res.json({
+            valid: false,
+            estatus: '400',
+            correo: correo
+        });
     }
 });
 exports.resetpassword = resetpassword;

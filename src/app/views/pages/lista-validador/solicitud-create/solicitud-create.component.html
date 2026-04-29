@@ -88,10 +88,10 @@
                 <label class="form-label">Órganos Desconcentrados</label>
                 <select class="form-select" formControlName="organoDesconcentrado">
                   <option value="" disabled>Selecciona la respuesta</option>
-                 <option *ngFor="let o of organosDesconcentradosOptions" [value]="o.id_organo_desconcentrado">
-                     {{ o.nombre }} ({{ o.codigo }})
-                 </option>
-               </select>
+                  <option *ngFor="let o of organosDesconcentradosOptions" [value]="o.id_organo_desconcentrado">
+                    {{ o.nombre }} ({{ o.codigo }})
+                  </option>
+                </select>
               </div>
             </div>
 
@@ -142,12 +142,12 @@
 
             <div class="row g-3">
 
-              <div class="col-12">
-                <label class="form-label">Capítulo:</label>
+              <div class="col-12 col-lg-6">
+                <label class="form-label">Capítulo</label>
                 <select class="form-select" formControlName="capitulo">
                   <option value="" disabled>Selecciona la respuesta</option>
-                  <option *ngFor="let c of capituloOptions" [value]="c.value">
-                    {{ c.label }}
+                  <option *ngFor="let c of capituloOptions" [value]="c.id_capitulo">
+                    {{ c.codigo }} {{ c.nombre }}
                   </option>
                 </select>
                 <small class="text-danger" *ngIf="hasError('capitulo','required')">
@@ -156,23 +156,40 @@
               </div>
 
               <div class="col-12 col-lg-6">
-                <label class="form-label">Giro</label>
-                <select class="form-select" formControlName="giro">
+                <label class="form-label">Subcapítulo</label>
+                <select class="form-select" formControlName="subcapitulo">
                   <option value="" disabled>Selecciona la respuesta</option>
-                  <option *ngFor="let g of giroOptions" [value]="g">{{ g }}</option>
+                  <option *ngFor="let s of subcapituloOptions" [value]="s.id_subcapitulo">
+                    {{ s.codigo }} {{ s.nombre }}
+                  </option>
                 </select>
-                <small class="text-danger" *ngIf="hasError('giro','required')">
+                <small class="text-danger" *ngIf="hasError('subcapitulo','required')">
                   Selecciona una opción.
                 </small>
               </div>
 
               <div class="col-12 col-lg-6">
-                <label class="form-label">SubGiro</label>
-                <select class="form-select" formControlName="subGiro">
+                <label class="form-label">Partida Genérica</label>
+                <select class="form-select" formControlName="partidaGenerica">
                   <option value="" disabled>Selecciona la respuesta</option>
-                  <option *ngFor="let s of subGiroOptions" [value]="s">{{ s }}</option>
+                  <option *ngFor="let pg of partidaGenericaOptions" [value]="pg.id_partida_generica">
+                    {{ pg.codigo }} {{ pg.nombre }}
+                  </option>
                 </select>
-                <small class="text-danger" *ngIf="hasError('subGiro','required')">
+                <small class="text-danger" *ngIf="hasError('partidaGenerica','required')">
+                  Selecciona una opción.
+                </small>
+              </div>
+
+              <div class="col-12 col-lg-6">
+                <label class="form-label">Partida Específica</label>
+                <select class="form-select" formControlName="partidaEspecifica">
+                  <option value="" disabled>Selecciona la respuesta</option>
+                  <option *ngFor="let pe of partidaEspecificaOptions" [value]="pe.id_partida_especifica">
+                    {{ pe.codigo }} {{ pe.nombre }}
+                  </option>
+                </select>
+                <small class="text-danger" *ngIf="hasError('partidaEspecifica','required')">
                   Selecciona una opción.
                 </small>
               </div>

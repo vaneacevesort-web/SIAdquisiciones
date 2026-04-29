@@ -35,7 +35,9 @@ const saveDocumentos = (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (!archivo) {
         return res.status(400).json({ message: 'Archivo no recibido' });
     }
-    const solicitud = yield solicitud_1.default.findOne({ where: { userId: usuario } });
+    const solicitud = yield solicitud_1.default.findOne({
+        where: { userId: usuario }
+    });
     if (!solicitud) {
         return res.status(404).json({ message: 'Solicitud no encontrada' });
     }
@@ -252,7 +254,9 @@ const envSolicitud = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.envSolicitud = envSolicitud;
 const deleteDoc = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { tipo, usuario } = req.body;
-    const solicitud = yield solicitud_1.default.findOne({ where: { userId: usuario } });
+    const solicitud = yield solicitud_1.default.findOne({
+        where: { userId: usuario }
+    });
     const documentoExistente = yield documentos_1.default.findOne({
         where: { solicitudId: solicitud.id },
         include: [

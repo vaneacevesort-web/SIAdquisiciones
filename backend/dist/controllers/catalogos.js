@@ -97,6 +97,7 @@ const getOrganosDesconcentrados = (req, res) => __awaiter(void 0, void 0, void 0
 exports.getOrganosDesconcentrados = getOrganosDesconcentrados;
 const getCapitulos = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        console.log('ENTRÓ A GET CAPITULOS');
         const capitulos = yield AdqCatCapitulos_1.default.findAll({
             order: [['codigo', 'ASC']]
         });

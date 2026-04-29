@@ -85,6 +85,8 @@ export const getOrganosDesconcentrados = async (req: Request, res: Response): Pr
 
 export const getCapitulos = async (req: Request, res: Response): Promise<any> => {
   try {
+    console.log('ENTRÓ A GET CAPITULOS');
+    
     const capitulos = await AdqCatCapitulos.findAll({
       order: [['codigo', 'ASC']]
     });
