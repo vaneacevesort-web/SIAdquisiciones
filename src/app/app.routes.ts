@@ -64,9 +64,28 @@ export const routes: Routes = [
         loadChildren: () => import('./views/pages/documentos/documentos.route')
       },
       {
+        path: 'registro/solicitud/:id/estudio-mercado',
+        loadComponent: () =>
+          import('./views/registro/estudio-mercado/estudio-mercado.component')
+            .then(c => c.EstudioMercadoComponent)
+      },
+      {
         path: 'validadores',
         loadChildren: () => import('./views/pages/validadores/validadores.route')
       },
+      {
+        path: 'solicitud/afectacion-presupuestal',
+        loadComponent: () =>
+        import('./views/pages/solicitud/afectacion-presupuestal/lista-afectacion/lista-afectacion.component')
+        .then(m => m.ListaAfectacionComponent)
+      },
+      {
+        path: 'solicitud/afectacion-presupuestal/:id',
+        loadComponent: () =>
+        import('./views/pages/solicitud/afectacion-presupuestal/form-afectacion/form-afectacion.component')
+            .then(m => m.FormAfectacionComponent)
+},
+
     ]
   },
   {
@@ -81,6 +100,7 @@ export const routes: Routes = [
     path: 'registrate',
     loadComponent: () => import('./views/pages/registro/registro.component').then(c => c.RegistroComponent)
   },
+  
   
   { path: '**', redirectTo: 'error/404', pathMatch: 'full' }
 ];

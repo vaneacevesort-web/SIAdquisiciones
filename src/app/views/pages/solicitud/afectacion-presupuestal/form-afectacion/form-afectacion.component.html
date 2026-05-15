@@ -1,0 +1,146 @@
+<div class="container-fluid p-4">
+  <div class="card">
+    <div class="card-body">
+
+    <div class="page-header mb-4">
+  <h5 class="page-title">Afectación Presupuestal</h5>
+  <div class="page-subtitle-1">Integración del Expediente</div>
+</div>
+      <form>
+
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="form-label">Folio Interno (Seguimiento)</label>
+            <input type="text" class="form-control" placeholder="Escriba su respuesta">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Folio de Solicitud de Adquisición (CA)</label>
+            <input type="text" class="form-control" placeholder="Escriba su respuesta">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Fecha de Liberación de Estudio de Mercado</label>
+            <input type="date" class="form-control">
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <label class="form-label">Nombre de Testigo Social</label>
+            <input type="text" class="form-control" placeholder="Escriba su respuesta">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Tipo de gasto</label>
+            <select class="form-select">
+              <option value="">Seleccione una opción</option>
+              <option value="PAD">PAD - Programa de Acciones para el Desarrollo</option>
+              <option value="GC">GC - Gasto Corriente</option>
+              <option value="MIXTO">Mixto - PAD y GC</option>
+            </select>
+          </div>
+
+          <div class="col-12 mt-4">
+            <label class="form-label">Fuente de financiamiento:</label>
+
+            <div class="fuente-box">
+
+             @for (fuente of fuentesFinanciamiento; track fuente.codigo) {
+          <div class="form-check mb-3">
+
+            <input
+              class="form-check-input"
+              type="checkbox"
+              [value]="fuente.codigo"
+              [id]="'fuente_' + fuente.codigo"
+            />
+
+            <label
+              class="form-check-label"
+              [for]="'fuente_' + fuente.codigo"
+            >
+              {{ fuente.codigo }} - {{ fuente.nombre }}
+            </label>
+
+          </div>
+        }
+                    </div>
+                  </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Importe de Suficiencia Presupuestal</label>
+            <input type="number" class="form-control" placeholder="El valor debe ser un número">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Oficio de Suficiencia</label>
+          <input type="file" class="form-control">
+        </div>
+
+        <button type="button" class="btn px-4 text-white" style="background-color: #9b003f;">
+          Siguiente
+        </button>
+
+         <button type="button" class="btn btn-outline-secondary px-4">
+    Limpiar
+  </button>
+
+  
+      </form>
+
+    </div>
+  </div>
+
+</div>
+@if (paso === 1) {
+  <!-- aquí va todo lo que ya tienes: folios, tipo gasto, fuente, importe, oficio -->
+}
+
+@if (paso === 2) {
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <label class="form-label">Clave de Verificación</label>
+      <input type="text" class="form-control" placeholder="Escriba su respuesta">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Descripción de la Clave de Verificación</label>
+      <input type="text" class="form-control" placeholder="Escriba su respuesta">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Unidad de Medida</label>
+      <input type="text" class="form-control" placeholder="Escriba su respuesta">
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <label class="form-label d-block">Dictamen Técnico</label>
+
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="dictamenTecnico" id="dictamenSi" value="SI">
+      <label class="form-check-label" for="dictamenSi">Sí</label>
+    </div>
+
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="dictamenTecnico" id="dictamenNo" value="NO">
+      <label class="form-check-label" for="dictamenNo">No</label>
+    </div>
+  </div>
+
+  <div class="acciones mt-4">
+    <button type="button" class="btn btn-outline-secondary px-4" (click)="paso = 1">
+      Anterior
+    </button>
+
+    <button type="button" class="btn btn-primary px-4">
+      Guardar
+    </button>
+
+    <button type="button" class="btn btn-outline-secondary px-4">
+      Limpiar
+    </button>
+  </div>
+}

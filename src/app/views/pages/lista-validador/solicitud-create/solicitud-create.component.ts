@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { RegistroService } from '../../../../service/registro.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import { UserService } from '../../../../service/user.service';
+import { RegistroStateService } from '../../../../service/registro-state.service';
 
 import {
   AbstractControl,
@@ -24,15 +25,26 @@ import {
 })
 export class SolicitudCreateComponent {
   form: FormGroup;
+
   public _registroService = inject(RegistroService);
   public _userService = inject(UserService);
 
-origenOptions = [
-  { value: 1, label: 'Estatal' },
-  { value: 2, label: 'Federal' },
-  { value: 3, label: 'Fideicomiso' },
-  { value: 4, label: 'Concurrente o Propio' },
-];
+  origenOptions = [
+    { value: 1, label: 'Estatal' },
+    { value: 2, label: 'Federal' },
+    { value: 3, label: 'Fideicomiso' },
+    { value: 4, label: 'Concurrente o Propio' },
+  ];
+
+  tipoContratacionOptions = [
+    { value: 'LPNP', label: 'LP LICITACIÓN PÚBLICA PRESENCIAL', tipo: 'PRESENCIAL' },
+    { value: 'IRP', label: 'IR INVITACIÓN RESTRINGIDA PRESENCIAL', tipo: 'PRESENCIAL' },
+    { value: 'ADP', label: 'AD ADJUDICACIÓN DIRECTA PRESENCIAL', tipo: 'PRESENCIAL' },
+
+    { value: 'IRE', label: 'IR INVITACIÓN RESTRINGIDA ELECTRÓNICA', tipo: 'ELECTRONICA' },
+    { value: 'ADE', label: 'AD ADJUDICACIÓN DIRECTA ELECTRÓNICA', tipo: 'ELECTRONICA' },
+    { value: 'LPE', label: 'LP LICITACIÓN PÚBLICA ELECTRÓNICA', tipo: 'ELECTRONICA' }
+  ];
 
   dependenciaOptions: any[] = [];
   centroCostoOptionsApi: any[] = [];
@@ -43,6 +55,57 @@ origenOptions = [
   subcapituloOptionsApi: any[] = [];
   partidaGenericaOptionsApi: any[] = [];
   partidaEspecificaOptionsApi: any[] = [];
+
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private registroStateService: RegistroStateService
+  ) {
+    this.form = this.fb.group(
+      {
+        folioInterno: ['', [Validators.required, Validators.maxLength(50)]],
+        fechaIngreso: ['', Validators.required],
+        origenRecurso: ['', Validators.required],
+        dependencia: ['', Validators.required],
+        tipoContratacion: ['', Validators.required],
+
+        opdsDescentralizado: [''],
+        organoDesconcentrado: [''],
+        centroCosto: [''],
+
+        capitulo: ['', Validators.required],
+        subcapitulo: [{ value: '', disabled: true }, Validators.required],
+        partidaGenerica: [{ value: '', disabled: true }, Validators.required],
+        partidaEspecifica: [{ value: '', disabled: true }, Validators.required],
+      },
+      { validators: [this.opdsSelectionValidator.bind(this)] }
+    );
+
+    this.form.get('origenRecurso')?.valueChanges.subscribe(() => {
+      this.form.get('tipoContratacion')?.setValue('');
+    });
+
+    this.cargarCatalogos();
+    this.configurarDependencia();
+    this.configurarOPDS();
+    this.configurarPartidas();
+
+    const datosGuardados = this.registroStateService.getDatosGenerales();
+
+    if (datosGuardados) {
+      this.form.patchValue(datosGuardados);
+    }
+  }
+
+  getTipoContratacionOptions(): any[] {
+    const origen = Number(this.form.get('origenRecurso')?.value);
+
+    if (origen === 2) {
+      return this.tipoContratacionOptions.filter(opt => opt.tipo === 'ELECTRONICA');
+    }
+
+    return this.tipoContratacionOptions.filter(opt => opt.tipo === 'PRESENCIAL');
+  }
 
   get centroCostoOptions(): any[] {
     return this.centroCostoOptionsApi;
@@ -64,44 +127,10 @@ origenOptions = [
     return this.partidaEspecificaOptionsApi;
   }
 
-  getDependenciaSeleccionadaNombre(): string {
-    const dep = this.form?.get('dependencia')?.value;
-
-    const encontrada = this.dependenciaOptions.find(
-      (d) => String(d.id_dependencia) === String(dep)
-    );
-
-    return encontrada?.nombre || '';
-  }
-
-  esOrganismosOPDS(): boolean {
-    return this.getDependenciaSeleccionadaNombre() === 'Organismos OPDS';
-  }
-
-  constructor(private fb: FormBuilder, private router: Router) {
-    this.form = this.fb.group(
-      {
-        folioInterno: ['', [Validators.required, Validators.maxLength(50)]],
-        fechaIngreso: ['', Validators.required],
-        origenRecurso: ['', Validators.required],
-        dependencia: ['', Validators.required],
-
-        opdsDescentralizado: [''],
-        organoDesconcentrado: [''],
-        centroCosto: [''],
-
-        capitulo: ['', Validators.required],
-        subcapitulo: [{ value: '', disabled: true }, Validators.required],
-        partidaGenerica: [{ value: '', disabled: true }, Validators.required],
-        partidaEspecifica: [{ value: '', disabled: true }, Validators.required],
-      },
-      { validators: [this.opdsSelectionValidator.bind(this)] }
-    );
-
+  cargarCatalogos(): void {
     this._registroService.getDependencias().subscribe({
       next: (resp) => {
         this.dependenciaOptions = resp?.data || [];
-        console.log('DEPENDENCIAS DESDE BD =>', this.dependenciaOptions);
       },
       error: (err) => {
         console.log('Error al cargar Dependencias', err);
@@ -111,7 +140,6 @@ origenOptions = [
     this._registroService.getOrganismosOPDS().subscribe({
       next: (resp) => {
         this.opdsDescentralizadosOptions = resp?.data || [];
-        console.log('OPDS DESDE BD =>', this.opdsDescentralizadosOptions);
       },
       error: (err) => {
         console.log('Error al cargar OPDS Descentralizados', err);
@@ -121,7 +149,6 @@ origenOptions = [
     this._registroService.getOrganosDesconcentrados().subscribe({
       next: (resp) => {
         this.organosDesconcentradosOptions = resp?.data || [];
-        console.log('DESCONCENTRADOS DESDE BD =>', this.organosDesconcentradosOptions);
       },
       error: (err) => {
         console.log('Error al cargar órganos desconcentrados', err);
@@ -131,13 +158,14 @@ origenOptions = [
     this._registroService.getCapitulos().subscribe({
       next: (resp) => {
         this.capituloOptionsApi = resp?.data || [];
-        console.log('CAPÍTULOS DESDE BD =>', this.capituloOptionsApi);
       },
       error: (err) => {
         console.log('Error al cargar capítulos', err);
       }
     });
+  }
 
+  configurarDependencia(): void {
     this.form.get('opdsDescentralizado')?.disable({ emitEvent: false });
     this.form.get('organoDesconcentrado')?.disable({ emitEvent: false });
     this.form.get('centroCosto')?.disable({ emitEvent: false });
@@ -162,11 +190,9 @@ origenOptions = [
       if (!dep) {
         desc.disable({ emitEvent: false });
         desconc.disable({ emitEvent: false });
-
         cc.disable({ emitEvent: false });
         cc.clearValidators();
         cc.updateValueAndValidity({ emitEvent: false });
-
         this.form.updateValueAndValidity({ emitEvent: false });
         return;
       }
@@ -174,7 +200,6 @@ origenOptions = [
       if (nombreDependencia === 'Organismos OPDS') {
         desc.enable({ emitEvent: false });
         desconc.enable({ emitEvent: false });
-
         cc.disable({ emitEvent: false });
         cc.clearValidators();
         cc.updateValueAndValidity({ emitEvent: false });
@@ -189,7 +214,6 @@ origenOptions = [
         this._registroService.getCentrosCosto(Number(dep)).subscribe({
           next: (resp) => {
             this.centroCostoOptionsApi = resp.data || [];
-            console.log('CENTROS COSTO DESDE BD =>', this.centroCostoOptionsApi);
           },
           error: (err) => {
             console.log('Error al cargar centros de costo', err);
@@ -199,7 +223,9 @@ origenOptions = [
 
       this.form.updateValueAndValidity({ emitEvent: false });
     });
+  }
 
+  configurarOPDS(): void {
     this.form.get('opdsDescentralizado')?.valueChanges.subscribe((val) => {
       const desconc = this.form.get('organoDesconcentrado');
       if (!desconc) return;
@@ -212,6 +238,7 @@ origenOptions = [
         const dependenciaSeleccionada = this.dependenciaOptions.find(
           (d) => String(d.id_dependencia) === String(dep)
         );
+
         if (dependenciaSeleccionada?.nombre === 'Organismos OPDS') {
           desconc.enable({ emitEvent: false });
         }
@@ -232,6 +259,7 @@ origenOptions = [
         const dependenciaSeleccionada = this.dependenciaOptions.find(
           (d) => String(d.id_dependencia) === String(dep)
         );
+
         if (dependenciaSeleccionada?.nombre === 'Organismos OPDS') {
           desc.enable({ emitEvent: false });
         }
@@ -239,7 +267,9 @@ origenOptions = [
 
       this.form.updateValueAndValidity({ emitEvent: false });
     });
+  }
 
+  configurarPartidas(): void {
     this.form.get('capitulo')?.valueChanges.subscribe((idCapitulo) => {
       const subcapitulo = this.form.get('subcapitulo')!;
       const partidaGenerica = this.form.get('partidaGenerica')!;
@@ -263,7 +293,6 @@ origenOptions = [
         next: (resp) => {
           this.subcapituloOptionsApi = resp?.data || [];
           subcapitulo.enable({ emitEvent: false });
-          console.log('SUBCAPÍTULOS DESDE BD =>', this.subcapituloOptionsApi);
         },
         error: (err) => {
           console.log('Error al cargar subcapítulos', err);
@@ -290,7 +319,6 @@ origenOptions = [
         next: (resp) => {
           this.partidaGenericaOptionsApi = resp?.data || [];
           partidaGenerica.enable({ emitEvent: false });
-          console.log('PARTIDAS GENÉRICAS DESDE BD =>', this.partidaGenericaOptionsApi);
         },
         error: (err) => {
           console.log('Error al cargar partidas genéricas', err);
@@ -312,13 +340,26 @@ origenOptions = [
         next: (resp) => {
           this.partidaEspecificaOptionsApi = resp?.data || [];
           partidaEspecifica.enable({ emitEvent: false });
-          console.log('PARTIDAS ESPECÍFICAS DESDE BD =>', this.partidaEspecificaOptionsApi);
         },
         error: (err) => {
           console.log('Error al cargar partidas específicas', err);
         }
       });
     });
+  }
+
+  getDependenciaSeleccionadaNombre(): string {
+    const dep = this.form?.get('dependencia')?.value;
+
+    const encontrada = this.dependenciaOptions.find(
+      (d) => String(d.id_dependencia) === String(dep)
+    );
+
+    return encontrada?.nombre || '';
+  }
+
+  esOrganismosOPDS(): boolean {
+    return this.getDependenciaSeleccionadaNombre() === 'Organismos OPDS';
   }
 
   private opdsSelectionValidator(group: AbstractControl): ValidationErrors | null {
@@ -337,7 +378,7 @@ origenOptions = [
     return null;
   }
 
-  hasError(name: string, err: string) {
+  hasError(name: string, err: string): boolean {
     const c = this.form.get(name);
     return !!(c && c.touched && c.hasError(err));
   }
@@ -357,13 +398,16 @@ origenOptions = [
     return !!(touched && this.form.hasError('opdsRequired'));
   }
 
-  onClear() {
+  onClear(): void {
+    this.registroStateService.clear();
+
     this.form.reset(
       {
         folioInterno: '',
         fechaIngreso: '',
         origenRecurso: '',
         dependencia: '',
+        tipoContratacion: '',
         opdsDescentralizado: '',
         organoDesconcentrado: '',
         centroCosto: '',
@@ -393,7 +437,7 @@ origenOptions = [
     this.form.updateValueAndValidity({ emitEvent: false });
   }
 
-  onSubmit() {
+  onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -404,8 +448,8 @@ origenOptions = [
     const data = {
       folio: formValue.folioInterno,
       fecha_ingreso: formValue.fechaIngreso,
-
       id_origen_recurso: formValue.origenRecurso,
+      tipo_contratacion: formValue.tipoContratacion,
 
       id_dependencia: formValue.dependencia,
       id_opd: formValue.opdsDescentralizado || null,
@@ -424,44 +468,31 @@ origenOptions = [
 
     this._registroService.saveRegistro(data).subscribe({
       next: (response: any) => {
-        if (response) {
-          Swal.fire({
-            position: 'center',
-            icon: 'success',
-            title: '¡Solicitud registrada satisfactoriamente!',
-            text: 'Para continuar con el trámite.',
-            showConfirmButton: false,
-            timer: 10000
-          });
+        console.log('RESPUESTA COMPLETA AL GUARDAR =>', response);
 
-          this.router.navigate(['/']);
+        if (response?.data?.id_solicitud) {
+          const idSolicitud = response.data.id_solicitud;
+
+          this.registroStateService.setDatosGenerales(this.form.getRawValue());
+
+          this.router.navigate([
+            '/registro/solicitud',
+            idSolicitud,
+            'estudio-mercado'
+          ]);
         }
       },
-     error: (e: HttpErrorResponse) => {
-  console.error('ERROR AL GUARDAR =>', e);
+      error: (e: HttpErrorResponse) => {
+        console.error('ERROR AL GUARDAR =>', e);
 
-  if (e.error && e.error.msg) {
-    Swal.fire({
-      position: 'center',
-      icon: 'error',
-      title: e.error.msg + ': ' + e.error.correo,
-      showConfirmButton: false,
-      timer: 3000
-    });
-
-    // this.router.navigate(['/']);
-  } else {
-    Swal.fire({
-      position: 'center',
-      icon: 'error',
-      title: 'Error desconocido: ' + e.message,
-      showConfirmButton: false,
-      timer: 3000
-    });
-
-    // this.router.navigate(['/']);
-  }
-}
+        Swal.fire({
+          position: 'center',
+          icon: 'error',
+          title: e.error?.msg || 'Error desconocido: ' + e.message,
+          showConfirmButton: false,
+          timer: 3000
+        });
+      }
     });
   }
 }

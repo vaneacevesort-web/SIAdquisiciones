@@ -25,5 +25,11 @@ export default [
       {
         path: 'validacion/:id',
         loadComponent: () => import('./detalle-validador/detalle-validador.component').then(c => c.DetalleValidadorComponent)
-      }
+      },
+      {
+        path: 'nuevo/estudio-mercado',
+        loadComponent: () => import('../../registro/estudio-mercado/estudio-mercado.component')
+          .then(c => c.EstudioMercadoComponent)
+      },
+
 ] as Routes;

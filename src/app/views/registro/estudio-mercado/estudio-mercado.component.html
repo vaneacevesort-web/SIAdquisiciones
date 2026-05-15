@@ -1,0 +1,107 @@
+<div class="card">
+  <div class="card-body">
+
+    <h5 class="titulo-principal">Bienes y servicios solicitados</h5>
+    <h6 class="subtitulo">Estudio de Mercado</h6>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+      <div class="row mt-4">
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Tipo de Solicitud</label>
+          <select class="form-select" formControlName="tipoSolicitud">
+            <option value="">Selecciona la respuesta</option>
+            <option value="BIEN">Bien - Adquisición de materiales y suministros</option>
+            <option value="SERVICIO">Servicio - Contratación de servicios generales</option>
+          </select>
+          <small class="text-danger" *ngIf="hasError('tipoSolicitud','required')">
+            Selecciona una opción.
+          </small>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Descripción del bien o servicio</label>
+          <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="descripcion">
+          <small class="text-danger" *ngIf="hasError('descripcion','required')">
+            Este campo es requerido.
+          </small>
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Valor del Estudio de Mercado</label>
+          <input type="number" class="form-control" placeholder="Ej. 102000.00" formControlName="valorEstudio">
+          <small class="text-danger" *ngIf="hasError('valorEstudio','required')">
+            Este campo es requerido.
+          </small>
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Estado del Estudio de Mercado</label>
+          <select class="form-select" formControlName="estadoEstudio">
+            <option value="">Selecciona la respuesta</option>
+            <option value="CONCLUIDO">Concluido</option>
+            <option value="PROCESO">En Proceso</option>
+            <option value="RECHAZADO">Rechazado</option>
+          </select>
+          <small class="text-danger" *ngIf="hasError('estadoEstudio','required')">
+            Selecciona una opción.
+          </small>
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Monto de SABYS</label>
+          <input type="number" class="form-control" placeholder="Ej. 102000.00" formControlName="montoSabys">
+          <small class="text-danger" *ngIf="hasError('montoSabys','required')">
+            Este campo es requerido.
+          </small>
+        </div>
+
+                <div class="col-md-6 mb-3">
+          <label class="form-label">Contratación Plurianual</label>
+
+          <select class="form-select" formControlName="contratacionPlurianual">
+            <option value="">Selecciona la respuesta</option>
+            <option value="SI">Sí</option>
+            <option value="NO">No</option>
+          </select>
+        </div>
+
+        <div class="row" *ngIf="form.get('contratacionPlurianual')?.value === 'SI'">
+
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Monto 2026</label>
+            <input type="number" class="form-control" formControlName="monto2026">
+          </div>
+
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Monto 2027</label>
+            <input type="number" class="form-control" formControlName="monto2027">
+          </div>
+
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Monto 2028</label>
+            <input type="number" class="form-control" formControlName="monto2028">
+          </div>
+
+          <div class="col-md-3 mb-3">
+            <label class="form-label">Monto 2029</label>
+            <input type="number" class="form-control" formControlName="monto2029">
+          </div>
+
+        </div>
+      </div>
+
+      <div class="acciones mt-4">
+        <button type="button" class="btn btn-outline-secondary me-2" (click)="regresar()">
+          Regresar
+        </button>
+
+        <button type="submit" class="btn btn-primary">
+          Guardar
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

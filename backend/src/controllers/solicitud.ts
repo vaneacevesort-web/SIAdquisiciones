@@ -1,3 +1,9 @@
+import AdqDependencias from '../models/AdqDependencias';
+import AdqCentrosCosto from '../models/AdqCentrosCosto';
+import AdqOrganismosOPDS from '../models/AdqOrganismosOPDS';
+import AdqCatCapitulos from '../models/AdqCatCapitulos';
+import AdqCatPartidasGenericas from '../models/AdqCatPartidasGenericas';
+import AdqCatPartidasEspecificas from '../models/AdqCatPartidasEspecificas';
 import { Request, Response } from 'express';
 import Solicitudes from '../models/solicitud';
 import User from '../models/user';
@@ -9,27 +15,103 @@ import AdqSolicitudes from '../models/AdqSolicitudes';
 dotenv.config();
 
 export const getRegistros = async (req: Request, res: Response): Promise<any> => {
-  const listSolicitudes = await AdqSolicitudes.findAll();
+  try {
+    const listSolicitudes: any[] = await AdqSolicitudes.findAll({
+      order: [['id_solicitud', 'ASC']]
+    });
 
-  return res.json({
-    msg: 'Lista obtenida exitosamente',
-    data: listSolicitudes
-  });
-};
+    const data = await Promise.all(
+      listSolicitudes.map(async (solicitud: any) => {
+        const item = solicitud.toJSON();
 
-export const getRegistro = async (req: Request, res: Response): Promise<any> => {
-  const { id } = req.params;
+        const dependencia: any = item.id_dependencia
+          ? await AdqDependencias.findByPk(item.id_dependencia)
+          : null;
 
-  const solicitud = await AdqSolicitudes.findByPk(id);
+        const centroCosto: any = item.id_centro_costo
+          ? await AdqCentrosCosto.findByPk(item.id_centro_costo)
+          : null;
 
-  if (solicitud) {
-    return res.json(solicitud);
+        const opd: any = item.id_opd
+          ? await AdqOrganismosOPDS.findByPk(item.id_opd)
+          : null;
+
+        const capitulo: any = item.id_capitulo
+          ? await AdqCatCapitulos.findByPk(item.id_capitulo)
+          : null;
+
+        const partidaGenerica: any = item.id_partida_generica
+          ? await AdqCatPartidasGenericas.findByPk(item.id_partida_generica)
+          : null;
+
+        const partidaEspecifica: any = item.id_partida_especifica
+          ? await AdqCatPartidasEspecificas.findByPk(item.id_partida_especifica)
+          : null;
+
+        return {
+          ...item,
+
+          origen_recurso_nombre: getOrigenRecursoNombre(item.id_origen_recurso),
+
+          dependencia_nombre: dependencia?.getDataValue('nombre') || '',
+
+          centro_costo_nombre: centroCosto
+            ? `${centroCosto.getDataValue('codigo')} - ${centroCosto.getDataValue('nombre')}`
+            : '',
+
+          opd_nombre: opd
+            ? `${opd.getDataValue('codigo')} - ${opd.getDataValue('nombre')}`
+            : '',
+
+          capitulo_nombre: capitulo
+            ? `${capitulo.getDataValue('codigo')} - ${capitulo.getDataValue('nombre')}`
+            : '',
+
+          partida_generica_nombre: partidaGenerica
+            ? `${partidaGenerica.getDataValue('codigo')} - ${partidaGenerica.getDataValue('nombre')}`
+            : '',
+
+          partida_especifica_nombre: partidaEspecifica
+            ? `${partidaEspecifica.getDataValue('codigo')} - ${partidaEspecifica.getDataValue('nombre')}`
+            : '',
+        };
+      })
+    );
+
+    return res.json({
+      msg: 'Lista obtenida exitosamente',
+      data
+    });
+
+  } catch (error: any) {
+    console.error('ERROR REAL AL CREAR SOLICITUD =>', error);
+
+     if (error.name=== 'SequelizeUniqueConstraintError') {
+    return res.status(400).json({
+      msg: 'El folio ya existe. Captura un folio diferente.'
+    });
   }
 
-  return res.status(404).json({
-    msg: `No existe el id ${id}`,
-  });
+    return res.status(500).json({
+      msg: 'Error al crear la solicitud',
+      error: error.message
+    });
+  }
 };
+
+      export const getRegistro = async (req: Request, res: Response): Promise<any> => {
+        const { id } = req.params;
+
+        const solicitud = await AdqSolicitudes.findByPk(id);
+
+        if (solicitud) {
+          return res.json(solicitud);
+        }
+
+        return res.status(404).json({
+          msg: `No existe el id ${id}`,
+        });
+      };
 
 export const deleteRegistro = async (req: Request, res: Response): Promise<any> => {
   const { id } = req.params;
@@ -48,6 +130,15 @@ export const deleteRegistro = async (req: Request, res: Response): Promise<any> 
     msg: `No existe el id ${id}`,
   });
 };
+function getOrigenRecursoNombre(id: number): string {
+  switch (Number(id)) {
+    case 1: return 'Estatal';
+    case 2: return 'Federal';
+    case 3: return 'Fideicomiso';
+    case 4: return 'Concurrente o Propio';
+    default: return '';
+  }
+}
 
 export const saveRegistro = async (req: Request, res: Response): Promise<any> => {
   const { body } = req;
@@ -66,7 +157,7 @@ export const saveRegistro = async (req: Request, res: Response): Promise<any> =>
       });
     }
 
-    const solicitud = await AdqSolicitudes.create({
+      const solicitud = await AdqSolicitudes.create({
       folio: folio,
       fecha_ingreso: fechaIngreso,
       id_origen_recurso: Number(origenRecurso),
@@ -86,11 +177,15 @@ export const saveRegistro = async (req: Request, res: Response): Promise<any> =>
       estatus_id: 1,
     });
 
-    return res.json({
-      msg: 'Agregado con éxito',
-      data: solicitud
+    return res.status(201).json({
+      ok: true,
+      msg: 'Solicitud registrada correctamente',
+      data: {
+        id_solicitud: solicitud.id_solicitud,
+        folio: solicitud.folio
+      }
     });
-
+    
   } catch (error) {
     console.log('ERROR EN saveRegistro:', error);
 
@@ -182,6 +277,77 @@ export const getestatus = async (req: Request, res: Response): Promise<any> => {
   return res.status(404).json({
     msg: `No existe el id ${id}`,
   });
+};
+export const createEstudioMercado = async (req: Request, res: Response): Promise<any> => {
+  try {
+    console.log('BODY ESTUDIO MERCADO =>', req.body);
+
+    const { id_solicitud } = req.body;
+
+    if (!id_solicitud) {
+      return res.status(400).json({
+        ok: false,
+        msg: 'Falta id_solicitud'
+      });
+    }
+
+    await AdqSolicitudes.update(
+      {
+        estatus_id: 2
+      },
+      {
+        where: {
+          id_solicitud: id_solicitud
+        }
+      }
+    );
+
+    const actualizada = await AdqSolicitudes.findByPk(id_solicitud);
+
+      console.log('SOLICITUD ACTUALIZADA =>', actualizada?.toJSON());
+
+    return res.status(200).json({
+      ok: true,
+      msg: 'Estudio de mercado guardado correctamente',
+      data: req.body
+    });
+
+  } catch (error) {
+    console.error('ERROR ESTUDIO MERCADO =>', error);
+
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error al guardar estudio de mercado'
+    });
+  }
+};
+
+export const getSolicitudesAfectacion = async (req: Request, res: Response): Promise<any> => {
+  try {
+
+    const solicitudes = await AdqSolicitudes.findAll({
+      where: {
+        estatus_id: 2
+      },
+      order: [['id_solicitud', 'DESC']]
+    });
+
+    return res.json({
+      ok: true,
+      msg: 'Solicitudes para afectación presupuestal',
+      data: solicitudes
+    });
+
+  } catch (error) {
+
+    console.error('ERROR AL OBTENER AFECTACIÓN =>', error);
+
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error al obtener solicitudes de afectación presupuestal'
+    });
+
+  }
 };
 
 function generarHtmlCorreo(contenidoHtml: string): string {

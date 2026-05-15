@@ -12,7 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
+exports.getSolicitudesAfectacion = exports.createEstudioMercado = exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
+const AdqDependencias_1 = __importDefault(require("../models/AdqDependencias"));
+const AdqCentrosCosto_1 = __importDefault(require("../models/AdqCentrosCosto"));
+const AdqOrganismosOPDS_1 = __importDefault(require("../models/AdqOrganismosOPDS"));
+const AdqCatCapitulos_1 = __importDefault(require("../models/AdqCatCapitulos"));
+const AdqCatPartidasGenericas_1 = __importDefault(require("../models/AdqCatPartidasGenericas"));
+const AdqCatPartidasEspecificas_1 = __importDefault(require("../models/AdqCatPartidasEspecificas"));
 const solicitud_1 = __importDefault(require("../models/solicitud"));
 const user_1 = __importDefault(require("../models/user"));
 const role_users_1 = __importDefault(require("../models/role_users"));
@@ -21,11 +27,59 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const AdqSolicitudes_1 = __importDefault(require("../models/AdqSolicitudes"));
 dotenv_1.default.config();
 const getRegistros = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const listSolicitudes = yield AdqSolicitudes_1.default.findAll();
-    return res.json({
-        msg: 'Lista obtenida exitosamente',
-        data: listSolicitudes
-    });
+    try {
+        const listSolicitudes = yield AdqSolicitudes_1.default.findAll({
+            order: [['id_solicitud', 'ASC']]
+        });
+        const data = yield Promise.all(listSolicitudes.map((solicitud) => __awaiter(void 0, void 0, void 0, function* () {
+            const item = solicitud.toJSON();
+            const dependencia = item.id_dependencia
+                ? yield AdqDependencias_1.default.findByPk(item.id_dependencia)
+                : null;
+            const centroCosto = item.id_centro_costo
+                ? yield AdqCentrosCosto_1.default.findByPk(item.id_centro_costo)
+                : null;
+            const opd = item.id_opd
+                ? yield AdqOrganismosOPDS_1.default.findByPk(item.id_opd)
+                : null;
+            const capitulo = item.id_capitulo
+                ? yield AdqCatCapitulos_1.default.findByPk(item.id_capitulo)
+                : null;
+            const partidaGenerica = item.id_partida_generica
+                ? yield AdqCatPartidasGenericas_1.default.findByPk(item.id_partida_generica)
+                : null;
+            const partidaEspecifica = item.id_partida_especifica
+                ? yield AdqCatPartidasEspecificas_1.default.findByPk(item.id_partida_especifica)
+                : null;
+            return Object.assign(Object.assign({}, item), { origen_recurso_nombre: getOrigenRecursoNombre(item.id_origen_recurso), dependencia_nombre: (dependencia === null || dependencia === void 0 ? void 0 : dependencia.getDataValue('nombre')) || '', centro_costo_nombre: centroCosto
+                    ? `${centroCosto.getDataValue('codigo')} - ${centroCosto.getDataValue('nombre')}`
+                    : '', opd_nombre: opd
+                    ? `${opd.getDataValue('codigo')} - ${opd.getDataValue('nombre')}`
+                    : '', capitulo_nombre: capitulo
+                    ? `${capitulo.getDataValue('codigo')} - ${capitulo.getDataValue('nombre')}`
+                    : '', partida_generica_nombre: partidaGenerica
+                    ? `${partidaGenerica.getDataValue('codigo')} - ${partidaGenerica.getDataValue('nombre')}`
+                    : '', partida_especifica_nombre: partidaEspecifica
+                    ? `${partidaEspecifica.getDataValue('codigo')} - ${partidaEspecifica.getDataValue('nombre')}`
+                    : '' });
+        })));
+        return res.json({
+            msg: 'Lista obtenida exitosamente',
+            data
+        });
+    }
+    catch (error) {
+        console.error('ERROR REAL AL CREAR SOLICITUD =>', error);
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json({
+                msg: 'El folio ya existe. Captura un folio diferente.'
+            });
+        }
+        return res.status(500).json({
+            msg: 'Error al crear la solicitud',
+            error: error.message
+        });
+    }
 });
 exports.getRegistros = getRegistros;
 const getRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -53,6 +107,15 @@ const deleteRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function*
     });
 });
 exports.deleteRegistro = deleteRegistro;
+function getOrigenRecursoNombre(id) {
+    switch (Number(id)) {
+        case 1: return 'Estatal';
+        case 2: return 'Federal';
+        case 3: return 'Fideicomiso';
+        case 4: return 'Concurrente o Propio';
+        default: return '';
+    }
+}
 const saveRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { body } = req;
     console.log('BODY RECIBIDO:', body);
@@ -82,9 +145,13 @@ const saveRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             user_id: body.userId || body.user_id || null,
             estatus_id: 1,
         });
-        return res.json({
-            msg: 'Agregado con éxito',
-            data: solicitud
+        return res.status(201).json({
+            ok: true,
+            msg: 'Solicitud registrada correctamente',
+            data: {
+                id_solicitud: solicitud.id_solicitud,
+                folio: solicitud.folio
+            }
         });
     }
     catch (error) {
@@ -173,6 +240,63 @@ const getestatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     });
 });
 exports.getestatus = getestatus;
+const createEstudioMercado = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        console.log('BODY ESTUDIO MERCADO =>', req.body);
+        const { id_solicitud } = req.body;
+        if (!id_solicitud) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'Falta id_solicitud'
+            });
+        }
+        yield AdqSolicitudes_1.default.update({
+            estatus_id: 2
+        }, {
+            where: {
+                id_solicitud: id_solicitud
+            }
+        });
+        const actualizada = yield AdqSolicitudes_1.default.findByPk(id_solicitud);
+        console.log('SOLICITUD ACTUALIZADA =>', actualizada === null || actualizada === void 0 ? void 0 : actualizada.toJSON());
+        return res.status(200).json({
+            ok: true,
+            msg: 'Estudio de mercado guardado correctamente',
+            data: req.body
+        });
+    }
+    catch (error) {
+        console.error('ERROR ESTUDIO MERCADO =>', error);
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al guardar estudio de mercado'
+        });
+    }
+});
+exports.createEstudioMercado = createEstudioMercado;
+const getSolicitudesAfectacion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const solicitudes = yield AdqSolicitudes_1.default.findAll({
+            where: {
+                estatus_id: 2
+            },
+            order: [['id_solicitud', 'DESC']]
+        });
+        return res.json({
+            ok: true,
+            msg: 'Solicitudes para afectación presupuestal',
+            data: solicitudes
+        });
+    }
+    catch (error) {
+        console.error('ERROR AL OBTENER AFECTACIÓN =>', error);
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al obtener solicitudes de afectación presupuestal'
+        });
+    }
+});
+exports.getSolicitudesAfectacion = getSolicitudesAfectacion;
 function generarHtmlCorreo(contenidoHtml) {
     return `
     <html>

@@ -14,4 +14,5 @@ router.get('/capitulos', catalogos_1.getCapitulos);
 router.get('/subcapitulos/:id_capitulo', catalogos_1.getSubcapitulos);
 router.get('/partidas-genericas/:id_subcapitulo', catalogos_1.getPartidasGenericas);
 router.get('/partidas-especificas/:id_partida_generica', catalogos_1.getPartidasEspecificas);
+router.get('/fuentes-financiamiento', catalogos_1.getFuentesFinanciamiento);
 exports.default = router;

@@ -7,7 +7,8 @@ import {
   getCapitulos,
   getSubcapitulos,
   getPartidasGenericas,
-  getPartidasEspecificas
+  getPartidasEspecificas,
+  getFuentesFinanciamiento
 } from '../controllers/catalogos';
 
 const router = Router();
@@ -25,5 +26,6 @@ router.get('/capitulos', getCapitulos);
 router.get('/subcapitulos/:id_capitulo', getSubcapitulos);
 router.get('/partidas-genericas/:id_subcapitulo', getPartidasGenericas);
 router.get('/partidas-especificas/:id_partida_generica', getPartidasEspecificas);
+router.get('/fuentes-financiamiento', getFuentesFinanciamiento);
 
 export default router;

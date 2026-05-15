@@ -1,0 +1,35 @@
+<tbody>
+
+  <tr *ngFor="let solicitud of solicitudes; let i = index">
+
+    <td>{{ i + 1 }}</td>
+
+    <td>{{ solicitud.folio }}</td>
+
+    <td>{{ solicitud.fecha_ingreso }}</td>
+
+    <td>{{ solicitud.tipo_solicitud }}</td>
+
+    <td>{{ solicitud.dependencia }}</td>
+
+    <td>
+      <span class="badge bg-success">
+        Concluido
+      </span>
+    </td>
+
+    <td>
+
+      <button
+        class="btn btn-primary btn-sm"
+        [routerLink]="['/solicitud/afectacion-presupuestal', solicitud.id_solicitud]">
+
+        Capturar afectación
+
+      </button>
+
+    </td>
+
+  </tr>
+
+</tbody>

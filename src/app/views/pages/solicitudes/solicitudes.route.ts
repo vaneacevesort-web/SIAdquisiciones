@@ -7,3 +7,4 @@ export default [
         loadComponent: () => import('./solicitudes.component').then(c => c.SolicitudesComponent) 
     }
 ] as Routes;
+

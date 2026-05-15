@@ -10,4 +10,6 @@ router.post("/api/solicitud/edit/:id", solicitud_1.getRegistro);
 router.put("/api/solicitud/update/:id", solicitud_1.putRegistro);
 router.post("/api/solicitud/getsolicitudes", solicitud_1.getSolicitudes);
 router.get("/api/solicitud/getestatus/:id", solicitud_1.getestatus);
+router.post("/api/solicitud/estudio-mercado", solicitud_1.createEstudioMercado);
+router.get("/api/solicitud/afectacion-presupuestal", solicitud_1.getSolicitudesAfectacion);
 exports.default = router;

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPartidasEspecificas = exports.getPartidasGenericas = exports.getSubcapitulos = exports.getCapitulos = exports.getOrganosDesconcentrados = exports.getOrganismosOPDS = exports.getCentrosCosto = exports.getDependencias = void 0;
+exports.getFuentesFinanciamiento = exports.createEstudioMercado = exports.getPartidasEspecificas = exports.getPartidasGenericas = exports.getSubcapitulos = exports.getCapitulos = exports.getOrganosDesconcentrados = exports.getOrganismosOPDS = exports.getCentrosCosto = exports.getDependencias = void 0;
 const AdqDependencias_1 = __importDefault(require("../models/AdqDependencias"));
 const AdqCentrosCosto_1 = __importDefault(require("../models/AdqCentrosCosto"));
 const AdqOrganismosOPDS_1 = __importDefault(require("../models/AdqOrganismosOPDS"));
@@ -21,6 +21,7 @@ const AdqCatCapitulos_1 = __importDefault(require("../models/AdqCatCapitulos"));
 const AdqCatSubcapitulos_1 = __importDefault(require("../models/AdqCatSubcapitulos"));
 const AdqCatPartidasGenericas_1 = __importDefault(require("../models/AdqCatPartidasGenericas"));
 const AdqCatPartidasEspecificas_1 = __importDefault(require("../models/AdqCatPartidasEspecificas"));
+const adq_cat_fuentes_financiamiento_1 = __importDefault(require("../models/adq_cat_fuentes_financiamiento"));
 const getDependencias = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const dependencias = yield AdqDependencias_1.default.findAll({
@@ -147,9 +148,10 @@ const getPartidasGenericas = (req, res) => __awaiter(void 0, void 0, void 0, fun
         });
     }
     catch (error) {
-        console.log(error);
+        console.error('ERROR FUENTES FINANCIAMIENTO =>', error);
         return res.status(500).json({
-            msg: 'Error al obtener partidas genéricas'
+            ok: false,
+            msg: error.message
         });
     }
 });
@@ -174,3 +176,43 @@ const getPartidasEspecificas = (req, res) => __awaiter(void 0, void 0, void 0, f
     }
 });
 exports.getPartidasEspecificas = getPartidasEspecificas;
+const createEstudioMercado = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        console.log('BODY ESTUDIO MERCADO =>', req.body);
+        return res.status(200).json({
+            ok: true,
+            msg: 'Estudio de mercado guardado correctamente',
+            data: req.body
+        });
+    }
+    catch (error) {
+        console.error('ERROR ESTUDIO MERCADO =>', error);
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al guardar estudio de mercado'
+        });
+    }
+});
+exports.createEstudioMercado = createEstudioMercado;
+const getFuentesFinanciamiento = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const fuentes = yield adq_cat_fuentes_financiamiento_1.default.findAll({
+            where: {
+                activo: true
+            },
+            order: [['codigo', 'ASC']]
+        });
+        return res.json({
+            ok: true,
+            data: fuentes
+        });
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al obtener fuentes de financiamiento'
+        });
+    }
+});
+exports.getFuentesFinanciamiento = getFuentesFinanciamiento;

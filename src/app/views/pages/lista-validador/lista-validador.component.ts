@@ -65,7 +65,12 @@ export class ListaValidadorComponent {
 
     this._registroService.getRegistros().subscribe({
       next: (response: any) => {
-        this.originalData = [...response.data];
+
+        const data = response?.data || response?.data?.data || response || [];
+
+         console.log('DATA FINAL =>', data);
+
+        this.originalData = Array.isArray(data) ? [...data] : [];
         this.temp = [...this.originalData];
         this.filteredCount = this.temp.length;
         this.setPage({ offset: 0 });
@@ -131,28 +136,72 @@ export class ListaValidadorComponent {
     this.setPage({ offset: 0 });
   }
 
-  exportToExcel(): void {
-    const exportData = this.temp.map((row, index) => ({
-      N: index + 1,
-      'Fecha Solicitud': this.formatDate(row.fecha_envio),
-      Folio: row.id?.substring(0, 8),
-      Nombre: `${row.ap_paterno} ${row.ap_materno} ${row.nombres}`,
-      Correo: row.correo,
-      Telefono: row.celular,
-      Curp: row.curp,
-      Estatus: this.getEstatusNombre(row.estatusId)
-    }));
+ exportToExcel(): void {
+  const exportData = this.temp.map((row, index) => ({
+    'N': index + 1,
+    'Folio Interno de Solicitud': row.folio || '',
+    'Fecha Ingreso de Solicitud': this.formatDate(row.fecha_ingreso),
+    'Origen de Recurso': row.origen_recurso_nombre || '',
+    'Dependencia': row.dependencia_nombre || '',
+    'Centro de Costo': row.centro_costo_nombre || row.opd_nombre || '',
+    'Capítulo': row.capitulo_nombre || '',
+    'Partida Genérica': row.partida_generica_nombre || '',
+    'Partida Específica': row.partida_especifica_nombre || '',
+    'Tipo de Solicitud': row.tipo_solicitud || '',
+    'Valor del Estudio de Mercado': row.valor_estudio_mercado || '',
+    'Estatus del Estudio de Mercado': row.estatus_estudio_mercado || '',
+    'Monto SABYS': row.monto_sabys || '',
+    'Descripción del bien o servicio': row.descripcion_bien_servicio || '',
+    'Contratación Plurianual': row.contratacion_plurianual || '',
+    'Monto 2026': row.monto_2026 || '',
+    'Monto 2027': row.monto_2027 || '',
+    'Monto 2028': row.monto_2028 || '',
+    'Monto 2029': row.monto_2029 || '',
+    'Estatus': this.getEstatusNombre(row.estatus_id)
+  }));
 
-    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook: XLSX.WorkBook = {
-      Sheets: { 'Datos': worksheet },
-      SheetNames: ['Datos']
-    };
+  const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(exportData);
 
-    const excelBuffer: any = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob: Blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    FileSaver.saveAs(blob, 'reporte.xlsx');
-  }
+  worksheet['!cols'] = [
+    { wch: 6 },
+    { wch: 28 },
+    { wch: 24 },
+    { wch: 20 },
+    { wch: 25 },
+    { wch: 20 },
+    { wch: 15 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 28 },
+    { wch: 30 },
+    { wch: 18 },
+    { wch: 45 },
+    { wch: 24 },
+    { wch: 15 },
+    { wch: 15 },
+    { wch: 15 },
+    { wch: 15 },
+    { wch: 15 }
+  ];
+
+  const workbook: XLSX.WorkBook = {
+    Sheets: { 'General': worksheet },
+    SheetNames: ['General']
+  };
+
+  const excelBuffer: any = XLSX.write(workbook, {
+    bookType: 'xlsx',
+    type: 'array'
+  });
+
+  const blob: Blob = new Blob([excelBuffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
+
+  FileSaver.saveAs(blob, 'SIAdquisiciones_General.xlsx');
+}
 
   // Devuelve el nombre del estatus como texto
   getEstatusNombre(estatusId: number): string {
@@ -172,6 +221,30 @@ getLink(row: any): string[] {
     return ['/solicitud/validacion', row.userId]; 
 }
 
+getOrigenRecursoNombre(id: number): string {
+  switch (Number(id)) {
+    case 1: return 'Estatal';
+    case 2: return 'Federal';
+    case 3: return 'Fideicomiso';
+    case 4: return 'Concurrente o Propio';
+    default: return '';
+  }
+}
+
+getCapituloNombre(id: number): string {
+  switch (Number(id)) {
+    case 1: return '1000 - Servicios Personales';
+    case 2: return '2000 - Materiales y Suministros';
+    case 3: return '3000 - Servicios Generales';
+    case 4: return '4000 - Transferencias, Asignaciones, Subsidios y Otras Ayudas';
+    case 5: return '5000 - Bienes Muebles, Inmuebles e Intangibles';
+    case 6: return '6000 - Inversión Pública';
+    case 7: return '7000 - Inversiones Financieras y Otras Provisiones';
+    case 8: return '8000 - Participaciones y Aportaciones';
+    case 9: return '9000 - Deuda Pública';
+    default: return '';
+  }
+}
 
   formatDate(fecha: string | Date): string {
     const d = new Date(fecha);

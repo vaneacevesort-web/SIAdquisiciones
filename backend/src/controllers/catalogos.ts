@@ -7,6 +7,7 @@ import AdqCatCapitulos from '../models/AdqCatCapitulos';
 import AdqCatSubcapitulos from '../models/AdqCatSubcapitulos';
 import AdqCatPartidasGenericas from '../models/AdqCatPartidasGenericas';
 import AdqCatPartidasEspecificas from '../models/AdqCatPartidasEspecificas';
+import AdqCatFuentesFinanciamiento from '../models/adq_cat_fuentes_financiamiento';
 
 export const getDependencias = async (req: Request, res: Response): Promise<any> => {
   try {
@@ -137,11 +138,15 @@ export const getPartidasGenericas = async (req: Request, res: Response): Promise
       msg: 'Partidas genéricas obtenidas',
       data: partidas
     });
-  } catch (error) {
-    console.log(error);
+    } catch (error: any) {
+
+    console.error('ERROR FUENTES FINANCIAMIENTO =>', error);
+
     return res.status(500).json({
-      msg: 'Error al obtener partidas genéricas'
+      ok: false,
+      msg: error.message
     });
+
   }
 };
 
@@ -164,4 +169,52 @@ export const getPartidasEspecificas = async (req: Request, res: Response): Promi
       msg: 'Error al obtener partidas específicas'
     });
   }
+};
+
+export const createEstudioMercado = async (req: any, res: any) => {
+  try {
+    console.log('BODY ESTUDIO MERCADO =>', req.body);
+
+    return res.status(200).json({
+      ok: true,
+      msg: 'Estudio de mercado guardado correctamente',
+      data: req.body
+    });
+
+  } catch (error) {
+    console.error('ERROR ESTUDIO MERCADO =>', error);
+
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error al guardar estudio de mercado'
+    });
+  }
+};
+export const getFuentesFinanciamiento = async (req: any, res: any) => {
+
+  try {
+
+    const fuentes = await AdqCatFuentesFinanciamiento.findAll({
+      where: {
+        activo: true
+      },
+      order: [['codigo', 'ASC']]
+    });
+
+    return res.json({
+      ok: true,
+      data: fuentes
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error al obtener fuentes de financiamiento'
+    });
+
+  }
+
 };

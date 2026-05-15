@@ -193,7 +193,21 @@
                   Selecciona una opción.
                 </small>
               </div>
+              <div class="col-md-6 mb-3">
+  <label class="form-label">Tipo de Contratación</label>
 
+  <select class="form-select" formControlName="tipoContratacion">
+    <option value="">Selecciona la respuesta</option>
+
+    <option *ngFor="let opt of getTipoContratacionOptions()" [value]="opt.value">
+      {{ opt.label }}
+    </option>
+  </select>
+
+  <small class="text-danger" *ngIf="hasError('tipoContratacion','required')">
+    Selecciona una opción.
+  </small>
+</div>
             </div>
 
           </div>
@@ -201,7 +215,7 @@
       </div>
 
       <div class="mt-4 d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="submit" class="btn btn-primary">Siguiente</button>
         <button type="button" class="btn btn-outline-secondary" (click)="onClear()">Limpiar</button>
       </div>
 

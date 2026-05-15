@@ -19,6 +19,9 @@ export class RegistroService {
   saveRegistro(data: any): Observable<any> {
     return this.http.post<any>(`${this.myAppUrl}${this.myAPIUrl}/create`, data);
   }
+  saveEstudioMercado(data: any): Observable<any> {
+    return this.http.post<any>(`${this.myAppUrl}${this.myAPIUrl}/estudio-mercado`, data);
+  }
 
   getStatus(user: string): Observable<any> {
     return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/getestatus/${user}`);
@@ -59,4 +62,13 @@ export class RegistroService {
   getPartidasEspecificas(idPartidaGenerica: number): Observable<any> {
     return this.http.get<any>(`${this.myAppUrl}api/catalogos/partidas-especificas/${idPartidaGenerica}`);
   }
+  getSolicitudesAfectacion(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/afectacion-presupuestal`);
+  }
+getFuentesFinanciamiento(): Observable<any> {
+  return this.http.get<any>(`${this.myAppUrl}api/catalogos/fuentes-financiamiento`);
 }
+}
+
+
+  
