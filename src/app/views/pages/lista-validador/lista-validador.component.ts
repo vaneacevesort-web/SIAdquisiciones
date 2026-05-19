@@ -1,13 +1,12 @@
 import { Component, inject, ViewChild } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ValidadorService } from '../../../service/validador.service';
 import { UserService } from '../../../service/user.service';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ColumnMode, DatatableComponent, NgxDatatableModule } from '@siemens/ngx-datatable';
-import { RouterModule } from '@angular/router';
+import { DatatableComponent, NgxDatatableModule } from '@siemens/ngx-datatable';
 import * as XLSX from 'xlsx';
-import * as FileSaver from 'file-saver';
+import { saveAs } from 'file-saver';
 import { RegistroService } from '../../../service/registro.service';
 
 @Component({
@@ -27,6 +26,13 @@ export class ListaValidadorComponent {
   rutaActual: string = '';
   titulo: string = '';
   tipoEstatus: number = 0;
+  fechaHoy: string = '';
+  nombreUsuario: string = '';
+  rolUsuario: string = '';
+
+  kpi = { solicitudes: 0, estudio: 0, afectacion: 0, adquisicion: 0, adjudicacion: 0, total: 0 };
+  textoBusqueda: string = '';
+  filtroEstatus: string = '';
   public _userService = inject(UserService);
   public _validadorService = inject(ValidadorService);
   public _registroService = inject(RegistroService);
@@ -34,9 +40,41 @@ export class ListaValidadorComponent {
   @ViewChild('table') table: DatatableComponent;
 
 
-  constructor(private router: Router) { }
+  constructor(private router: Router) {}
+
+  calcularKPIs(): void {
+    const all = this.originalData;
+    const n = (r: any) => Number(r.estatus_id);
+    this.kpi = {
+      total:        all.length,
+      solicitudes:  all.filter(r => n(r) >= 1).length,
+      estudio:      all.filter(r => n(r) >= 2).length,
+      afectacion:   all.filter(r => n(r) >= 3).length,
+      adquisicion:  all.filter(r => n(r) >= 4).length,
+      adjudicacion: all.filter(r => n(r) >= 5).length,
+    };
+  }
+
+  pct(n: number): string {
+    if (!this.kpi.total) return '—';
+    return Math.round((n / this.kpi.total) * 100) + '% del total';
+  }
+
+  logout(): void {
+    localStorage.setItem('isLoggedin', 'false');
+    localStorage.removeItem('myToken');
+    localStorage.removeItem('currentUser');
+    this.router.navigate(['/auth/login']);
+  }
 
   ngOnInit(): void {
+    const user = this._userService.currentUserValue;
+    this.nombreUsuario = user?.email?.split('@')[0] ?? 'Usuario';
+    this.rolUsuario = user?.rol_users?.role?.name ?? 'Sin rol';
+    this.fechaHoy = new Date().toLocaleDateString('es-MX', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
     this.rutaActual = this.router.url;
     if (this.rutaActual.includes('estudiodemercado')) {
       this.titulo = 'Solicitudes en tramite'
@@ -75,6 +113,7 @@ export class ListaValidadorComponent {
         this.filteredCount = this.temp.length;
         this.setPage({ offset: 0 });
         this.loading = false;
+        this.calcularKPIs();
 
       },
       error: (e: HttpErrorResponse) => {
@@ -125,15 +164,45 @@ export class ListaValidadorComponent {
 
   
   updateFilter(event: any) {
-    const val = (event.target?.value || '').toLowerCase();
-    this.temp = this.originalData.filter((row: any) => {
-      return Object.values(row).some((field) => {
-        return field && field.toString().toLowerCase().includes(val);
-      });
-    });
+    this.textoBusqueda = (event.target?.value || '').toLowerCase();
+    this.aplicarFiltros();
+  }
 
+  aplicarFiltros(): void {
+    this.temp = this.originalData.filter((row: any) => {
+      const coincideTexto = !this.textoBusqueda ||
+        Object.values(row).some(f => f && f.toString().toLowerCase().includes(this.textoBusqueda));
+      const coincideEstatus = !this.filtroEstatus ||
+        Number(row.estatus_id) >= Number(this.filtroEstatus);
+      return coincideTexto && coincideEstatus;
+    });
     this.filteredCount = this.temp.length;
     this.setPage({ offset: 0 });
+  }
+
+  cambiarFiltroEstatus(event: any): void {
+    this.filtroEstatus = event.target?.value || '';
+    this.aplicarFiltros();
+  }
+
+  getAvancePct(estatusId: number): number {
+    switch (estatusId) {
+      case 1: return 25;
+      case 2: return 50;
+      case 3: return 75;
+      case 4: return 100;
+      default: return 0;
+    }
+  }
+
+  getAvanceColor(estatusId: number): string {
+    switch (estatusId) {
+      case 1: return '#2563eb';
+      case 2: return '#d97706';
+      case 3: return '#922040';
+      case 4: return '#16a34a';
+      default: return '#94a3b8';
+    }
   }
 
  exportToExcel(): void {
@@ -200,7 +269,7 @@ export class ListaValidadorComponent {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   });
 
-  FileSaver.saveAs(blob, 'SIAdquisiciones_General.xlsx');
+  saveAs(blob, 'SIAdquisiciones_General.xlsx');
 }
 
   // Devuelve el nombre del estatus como texto

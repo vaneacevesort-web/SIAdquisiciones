@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSolicitudesAfectacion = exports.createEstudioMercado = exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
+exports.getSolicitudesAfectacion = exports.getSolicitudesCola = exports.saveProcedimientoAdquisitivo = exports.getProcedimientoById = exports.saveAfectacionPresupuestal = exports.getAfectacionById = exports.createEstudioMercado = exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
 const AdqDependencias_1 = __importDefault(require("../models/AdqDependencias"));
 const AdqCentrosCosto_1 = __importDefault(require("../models/AdqCentrosCosto"));
 const AdqOrganismosOPDS_1 = __importDefault(require("../models/AdqOrganismosOPDS"));
@@ -25,6 +25,10 @@ const role_users_1 = __importDefault(require("../models/role_users"));
 const validadorsolicitud_1 = __importDefault(require("../models/validadorsolicitud"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const AdqSolicitudes_1 = __importDefault(require("../models/AdqSolicitudes"));
+const AdqAfectacionPresupuestal_1 = __importDefault(require("../models/AdqAfectacionPresupuestal"));
+const AdqBienesServicios_1 = __importDefault(require("../models/AdqBienesServicios"));
+const AdqAfectacionFuentes_1 = __importDefault(require("../models/AdqAfectacionFuentes"));
+const AdqProcedimientoAdquisitivo_1 = __importDefault(require("../models/AdqProcedimientoAdquisitivo"));
 dotenv_1.default.config();
 const getRegistros = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -274,6 +278,158 @@ const createEstudioMercado = (req, res) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.createEstudioMercado = createEstudioMercado;
+const getAfectacionById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const [afectacion, bienesServicios] = yield Promise.all([
+            AdqAfectacionPresupuestal_1.default.findOne({ where: { id_solicitud: id } }),
+            AdqBienesServicios_1.default.findOne({ where: { id_solicitud: id } }),
+        ]);
+        let fuentes_financiamiento = [];
+        if (afectacion) {
+            const filas = yield AdqAfectacionFuentes_1.default.findAll({
+                where: { id_afectacion: afectacion.id_afectacion },
+            });
+            fuentes_financiamiento = filas.map(f => f.id_fuente_financiamiento);
+        }
+        return res.json({
+            ok: true,
+            data: {
+                afectacion: afectacion ? Object.assign(Object.assign({}, afectacion.toJSON()), { fuentes_financiamiento }) : null,
+                bienesServicios: bienesServicios !== null && bienesServicios !== void 0 ? bienesServicios : null,
+            },
+        });
+    }
+    catch (error) {
+        console.error('ERROR getAfectacionById =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al obtener datos de afectación' });
+    }
+});
+exports.getAfectacionById = getAfectacionById;
+const saveAfectacionPresupuestal = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+    try {
+        const { id } = req.params;
+        const { afectacion, bienesServicios } = req.body;
+        const idSolicitud = Number(id);
+        const existeAfectacion = yield AdqAfectacionPresupuestal_1.default.findOne({ where: { id_solicitud: idSolicitud } });
+        const fuentes = (_a = afectacion.fuentes_financiamiento) !== null && _a !== void 0 ? _a : [];
+        let registroAfectacion;
+        if (existeAfectacion) {
+            yield existeAfectacion.update({
+                nombre_testigo_social: (_b = afectacion.nombre_testigo_social) !== null && _b !== void 0 ? _b : null,
+                tipo_gasto: afectacion.tipo_gasto,
+                importe_suficiencia: (_c = afectacion.importe_suficiencia) !== null && _c !== void 0 ? _c : null,
+                updated_by: (_d = afectacion.user_id) !== null && _d !== void 0 ? _d : null,
+            });
+            registroAfectacion = existeAfectacion;
+        }
+        else {
+            registroAfectacion = yield AdqAfectacionPresupuestal_1.default.create({
+                id_solicitud: idSolicitud,
+                nombre_testigo_social: (_e = afectacion.nombre_testigo_social) !== null && _e !== void 0 ? _e : null,
+                tipo_gasto: afectacion.tipo_gasto,
+                importe_suficiencia: (_f = afectacion.importe_suficiencia) !== null && _f !== void 0 ? _f : null,
+                created_by: (_g = afectacion.user_id) !== null && _g !== void 0 ? _g : '00000000-0000-0000-0000-000000000000',
+            });
+        }
+        // Reemplaza todas las fuentes: borra las anteriores e inserta las nuevas
+        yield AdqAfectacionFuentes_1.default.destroy({ where: { id_afectacion: registroAfectacion.id_afectacion } });
+        if (fuentes.length > 0) {
+            yield AdqAfectacionFuentes_1.default.bulkCreate(fuentes.map(id_fuente => ({
+                id_afectacion: registroAfectacion.id_afectacion,
+                id_fuente_financiamiento: id_fuente,
+            })));
+        }
+        if (bienesServicios) {
+            const existeBS = yield AdqBienesServicios_1.default.findOne({ where: { id_solicitud: idSolicitud } });
+            if (existeBS) {
+                yield existeBS.update({
+                    clave_verificacion: (_h = bienesServicios.clave_verificacion) !== null && _h !== void 0 ? _h : null,
+                    descripcion_clave_verificacion: (_j = bienesServicios.descripcion_clave_verificacion) !== null && _j !== void 0 ? _j : null,
+                    unidad_medida: (_k = bienesServicios.unidad_medida) !== null && _k !== void 0 ? _k : null,
+                    dictamen: bienesServicios.dictamen === 'SI',
+                    contrato_abierto: bienesServicios.contrato_abierto === 'SI',
+                    consolidado: bienesServicios.consolidado === 'SI',
+                    updated_by: (_l = afectacion.user_id) !== null && _l !== void 0 ? _l : null,
+                });
+            }
+            else {
+                yield AdqBienesServicios_1.default.create({
+                    id_solicitud: idSolicitud,
+                    clave_verificacion: (_m = bienesServicios.clave_verificacion) !== null && _m !== void 0 ? _m : null,
+                    descripcion_clave_verificacion: (_o = bienesServicios.descripcion_clave_verificacion) !== null && _o !== void 0 ? _o : null,
+                    unidad_medida: (_p = bienesServicios.unidad_medida) !== null && _p !== void 0 ? _p : null,
+                    dictamen: bienesServicios.dictamen === 'SI',
+                    contrato_abierto: bienesServicios.contrato_abierto === 'SI',
+                    consolidado: bienesServicios.consolidado === 'SI',
+                    created_by: (_q = afectacion.user_id) !== null && _q !== void 0 ? _q : '00000000-0000-0000-0000-000000000000',
+                });
+            }
+        }
+        yield AdqSolicitudes_1.default.update({ estatus_id: 3 }, { where: { id_solicitud: idSolicitud } });
+        return res.json({ ok: true, msg: 'Afectación presupuestal guardada correctamente' });
+    }
+    catch (error) {
+        console.error('ERROR saveAfectacionPresupuestal =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al guardar afectación presupuestal' });
+    }
+});
+exports.saveAfectacionPresupuestal = saveAfectacionPresupuestal;
+const getProcedimientoById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const [solicitud, procedimiento] = yield Promise.all([
+            AdqSolicitudes_1.default.findByPk(id),
+            AdqProcedimientoAdquisitivo_1.default.findOne({ where: { id_solicitud: id } }),
+        ]);
+        return res.json({ ok: true, data: { solicitud, procedimiento: procedimiento !== null && procedimiento !== void 0 ? procedimiento : null } });
+    }
+    catch (error) {
+        console.error('ERROR getProcedimientoById =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al obtener procedimiento' });
+    }
+});
+exports.getProcedimientoById = getProcedimientoById;
+const saveProcedimientoAdquisitivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const { modalidad, user_id } = req.body;
+        const idSolicitud = Number(id);
+        const existe = yield AdqProcedimientoAdquisitivo_1.default.findOne({ where: { id_solicitud: idSolicitud } });
+        if (existe) {
+            yield existe.update({ modalidad, updated_by: user_id !== null && user_id !== void 0 ? user_id : null });
+        }
+        else {
+            yield AdqProcedimientoAdquisitivo_1.default.create({
+                id_solicitud: idSolicitud,
+                modalidad,
+                created_by: user_id !== null && user_id !== void 0 ? user_id : '00000000-0000-0000-0000-000000000000',
+            });
+        }
+        return res.json({ ok: true, msg: 'Procedimiento adquisitivo guardado correctamente' });
+    }
+    catch (error) {
+        console.error('ERROR saveProcedimientoAdquisitivo =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al guardar procedimiento adquisitivo' });
+    }
+});
+exports.saveProcedimientoAdquisitivo = saveProcedimientoAdquisitivo;
+const getSolicitudesCola = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { estatus } = req.params;
+        const solicitudes = yield AdqSolicitudes_1.default.findAll({
+            where: { estatus_id: Number(estatus) },
+            order: [['id_solicitud', 'DESC']],
+        });
+        return res.json({ ok: true, data: solicitudes });
+    }
+    catch (error) {
+        console.error('ERROR getSolicitudesCola =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al obtener la cola' });
+    }
+});
+exports.getSolicitudesCola = getSolicitudesCola;
 const getSolicitudesAfectacion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const solicitudes = yield AdqSolicitudes_1.default.findAll({

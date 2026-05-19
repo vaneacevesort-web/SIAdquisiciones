@@ -74,6 +74,12 @@ export const routes: Routes = [
         loadChildren: () => import('./views/pages/validadores/validadores.route')
       },
       {
+        path: 'solicitud/cola/:estatus',
+        loadComponent: () =>
+          import('./views/pages/solicitud/lista-cola/lista-cola.component')
+            .then(m => m.ListaColaComponent)
+      },
+      {
         path: 'solicitud/afectacion-presupuestal',
         loadComponent: () =>
         import('./views/pages/solicitud/afectacion-presupuestal/lista-afectacion/lista-afectacion.component')
@@ -82,9 +88,15 @@ export const routes: Routes = [
       {
         path: 'solicitud/afectacion-presupuestal/:id',
         loadComponent: () =>
-        import('./views/pages/solicitud/afectacion-presupuestal/form-afectacion/form-afectacion.component')
+          import('./views/pages/solicitud/afectacion-presupuestal/form-afectacion/form-afectacion.component')
             .then(m => m.FormAfectacionComponent)
-},
+      },
+      {
+        path: 'solicitud/adquisicion/:id',
+        loadComponent: () =>
+          import('./views/pages/solicitud/adquisicion/form-adquisicion.component')
+            .then(m => m.FormAdquisicionComponent)
+      },
 
     ]
   },

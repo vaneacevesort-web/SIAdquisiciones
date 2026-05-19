@@ -65,9 +65,30 @@ export class RegistroService {
   getSolicitudesAfectacion(): Observable<any> {
     return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/afectacion-presupuestal`);
   }
-getFuentesFinanciamiento(): Observable<any> {
-  return this.http.get<any>(`${this.myAppUrl}api/catalogos/fuentes-financiamiento`);
-}
+
+  getAfectacionById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/afectacion-presupuestal/${id}`);
+  }
+
+  saveAfectacionPresupuestal(id: number, data: any): Observable<any> {
+    return this.http.post<any>(`${this.myAppUrl}${this.myAPIUrl}/afectacion-presupuestal/${id}`, data);
+  }
+
+  getFuentesFinanciamiento(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}api/catalogos/fuentes-financiamiento`);
+  }
+
+  getSolicitudesCola(estatus: number): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/cola/${estatus}`);
+  }
+
+  getProcedimientoById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/adquisicion/${id}`);
+  }
+
+  saveProcedimientoAdquisitivo(id: number, data: any): Observable<any> {
+    return this.http.post<any>(`${this.myAppUrl}${this.myAPIUrl}/adquisicion/${id}`, data);
+  }
 }
 
 

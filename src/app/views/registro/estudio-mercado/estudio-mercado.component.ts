@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import Swal from 'sweetalert2';
 import { RegistroService } from '../../../service/registro.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { RegistroStateService } from '../../../service/registro-state.service';
 
 @Component({
   selector: 'app-estudio-mercado',
@@ -39,7 +40,8 @@ export class EstudioMercadoComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private fb: FormBuilder,
-    private registroService: RegistroService
+    private registroService: RegistroService,
+    private registroStateService: RegistroStateService
   ) {}
 
   ngOnInit(): void {
@@ -96,8 +98,8 @@ export class EstudioMercadoComponent implements OnInit {
     this.registroService.saveEstudioMercado(data).subscribe({
       next: (resp: any) => {
         console.log('ESTUDIO GUARDADO =>', resp);
-// aqui lo dirigue a la afectacion presupuestal, para continuar con el flujo 
-        this.router.navigate(['/solicitud/afectacion-presupuestal']); 
+        this.registroStateService.clear();
+        this.router.navigate(['/solicitud/afectacion-presupuestal']);
       },
       error: (e: HttpErrorResponse) => {
         console.error('ERROR AL GUARDAR ESTUDIO =>', e);

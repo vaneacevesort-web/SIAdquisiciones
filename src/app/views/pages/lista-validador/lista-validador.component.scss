@@ -1,0 +1,496 @@
+// ─── Header Ejecutivo ────────────────────────────────────────────────────────
+.exec-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  background: linear-gradient(135deg, #922040 0%, #641228 100%);
+  border-radius: 8px;
+  padding: 0.45rem 1rem;
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(100, 18, 40, 0.18);
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    opacity: 0.92;
+
+    i { font-size: 0.8rem; }
+
+    strong { font-weight: 600; text-transform: capitalize; }
+  }
+
+  &__rol {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255,255,255,0.18);
+    border-radius: 20px;
+    padding: 1px 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  .exec-sep {
+    opacity: 0.35;
+    font-size: 0.7rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  &__action-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    color: #fff;
+    padding: 0.28rem 0.6rem;
+    font-size: 0.76rem;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    i { font-size: 0.85rem; }
+    &:hover { background: rgba(255,255,255,0.22); }
+
+    &--logout {
+      background: rgba(0,0,0,0.15);
+      &:hover { background: rgba(0,0,0,0.28); }
+    }
+  }
+}
+
+// ─── KPI Grid ────────────────────────────────────────────────────────────────
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+
+  @media (max-width: 1200px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 992px)  { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 576px)  { grid-template-columns: 1fr; }
+}
+
+.kpi-card {
+  border-radius: 12px;
+  padding: 1.25rem 1.25rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  border-top: 4px solid transparent;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.11);
+  }
+
+  &--blue  { border-top-color: #2563eb; .kpi-card__icon { background: #eff6ff; color: #2563eb; } }
+  &--amber { border-top-color: #d97706; .kpi-card__icon { background: #fffbeb; color: #d97706; } }
+  &--rose  { border-top-color: #922040; .kpi-card__icon { background: #fff1f4; color: #922040; } }
+  &--teal  { border-top-color: #0891b2; .kpi-card__icon { background: #ecfeff; color: #0891b2; } }
+  &--green { border-top-color: #16a34a; .kpi-card__icon { background: #f0fdf4; color: #16a34a; } }
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i { font-size: 1.3rem; }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__number {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #1e293b;
+  }
+
+  &__label {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__pct {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+}
+
+// ─── Flujo del proceso ───────────────────────────────────────────────────────
+.flujo {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+
+  &__paso {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+
+    &--done .flujo__circulo {
+      background: #922040;
+      color: #fff;
+      border-color: #922040;
+    }
+
+    &--active .flujo__circulo {
+      background: #fff;
+      color: #922040;
+      border-color: #922040;
+      box-shadow: 0 0 0 3px rgba(146, 32, 64, 0.1);
+    }
+  }
+
+  &__circulo {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+
+    i { font-size: 0.85rem; }
+  }
+
+  &__etiqueta {
+    font-size: 0.67rem;
+    font-weight: 500;
+    color: #64748b;
+    text-align: center;
+    max-width: 80px;
+    line-height: 1.2;
+  }
+
+  &__linea {
+    flex: 1;
+    height: 1.5px;
+    background: #e2e8f0;
+    margin: 0 0.2rem;
+    margin-bottom: 1.1rem;
+
+    &--done   { background: #922040; }
+    &--active { background: linear-gradient(to right, #922040, #e2e8f0); }
+  }
+}
+
+// ─── Accesos rápidos ─────────────────────────────────────────────────────────
+.accesos {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.acceso-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  transition: all 0.18s ease;
+
+  i {
+    font-size: 1rem;
+    color: #922040;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: #fff1f4;
+    border-color: #922040;
+    color: #922040;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(146, 32, 64, 0.12);
+
+    i { color: #922040; }
+  }
+
+  &--primary {
+    background: #922040;
+    border-color: #922040;
+    color: #fff;
+
+    i { color: #fff; }
+
+    &:hover {
+      background: #7a1a35;
+      border-color: #7a1a35;
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(146, 32, 64, 0.3);
+    }
+  }
+
+  &--disabled {
+    opacity: 0.45;
+    cursor: default;
+    pointer-events: none;
+  }
+}
+
+// ─── Tabla ejecutiva ─────────────────────────────────────────────────────────
+.tabla-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1e293b;
+
+    i { color: #922040; font-size: 1.1rem; }
+  }
+
+  &__total {
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 500;
+    border-radius: 20px;
+    padding: 2px 9px;
+  }
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__body { padding: 0; }
+}
+
+// Toolbar pieces
+.tabla-toolbar {
+  &__search {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    i {
+      position: absolute;
+      left: 9px;
+      color: #94a3b8;
+      font-size: 0.85rem;
+    }
+
+    input {
+      padding: 0.38rem 0.75rem 0.38rem 2rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      color: #334155;
+      width: 210px;
+      outline: none;
+      transition: border-color 0.2s;
+
+      &:focus { border-color: #922040; }
+      &::placeholder { color: #cbd5e1; }
+    }
+  }
+
+  &__select {
+    padding: 0.38rem 0.65rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    color: #334155;
+    background: #fff;
+    cursor: pointer;
+    outline: none;
+
+    &:focus { border-color: #922040; }
+  }
+
+  &__btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.38rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+
+    i { font-size: 0.85rem; }
+    &:hover { opacity: 0.85; }
+
+    &--outline {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #475569;
+    }
+
+    &--primary {
+      background: #922040;
+      color: #fff;
+    }
+  }
+}
+
+// Columnas
+:host ::ng-deep {
+  .tabla-exec {
+    .th-exec {
+      background: #f8fafc !important;
+      color: #475569 !important;
+      font-size: 0.76rem !important;
+      font-weight: 600 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.4px !important;
+      border-bottom: 2px solid #e2e8f0 !important;
+    }
+
+    .td-exec {
+      font-size: 0.84rem !important;
+      color: #334155 !important;
+      vertical-align: middle !important;
+    }
+
+    .datatable-row-wrapper:hover .datatable-body-cell {
+      background: #fdf2f5 !important;
+    }
+  }
+}
+
+// Folio pill
+.folio-pill {
+  display: inline-block;
+  background: #f1f5f9;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 0.78rem;
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+
+// Dependencia
+.dep-text {
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+// Estado badges
+.estado-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.73rem;
+  font-weight: 600;
+
+  &--blue  { background: #eff6ff; color: #2563eb; }
+  &--amber { background: #fffbeb; color: #b45309; }
+  &--rose  { background: #fff1f4; color: #922040; }
+  &--teal  { background: #ecfeff; color: #0891b2; }
+  &--green { background: #f0fdf4; color: #16a34a; }
+  &--gray  { background: #f1f5f9; color: #64748b; }
+}
+
+// Avance
+.avance-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avance-bar {
+  flex: 1;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+}
+
+.avance-pct {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: #64748b;
+  min-width: 30px;
+}
+
+// Empty state
+.tabla-empty {
+  padding: 3rem;
+  text-align: center;
+  color: #94a3b8;
+
+  i { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+  p { font-size: 0.9rem; }
+}
+
+// ─── Responsive header ───────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .exec-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+
+    &__actions { width: 100%; justify-content: flex-end; }
+  }
+}

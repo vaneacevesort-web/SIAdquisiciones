@@ -11,6 +11,10 @@ import RolUsers from '../models/role_users';
 import ValidadorSolicitud from '../models/validadorsolicitud';
 import dotenv from 'dotenv';
 import AdqSolicitudes from '../models/AdqSolicitudes';
+import AdqAfectacionPresupuestal from '../models/AdqAfectacionPresupuestal';
+import AdqBienesServicios from '../models/AdqBienesServicios';
+import AdqAfectacionFuentes from '../models/AdqAfectacionFuentes';
+import AdqProcedimientoAdquisitivo from '../models/AdqProcedimientoAdquisitivo';
 
 dotenv.config();
 
@@ -319,6 +323,167 @@ export const createEstudioMercado = async (req: Request, res: Response): Promise
       ok: false,
       msg: 'Error al guardar estudio de mercado'
     });
+  }
+};
+
+export const getAfectacionById = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+
+    const [afectacion, bienesServicios] = await Promise.all([
+      AdqAfectacionPresupuestal.findOne({ where: { id_solicitud: id } }),
+      AdqBienesServicios.findOne({ where: { id_solicitud: id } }),
+    ]);
+
+    let fuentes_financiamiento: number[] = [];
+    if (afectacion) {
+      const filas = await AdqAfectacionFuentes.findAll({
+        where: { id_afectacion: afectacion.id_afectacion },
+      });
+      fuentes_financiamiento = filas.map(f => f.id_fuente_financiamiento);
+    }
+
+    return res.json({
+      ok: true,
+      data: {
+        afectacion: afectacion ? { ...afectacion.toJSON(), fuentes_financiamiento } : null,
+        bienesServicios: bienesServicios ?? null,
+      },
+    });
+  } catch (error) {
+    console.error('ERROR getAfectacionById =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al obtener datos de afectación' });
+  }
+};
+
+export const saveAfectacionPresupuestal = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const { afectacion, bienesServicios } = req.body;
+
+    const idSolicitud = Number(id);
+
+    const existeAfectacion = await AdqAfectacionPresupuestal.findOne({ where: { id_solicitud: idSolicitud } });
+
+    const fuentes: number[] = afectacion.fuentes_financiamiento ?? [];
+
+    let registroAfectacion: AdqAfectacionPresupuestal;
+
+    if (existeAfectacion) {
+      await existeAfectacion.update({
+        nombre_testigo_social: afectacion.nombre_testigo_social ?? null,
+        tipo_gasto: afectacion.tipo_gasto,
+        importe_suficiencia: afectacion.importe_suficiencia ?? null,
+        updated_by: afectacion.user_id ?? null,
+      });
+      registroAfectacion = existeAfectacion;
+    } else {
+      registroAfectacion = await AdqAfectacionPresupuestal.create({
+        id_solicitud: idSolicitud,
+        nombre_testigo_social: afectacion.nombre_testigo_social ?? null,
+        tipo_gasto: afectacion.tipo_gasto,
+        importe_suficiencia: afectacion.importe_suficiencia ?? null,
+        created_by: afectacion.user_id ?? '00000000-0000-0000-0000-000000000000',
+      });
+    }
+
+    // Reemplaza todas las fuentes: borra las anteriores e inserta las nuevas
+    await AdqAfectacionFuentes.destroy({ where: { id_afectacion: registroAfectacion.id_afectacion } });
+    if (fuentes.length > 0) {
+      await AdqAfectacionFuentes.bulkCreate(
+        fuentes.map(id_fuente => ({
+          id_afectacion: registroAfectacion.id_afectacion,
+          id_fuente_financiamiento: id_fuente,
+        }))
+      );
+    }
+
+    if (bienesServicios) {
+      const existeBS = await AdqBienesServicios.findOne({ where: { id_solicitud: idSolicitud } });
+
+      if (existeBS) {
+        await existeBS.update({
+          clave_verificacion: bienesServicios.clave_verificacion ?? null,
+          descripcion_clave_verificacion: bienesServicios.descripcion_clave_verificacion ?? null,
+          unidad_medida: bienesServicios.unidad_medida ?? null,
+          dictamen: bienesServicios.dictamen === 'SI',
+          contrato_abierto: bienesServicios.contrato_abierto === 'SI',
+          consolidado: bienesServicios.consolidado === 'SI',
+          updated_by: afectacion.user_id ?? null,
+        });
+      } else {
+        await AdqBienesServicios.create({
+          id_solicitud: idSolicitud,
+          clave_verificacion: bienesServicios.clave_verificacion ?? null,
+          descripcion_clave_verificacion: bienesServicios.descripcion_clave_verificacion ?? null,
+          unidad_medida: bienesServicios.unidad_medida ?? null,
+          dictamen: bienesServicios.dictamen === 'SI',
+          contrato_abierto: bienesServicios.contrato_abierto === 'SI',
+          consolidado: bienesServicios.consolidado === 'SI',
+          created_by: afectacion.user_id ?? '00000000-0000-0000-0000-000000000000',
+        });
+      }
+    }
+
+    await AdqSolicitudes.update({ estatus_id: 3 }, { where: { id_solicitud: idSolicitud } });
+
+    return res.json({ ok: true, msg: 'Afectación presupuestal guardada correctamente' });
+  } catch (error) {
+    console.error('ERROR saveAfectacionPresupuestal =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al guardar afectación presupuestal' });
+  }
+};
+
+export const getProcedimientoById = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const [solicitud, procedimiento] = await Promise.all([
+      AdqSolicitudes.findByPk(id),
+      AdqProcedimientoAdquisitivo.findOne({ where: { id_solicitud: id } }),
+    ]);
+    return res.json({ ok: true, data: { solicitud, procedimiento: procedimiento ?? null } });
+  } catch (error) {
+    console.error('ERROR getProcedimientoById =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al obtener procedimiento' });
+  }
+};
+
+export const saveProcedimientoAdquisitivo = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const { modalidad, user_id } = req.body;
+    const idSolicitud = Number(id);
+
+    const existe = await AdqProcedimientoAdquisitivo.findOne({ where: { id_solicitud: idSolicitud } });
+
+    if (existe) {
+      await existe.update({ modalidad, updated_by: user_id ?? null });
+    } else {
+      await AdqProcedimientoAdquisitivo.create({
+        id_solicitud: idSolicitud,
+        modalidad,
+        created_by: user_id ?? '00000000-0000-0000-0000-000000000000',
+      });
+    }
+
+    return res.json({ ok: true, msg: 'Procedimiento adquisitivo guardado correctamente' });
+  } catch (error) {
+    console.error('ERROR saveProcedimientoAdquisitivo =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al guardar procedimiento adquisitivo' });
+  }
+};
+
+export const getSolicitudesCola = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { estatus } = req.params;
+    const solicitudes = await AdqSolicitudes.findAll({
+      where: { estatus_id: Number(estatus) },
+      order: [['id_solicitud', 'DESC']],
+    });
+    return res.json({ ok: true, data: solicitudes });
+  } catch (error) {
+    console.error('ERROR getSolicitudesCola =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al obtener la cola' });
   }
 };
 

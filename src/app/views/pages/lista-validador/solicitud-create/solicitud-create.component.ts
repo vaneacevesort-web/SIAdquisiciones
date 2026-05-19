@@ -443,6 +443,15 @@ export class SolicitudCreateComponent {
       return;
     }
 
+    // Si ya existe un id_solicitud guardado (usuario regresó del paso 2),
+    // solo navegar sin volver a insertar en la BD
+    const idExistente = this.registroStateService.getIdSolicitud();
+    if (idExistente) {
+      this.registroStateService.setDatosGenerales(this.form.getRawValue());
+      this.router.navigate(['/registro/solicitud', idExistente, 'estudio-mercado']);
+      return;
+    }
+
     const formValue = this.form.getRawValue();
 
     const data = {
@@ -474,6 +483,7 @@ export class SolicitudCreateComponent {
           const idSolicitud = response.data.id_solicitud;
 
           this.registroStateService.setDatosGenerales(this.form.getRawValue());
+          this.registroStateService.setIdSolicitud(idSolicitud);
 
           this.router.navigate([
             '/registro/solicitud',
