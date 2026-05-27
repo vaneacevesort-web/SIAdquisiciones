@@ -10,6 +10,7 @@ import { SubMenus } from './menu.model';
 import { SubMenuItems } from './menu.model';
 import { FeatherIconDirective } from '../../../core/feather-icon/feather-icon.directive';
 import { UserService } from '../../../service/user.service';
+import { RegistroService } from '../../../service/registro.service';
 
 @Component({
     selector: 'app-navbar',
@@ -33,8 +34,11 @@ export class NavbarComponent implements OnInit {
   subItem: SubMenuItems[] = [];
   usuario: string | undefined;
 
+  kpis = { registradas: 0, estudio: 0, afectacion: 0, rechazadas: 0, total: 0 };
+
   currentlyOpenedNavItem: HTMLElement | undefined;
   public _userService = inject(UserService);
+  private registroService = inject(RegistroService);
 
   constructor(
     private router: Router,
@@ -46,6 +50,8 @@ export class NavbarComponent implements OnInit {
       this.currentTheme = theme;
       this.showActiveTheme(this.currentTheme);
     });
+
+    this.cargarKpis();
 
     const role = this._userService.currentUserValue?.rol_users?.role?.name;
     const email = this._userService.currentUserValue?.email;
@@ -70,6 +76,13 @@ export class NavbarComponent implements OnInit {
         }
       });
     // }
+  }
+
+  cargarKpis(): void {
+    this.registroService.getKpis().subscribe({
+      next: (resp: any) => { if (resp?.data) this.kpis = resp.data; },
+      error: () => {}
+    });
   }
 
   private filterMenuByRole(menu: MenuItem[], role: string, email: string | undefined): MenuItem[] {

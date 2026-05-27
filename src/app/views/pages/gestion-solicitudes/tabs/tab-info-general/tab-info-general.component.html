@@ -1,0 +1,78 @@
+@if (!solicitud) {
+  <div class="text-muted text-center py-4">Sin información disponible.</div>
+} @else {
+
+  <div class="tab-section-title">Información de la Solicitud</div>
+
+  @if (readonly) {
+    <div class="alert alert-light border small mb-3">
+      <i class="feather icon-lock me-1 text-muted"></i>
+      Esta sección es de solo lectura en el estado actual de la solicitud.
+    </div>
+  }
+
+  <div class="row g-3">
+
+    <div class="col-md-3">
+      <label class="info-label">Folio de Solicitud</label>
+      <div class="info-value fw-semibold">{{ solicitud.folio || '—' }}</div>
+    </div>
+
+    <div class="col-md-3">
+      <label class="info-label">Fecha de Ingreso</label>
+      <div class="info-value">{{ solicitud.fecha_ingreso | date:'dd/MM/yyyy' }}</div>
+    </div>
+
+    <div class="col-md-3">
+      <label class="info-label">Origen del Recurso</label>
+      <div class="info-value">{{ getOrigenRecurso(solicitud.id_origen_recurso) }}</div>
+    </div>
+
+    <div class="col-md-3">
+      <label class="info-label">Tipo de Solicitud</label>
+      <div class="info-value">{{ getTipoSolicitud(solicitud.tipo_solicitud) }}</div>
+    </div>
+
+  </div>
+
+  <hr class="my-4">
+
+  <div class="tab-section-title">Clasificación Presupuestal</div>
+
+  <div class="row g-3">
+
+    <div class="col-md-4">
+      <label class="info-label">Dependencia</label>
+      <div class="info-value">{{ solicitud.id_dependencia ? ('ID: ' + solicitud.id_dependencia) : '—' }}</div>
+    </div>
+
+    <div class="col-md-4">
+      <label class="info-label">Centro de Costo / OPD</label>
+      <div class="info-value">
+        {{ solicitud.id_centro_costo ? ('CC: ' + solicitud.id_centro_costo) : (solicitud.id_opd ? ('OPD: ' + solicitud.id_opd) : '—') }}
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <label class="info-label">Capítulo</label>
+      <div class="info-value">{{ solicitud.id_capitulo || '—' }}</div>
+    </div>
+
+    <div class="col-md-4">
+      <label class="info-label">Subcapítulo</label>
+      <div class="info-value">{{ solicitud.id_subcapitulo || '—' }}</div>
+    </div>
+
+    <div class="col-md-4">
+      <label class="info-label">Partida Genérica</label>
+      <div class="info-value">{{ solicitud.id_partida_generica || '—' }}</div>
+    </div>
+
+    <div class="col-md-4">
+      <label class="info-label">Partida Específica</label>
+      <div class="info-value">{{ solicitud.id_partida_especifica || '—' }}</div>
+    </div>
+
+  </div>
+
+}

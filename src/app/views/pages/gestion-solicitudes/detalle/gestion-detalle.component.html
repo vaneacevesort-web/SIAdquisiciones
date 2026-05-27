@@ -1,0 +1,192 @@
+<div class="gd-wrapper">
+
+  <!-- ══ Cabecera del expediente ════════════════════════════════════════ -->
+  <div class="gd-header">
+
+    <button class="gd-back-btn" (click)="volver()" title="Volver a lista">
+      <i class="feather icon-arrow-left"></i>
+    </button>
+
+    @if (solicitud) {
+      <div class="gd-header-body">
+        <div class="gd-header-top">
+          <div class="gd-folio-wrap">
+            <i class="feather icon-file-text gd-folio-icon"></i>
+            <span class="gd-folio">{{ solicitud.folio }}</span>
+          </div>
+          <span class="gd-status-pill {{ getEstatusClass(solicitud.estatus_id) }}">
+            <span class="gd-status-dot"></span>
+            {{ getEstatusLabel(solicitud.estatus_id) }}
+          </span>
+        </div>
+        <div class="gd-header-meta">
+          <span class="gd-meta-item">
+            <i class="feather icon-calendar"></i>
+            Ingreso: {{ solicitud.fecha_ingreso | date:'dd/MM/yyyy' }}
+          </span>
+          @if (solicitud.dependencia_nombre) {
+            <span class="gd-meta-sep">·</span>
+            <span class="gd-meta-item">
+              <i class="feather icon-home"></i>
+              {{ solicitud.dependencia_nombre }}
+            </span>
+          }
+          @if (solicitud.tipo_solicitud) {
+            <span class="gd-meta-sep">·</span>
+            <span class="gd-meta-item">
+              <i class="feather icon-tag"></i>
+              {{ solicitud.tipo_solicitud === 'BIEN' ? 'Bien' : 'Servicio' }}
+            </span>
+          }
+        </div>
+      </div>
+    } @else if (!loading) {
+      <span class="gd-folio text-muted">Expediente #{{ idSolicitud }}</span>
+    }
+
+  </div>
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+
+
+  <!-- Estado: cargando -->
+  @if (loading) {
+    <div class="gd-state-box">
+      <div class="spinner-border spinner-border-sm gd-spinner me-2"></div>
+      <span>Cargando expediente...</span>
+    </div>
+  }
+
+  <!-- Estado: no encontrado -->
+  @else if (!solicitud) {
+    <div class="gd-state-box">
+      <div class="gd-empty-icon"><i class="feather icon-alert-circle"></i></div>
+      <p class="gd-empty-text">No se encontró la solicitud con ID {{ idSolicitud }}</p>
+      <button class="btn gd-btn-back-alt" (click)="volver()">
+        <i class="feather icon-arrow-left me-1"></i> Volver a la lista
+      </button>
+    </div>
+  }
+
+  <!-- Vista principal -->
+  @else {
+
+    <!-- ── Stepper-navegador ─────────────────────────────────────────── -->
+    <div class="gd-stepper-card">
+      @for (tab of tabs; track tab.key; let i = $index) {
+
+        <div class="gd-step"
+          [class.gd-step--active]="activeTab === tab.key"
+          [class.gd-step--done]="isTabAccessible(tab.key) && activeTab !== tab.key"
+          [class.gd-step--locked]="!isTabAccessible(tab.key)"
+          (click)="selectTab(tab.key)"
+          [title]="isTabAccessible(tab.key) ? tab.label : 'Bloqueado'"
+        >
+          <div class="gd-step-circle">
+            @if (!isTabAccessible(tab.key)) {
+              <i class="feather icon-lock"></i>
+            } @else {
+              <span>{{ i + 1 }}</span>
+            }
+          </div>
+
+          <div class="gd-step-text">
+            <span class="gd-step-num">Paso {{ i + 1 }}</span>
+            <span class="gd-step-label">{{ tab.label }}</span>
+          </div>
+
+          @if (isTabEditable(tab.key)) {
+            <span class="gd-edit-dot" title="En edición"></span>
+          }
+
+        </div>
+
+        @if (i < tabs.length - 1) {
+          <div class="gd-step-line"
+            [class.gd-step-line--active]="isTabAccessible(tabs[i+1].key)">
+          </div>
+        }
+
+      }
+    </div>
+    <!-- ────────────────────────────────────────────────────────────── -->
+
+
+    <!-- ── Contenido del tab activo ────────────────────────────────── -->
+    <div class="gd-content-card">
+
+      <!-- Mini-breadcrumb del tab activo -->
+      <div class="gd-content-header">
+        <div class="gd-content-title">
+          @for (tab of tabs; track tab.key) {
+            @if (tab.key === activeTab) {
+              <i class="feather {{ tab.icon }} me-2 gd-content-icon"></i>
+              {{ tab.label }}
+            }
+          }
+        </div>
+        @if (isTabEditable(activeTab)) {
+          <span class="gd-editable-badge">
+            <i class="feather icon-edit-2 me-1"></i>Edición activa
+          </span>
+        } @else {
+          <span class="gd-readonly-badge">
+            <i class="feather icon-eye me-1"></i>Solo lectura
+          </span>
+        }
+      </div>
+
+      <!-- Contenido -->
+      <div class="gd-tab-body">
+
+        @switch (activeTab) {
+
+          @case ('info') {
+            <app-tab-info-general
+              [idSolicitud]="idSolicitud"
+              [solicitud]="solicitud"
+              [readonly]="!isTabEditable('info')"
+              (saved)="onSaved()"
+            />
+          }
+
+          @case ('estudio') {
+            <app-tab-estudio-mercado
+              [idSolicitud]="idSolicitud"
+              [readonly]="!isTabEditable('estudio')"
+              (saved)="onSaved()"
+            />
+          }
+
+          @case ('afectacion') {
+            <app-tab-afectacion
+              [idSolicitud]="idSolicitud"
+              [readonly]="!isTabEditable('afectacion')"
+              (saved)="onSaved()"
+            />
+          }
+
+          @case ('adquisicion') {
+            <app-tab-adquisicion
+              [idSolicitud]="idSolicitud"
+              [readonly]="!isTabEditable('adquisicion')"
+              (saved)="onSaved()"
+            />
+          }
+
+          @case ('adjudicacion') {
+            <app-tab-adjudicacion
+              [idSolicitud]="idSolicitud"
+              [readonly]="!isTabEditable('adjudicacion')"
+              (saved)="onSaved()"
+            />
+          }
+
+        }
+
+      </div>
+    </div>
+    <!-- ────────────────────────────────────────────────────────────── -->
+
+  }
+
+</div>

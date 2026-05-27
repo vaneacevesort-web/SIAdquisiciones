@@ -64,3 +64,55 @@ $demo2-theme: mat.define-theme((
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* ───── Gestión de Solicitudes — estilos compartidos ─────── */
+.tab-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.info-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.info-value {
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+/* Oficio-wrap: URL + archivo side by side */
+.oficio-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  &__url  { flex: 1; min-width: 200px; }
+  &__sep  { padding-top: 1.5rem; color: #94a3b8; font-weight: 700; }
+  &__file { flex: 1; min-width: 200px; }
+  &__sublabel {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+}
+
+.acciones {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}

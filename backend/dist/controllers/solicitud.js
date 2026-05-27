@@ -8,17 +8,29 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSolicitudesAfectacion = exports.getSolicitudesCola = exports.saveProcedimientoAdquisitivo = exports.getProcedimientoById = exports.saveAfectacionPresupuestal = exports.getAfectacionById = exports.createEstudioMercado = exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
+exports.getSolicitudesAfectacion = exports.getSolicitudesCola = exports.getKpis = exports.saveProcedimientoAdquisitivo = exports.getProcedimientoById = exports.saveAfectacionPresupuestal = exports.getAfectacionById = exports.createEstudioMercado = exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
 const AdqDependencias_1 = __importDefault(require("../models/AdqDependencias"));
 const AdqCentrosCosto_1 = __importDefault(require("../models/AdqCentrosCosto"));
 const AdqOrganismosOPDS_1 = __importDefault(require("../models/AdqOrganismosOPDS"));
 const AdqCatCapitulos_1 = __importDefault(require("../models/AdqCatCapitulos"));
 const AdqCatPartidasGenericas_1 = __importDefault(require("../models/AdqCatPartidasGenericas"));
 const AdqCatPartidasEspecificas_1 = __importDefault(require("../models/AdqCatPartidasEspecificas"));
+const sequelize_1 = require("sequelize");
 const solicitud_1 = __importDefault(require("../models/solicitud"));
 const user_1 = __importDefault(require("../models/user"));
 const role_users_1 = __importDefault(require("../models/role_users"));
@@ -379,11 +391,13 @@ exports.saveAfectacionPresupuestal = saveAfectacionPresupuestal;
 const getProcedimientoById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const [solicitud, procedimiento] = yield Promise.all([
+        const [solicitud, proc] = yield Promise.all([
             AdqSolicitudes_1.default.findByPk(id),
             AdqProcedimientoAdquisitivo_1.default.findOne({ where: { id_solicitud: id } }),
         ]);
-        return res.json({ ok: true, data: { solicitud, procedimiento: procedimiento !== null && procedimiento !== void 0 ? procedimiento : null } });
+        // Mapeo inverso: columnas BD → nombres del form
+        const procedimiento = proc ? Object.assign(Object.assign({}, proc.toJSON()), { fecha_sesion_comite: proc.fecha_sesion_comite_analisis, hora_sesion_comite: proc.hora_sesion_comite_analisis, fecha_contra_oferta: proc.fecha_contraoferta, hora_contra_oferta: proc.hora_contraoferta, fecha_dictaminacion: proc.fecha_dictaminacion_comite, hora_dictaminacion: proc.hora_dictaminacion_comite, dictamen_procedencia: proc.dictamen_procedencia === true ? 'SI' : (proc.dictamen_procedencia === false ? 'NO' : null) }) : null;
+        return res.json({ ok: true, data: { solicitud, procedimiento } });
     }
     catch (error) {
         console.error('ERROR getProcedimientoById =>', error);
@@ -392,21 +406,43 @@ const getProcedimientoById = (req, res) => __awaiter(void 0, void 0, void 0, fun
 });
 exports.getProcedimientoById = getProcedimientoById;
 const saveProcedimientoAdquisitivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
     try {
         const { id } = req.params;
-        const { modalidad, user_id } = req.body;
+        const _v = req.body, { user_id } = _v, c = __rest(_v, ["user_id"]);
         const idSolicitud = Number(id);
+        // Mapeo: nombres del form → nombres reales de columna en la BD
+        const camposGuardar = {
+            modalidad: (_a = c.modalidad) !== null && _a !== void 0 ? _a : null,
+            responsable: (_b = c.responsable) !== null && _b !== void 0 ? _b : null,
+            no_procedimiento: (_c = c.no_procedimiento) !== null && _c !== void 0 ? _c : null,
+            dictamen_procedencia: c.dictamen_procedencia === 'SI' ? true : (c.dictamen_procedencia === 'NO' ? false : null),
+            convocatoria_url: (_d = c.convocatoria_url) !== null && _d !== void 0 ? _d : null,
+            medio_publicacion: (_e = c.medio_publicacion) !== null && _e !== void 0 ? _e : null,
+            fecha_junta_aclaracion: (_f = c.fecha_junta_aclaracion) !== null && _f !== void 0 ? _f : null,
+            hora_junta_aclaracion: (_g = c.hora_junta_aclaracion) !== null && _g !== void 0 ? _g : null,
+            fecha_presentacion_apertura: (_h = c.fecha_presentacion_apertura) !== null && _h !== void 0 ? _h : null,
+            hora_presentacion_apertura: (_j = c.hora_presentacion_apertura) !== null && _j !== void 0 ? _j : null,
+            fecha_sesion_comite_analisis: (_k = c.fecha_sesion_comite) !== null && _k !== void 0 ? _k : null, // form → BD
+            hora_sesion_comite_analisis: (_l = c.hora_sesion_comite) !== null && _l !== void 0 ? _l : null,
+            fecha_contraoferta: (_m = c.fecha_contra_oferta) !== null && _m !== void 0 ? _m : null, // form → BD
+            hora_contraoferta: (_o = c.hora_contra_oferta) !== null && _o !== void 0 ? _o : null,
+            fecha_dictaminacion_comite: (_p = c.fecha_dictaminacion) !== null && _p !== void 0 ? _p : null, // form → BD
+            hora_dictaminacion_comite: (_q = c.hora_dictaminacion) !== null && _q !== void 0 ? _q : null,
+            fecha_sesion_subcomite: (_r = c.fecha_sesion_subcomite) !== null && _r !== void 0 ? _r : null,
+            hora_sesion_subcomite: (_s = c.hora_sesion_subcomite) !== null && _s !== void 0 ? _s : null,
+            fecha_fallo: (_t = c.fecha_fallo) !== null && _t !== void 0 ? _t : null,
+            hora_fallo: (_u = c.hora_fallo) !== null && _u !== void 0 ? _u : null,
+        };
         const existe = yield AdqProcedimientoAdquisitivo_1.default.findOne({ where: { id_solicitud: idSolicitud } });
         if (existe) {
-            yield existe.update({ modalidad, updated_by: user_id !== null && user_id !== void 0 ? user_id : null });
+            yield existe.update(Object.assign(Object.assign({}, camposGuardar), { updated_by: user_id !== null && user_id !== void 0 ? user_id : null }));
         }
         else {
-            yield AdqProcedimientoAdquisitivo_1.default.create({
-                id_solicitud: idSolicitud,
-                modalidad,
-                created_by: user_id !== null && user_id !== void 0 ? user_id : '00000000-0000-0000-0000-000000000000',
-            });
+            yield AdqProcedimientoAdquisitivo_1.default.create(Object.assign(Object.assign({ id_solicitud: idSolicitud }, camposGuardar), { created_by: user_id !== null && user_id !== void 0 ? user_id : '00000000-0000-0000-0000-000000000000' }));
         }
+        // Avanzar a estatus 4 (Adquisición o Contratación)
+        yield AdqSolicitudes_1.default.update({ estatus_id: 4 }, { where: { id_solicitud: idSolicitud } });
         return res.json({ ok: true, msg: 'Procedimiento adquisitivo guardado correctamente' });
     }
     catch (error) {
@@ -415,6 +451,34 @@ const saveProcedimientoAdquisitivo = (req, res) => __awaiter(void 0, void 0, voi
     }
 });
 exports.saveProcedimientoAdquisitivo = saveProcedimientoAdquisitivo;
+const getKpis = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const filas = yield AdqSolicitudes_1.default.findAll({
+            attributes: ['estatus_id', [(0, sequelize_1.fn)('COUNT', (0, sequelize_1.col)('id_solicitud')), 'total']],
+            group: ['estatus_id'],
+            raw: true,
+        });
+        const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        filas.forEach((f) => { counts[Number(f.estatus_id)] = Number(f.total); });
+        const total = Object.values(counts).reduce((a, b) => a + b, 0);
+        return res.json({
+            ok: true,
+            data: {
+                total,
+                registradas: counts[1],
+                estudio: counts[2] + counts[3] + counts[4] + counts[5],
+                afectacion: counts[3] + counts[4] + counts[5],
+                contratacion: counts[4] + counts[5],
+                adjudicacion: counts[5],
+            },
+        });
+    }
+    catch (error) {
+        console.error('ERROR getKpis =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al obtener KPIs' });
+    }
+});
+exports.getKpis = getKpis;
 const getSolicitudesCola = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { estatus } = req.params;

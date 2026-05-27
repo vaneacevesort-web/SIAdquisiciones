@@ -99,7 +99,8 @@ export class EstudioMercadoComponent implements OnInit {
       next: (resp: any) => {
         console.log('ESTUDIO GUARDADO =>', resp);
         this.registroStateService.clear();
-        this.router.navigate(['/solicitud/afectacion-presupuestal']);
+        // Navegar a Gestión Integral → detalle de esta solicitud
+        this.router.navigate(['/gestion-solicitudes', this.idSolicitud]);
       },
       error: (e: HttpErrorResponse) => {
         console.error('ERROR AL GUARDAR ESTUDIO =>', e);

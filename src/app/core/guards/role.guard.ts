@@ -19,7 +19,7 @@ export const roleGuard: CanActivateFn = (route, state) => {
   }
 
   if (role === 'Administrador' || role === 'Validador') {
-    return router.createUrlTree(['/solicitud/estudiodemercado']);
+    return router.createUrlTree(['/gestion-solicitudes']);
   }
 
   return router.createUrlTree(['/error/404']);

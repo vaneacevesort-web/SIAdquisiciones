@@ -14,6 +14,7 @@ import {
   getProcedimientoById,
   saveProcedimientoAdquisitivo,
   getSolicitudesCola,
+  getKpis,
 } from "../controllers/solicitud";
 
 const router = Router();
@@ -26,6 +27,7 @@ router.put("/api/solicitud/update/:id", putRegistro)
 router.post("/api/solicitud/getsolicitudes", getSolicitudes)
 router.get("/api/solicitud/getestatus/:id", getestatus)
 router.post("/api/solicitud/estudio-mercado", createEstudioMercado);
+router.get("/api/solicitud/kpis", getKpis);
 router.get("/api/solicitud/cola/:estatus", getSolicitudesCola);
 router.get("/api/solicitud/afectacion-presupuestal", getSolicitudesAfectacion);
 router.get("/api/solicitud/afectacion-presupuestal/:id", getAfectacionById);

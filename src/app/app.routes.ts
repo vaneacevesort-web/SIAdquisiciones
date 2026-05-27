@@ -1,101 +1,67 @@
 import { Routes } from '@angular/router';
 import { BaseComponent } from './views/layout/base/base.component';
 import { authGuard } from './core/guards/auth.guard';
-import { adminGuard } from './core/guards/admin.guard';
 import { roleGuard } from './core/guards/role.guard';
-import { DashboardComponent } from './views/pages/dashboard/dashboard.component'; 
+import { DashboardComponent } from './views/pages/dashboard/dashboard.component';
 
 export const routes: Routes = [
-  { path: 'auth', loadChildren: () => import('./views/pages/auth/auth.routes')},
+  { path: 'auth', loadChildren: () => import('./views/pages/auth/auth.routes') },
   {
     path: '',
     component: BaseComponent,
     canActivateChild: [authGuard],
     children: [
-      { path: '', 
-        canActivate : [ roleGuard ],
-        component: DashboardComponent,
+
+      // Ruta raíz — roleGuard redirige según rol (Admin/Validador → /gestion-solicitudes)
+      { path: '',
+        canActivate: [roleGuard],
+        component: DashboardComponent,  // nunca carga; guard siempre redirige
       },
+
+      // Dashboard (pendiente de limpieza final)
       {
         path: 'dashboard',
         loadChildren: () => import('./views/pages/dashboard/dashboard.routes'),
-        //
       },
-      {
-        path: 'apps',
-        loadChildren: () => import('./views/pages/apps/apps.routes'),
-        data: { roles: ['admin'] }
-      },
-      {
-        path: 'ui-components',
-        loadChildren: () => import('./views/pages/ui-components/ui-components.routes')
-      },
-      {
-        path: 'advanced-ui',
-        loadChildren: () => import('./views/pages/advanced-ui/advanced-ui.routes')
-      },
-      {
-        path: 'forms',
-        loadChildren: () => import('./views/pages/forms/forms.routes')
-      },
-      {
-        path: 'charts',
-        loadChildren: () => import('./views/pages/charts/charts.routes')
-      },
-      {
-        path: 'tables',
-        loadChildren: () => import('./views/pages/tables/tables.routes')
-      },
-      {
-        path: 'icons',
-        loadChildren: () => import('./views/pages/icons/icons.routes')
-      },
-      {
-        path: 'general',
-        loadChildren: () => import('./views/pages/general/general.routes')
-      },
-      {
-        path: 'solicitud',
-        loadChildren: () => import('./views/pages/lista-validador/lista-validador.route'),
-        canActivate : [ adminGuard ]
-      },
+
+      // ── Rutas de la aplicación ──────────────────────────────────────────
+
       {
         path: 'registro',
         loadChildren: () => import('./views/pages/documentos/documentos.route')
       },
+
+      // Estudio de Mercado standalone — pendiente de limpieza final
       {
         path: 'registro/solicitud/:id/estudio-mercado',
         loadComponent: () =>
           import('./views/registro/estudio-mercado/estudio-mercado.component')
             .then(c => c.EstudioMercadoComponent)
       },
+
       {
         path: 'validadores',
         loadChildren: () => import('./views/pages/validadores/validadores.route')
       },
+
       {
-        path: 'solicitud/cola/:estatus',
+        path: 'reportes',
         loadComponent: () =>
-          import('./views/pages/solicitud/lista-cola/lista-cola.component')
-            .then(m => m.ListaColaComponent)
+          import('./views/pages/reportes/reportes.component')
+            .then(c => c.ReportesComponent)
       },
+
       {
-        path: 'solicitud/afectacion-presupuestal',
+        path: 'solicitud/nuevo',
         loadComponent: () =>
-        import('./views/pages/solicitud/afectacion-presupuestal/lista-afectacion/lista-afectacion.component')
-        .then(m => m.ListaAfectacionComponent)
+          import('./views/pages/solicitud/nuevo/form-nueva-solicitud.component')
+            .then(m => m.FormNuevaSolicitudComponent)
       },
+
       {
-        path: 'solicitud/afectacion-presupuestal/:id',
-        loadComponent: () =>
-          import('./views/pages/solicitud/afectacion-presupuestal/form-afectacion/form-afectacion.component')
-            .then(m => m.FormAfectacionComponent)
-      },
-      {
-        path: 'solicitud/adquisicion/:id',
-        loadComponent: () =>
-          import('./views/pages/solicitud/adquisicion/form-adquisicion.component')
-            .then(m => m.FormAdquisicionComponent)
+        path: 'gestion-solicitudes',
+        loadChildren: () => import('./views/pages/gestion-solicitudes/gestion-solicitudes.routes')
+          .then(m => m.gestionSolicitudesRoutes)
       },
 
     ]
@@ -112,7 +78,6 @@ export const routes: Routes = [
     path: 'registrate',
     loadComponent: () => import('./views/pages/registro/registro.component').then(c => c.RegistroComponent)
   },
-  
-  
+
   { path: '**', redirectTo: 'error/404', pathMatch: 'full' }
 ];

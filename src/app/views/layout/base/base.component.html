@@ -8,16 +8,13 @@
 
     <div class="page-content container">
 
-      <!-- Spinner for lazyload modules -->
-       @if (isLoading) {
-         <div class="spinner-wrapper">
-           <div class="spinner">Loading...</div>
-         </div>
-       } @else {
-         <div>
-           <router-outlet></router-outlet>
-         </div>
-       }
+      <!-- Spinner overlay — el router-outlet siempre permanece en el DOM -->
+      @if (isLoading) {
+        <div class="spinner-wrapper">
+          <div class="spinner">Loading...</div>
+        </div>
+      }
+      <router-outlet></router-outlet>
 
 
     </div>

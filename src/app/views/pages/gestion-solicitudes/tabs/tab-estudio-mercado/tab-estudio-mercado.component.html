@@ -1,0 +1,118 @@
+@if (mensajeExito) {
+  <div class="alert alert-success alert-dismissible mb-3">{{ mensajeExito }}</div>
+}
+@if (mensajeError) {
+  <div class="alert alert-danger alert-dismissible mb-3">{{ mensajeError }}</div>
+}
+
+@if (readonly) {
+  <div class="alert alert-light border small mb-3">
+    <i class="feather icon-lock me-1 text-muted"></i>
+    Esta sección es de solo lectura. La solicitud debe estar en estatus <strong>Registrada</strong> para editar.
+  </div>
+}
+
+<form [formGroup]="form">
+
+  <div class="tab-section-title">Bienes y Servicios Solicitados — Estudio de Mercado</div>
+
+  <div class="row g-3">
+
+    <div class="col-md-6">
+      <label class="form-label">Tipo de Solicitud <span class="text-danger">*</span></label>
+      <select class="form-select" formControlName="tipoSolicitud"
+        [class.is-invalid]="hasError('tipoSolicitud','required')">
+        <option value="">Selecciona una opción</option>
+        <option value="BIEN">Bien — Adquisición de materiales y suministros</option>
+        <option value="SERVICIO">Servicio — Contratación de servicios generales</option>
+      </select>
+      @if (hasError('tipoSolicitud','required')) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Descripción del Bien o Servicio <span class="text-danger">*</span></label>
+      <input type="text" class="form-control" placeholder="Escriba la descripción"
+        formControlName="descripcion"
+        [class.is-invalid]="hasError('descripcion','required')">
+      @if (hasError('descripcion','required')) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Valor del Estudio de Mercado <span class="text-danger">*</span></label>
+      <input type="number" class="form-control" placeholder="Ej. 102000.00"
+        formControlName="valorEstudio"
+        [class.is-invalid]="hasError('valorEstudio','required')">
+      @if (hasError('valorEstudio','required')) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Estado del Estudio de Mercado <span class="text-danger">*</span></label>
+      <select class="form-select" formControlName="estadoEstudio"
+        [class.is-invalid]="hasError('estadoEstudio','required')">
+        <option value="">Selecciona una opción</option>
+        <option value="CONCLUIDO">Concluido</option>
+        <option value="PROCESO">En Proceso</option>
+        <option value="RECHAZADO">Rechazado</option>
+      </select>
+      @if (hasError('estadoEstudio','required')) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Monto SABYS <span class="text-danger">*</span></label>
+      <input type="number" class="form-control" placeholder="Ej. 102000.00"
+        formControlName="montoSabys"
+        [class.is-invalid]="hasError('montoSabys','required')">
+      @if (hasError('montoSabys','required')) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Contratación Plurianual <span class="text-danger">*</span></label>
+      <select class="form-select" formControlName="contratacionPlurianual">
+        <option value="">Selecciona una opción</option>
+        <option value="SI">Sí</option>
+        <option value="NO">No</option>
+      </select>
+    </div>
+
+  </div>
+
+  @if (form.get('contratacionPlurianual')?.value === 'SI') {
+    <div class="row g-3 mt-1">
+      <div class="col-md-3">
+        <label class="form-label">Monto 2026</label>
+        <input type="number" class="form-control" formControlName="monto2026">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Monto 2027</label>
+        <input type="number" class="form-control" formControlName="monto2027">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Monto 2028</label>
+        <input type="number" class="form-control" formControlName="monto2028">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Monto 2029</label>
+        <input type="number" class="form-control" formControlName="monto2029">
+      </div>
+    </div>
+  }
+
+  @if (!readonly) {
+    <div class="acciones mt-4">
+      <button type="button" class="btn btn-primary px-4" (click)="guardar()" [disabled]="guardando">
+        <i class="feather icon-save me-1"></i> {{ guardando ? 'Guardando...' : 'Guardar y continuar' }}
+      </button>
+    </div>
+  }
+
+</form>

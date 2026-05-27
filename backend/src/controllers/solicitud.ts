@@ -5,6 +5,7 @@ import AdqCatCapitulos from '../models/AdqCatCapitulos';
 import AdqCatPartidasGenericas from '../models/AdqCatPartidasGenericas';
 import AdqCatPartidasEspecificas from '../models/AdqCatPartidasEspecificas';
 import { Request, Response } from 'express';
+import { fn, col } from 'sequelize';
 import Solicitudes from '../models/solicitud';
 import User from '../models/user';
 import RolUsers from '../models/role_users';
@@ -437,11 +438,24 @@ export const saveAfectacionPresupuestal = async (req: Request, res: Response): P
 export const getProcedimientoById = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const [solicitud, procedimiento] = await Promise.all([
+    const [solicitud, proc] = await Promise.all([
       AdqSolicitudes.findByPk(id),
       AdqProcedimientoAdquisitivo.findOne({ where: { id_solicitud: id } }),
     ]);
-    return res.json({ ok: true, data: { solicitud, procedimiento: procedimiento ?? null } });
+
+    // Mapeo inverso: columnas BD → nombres del form
+    const procedimiento = proc ? {
+      ...proc.toJSON(),
+      fecha_sesion_comite:  proc.fecha_sesion_comite_analisis,
+      hora_sesion_comite:   proc.hora_sesion_comite_analisis,
+      fecha_contra_oferta:  proc.fecha_contraoferta,
+      hora_contra_oferta:   proc.hora_contraoferta,
+      fecha_dictaminacion:  proc.fecha_dictaminacion_comite,
+      hora_dictaminacion:   proc.hora_dictaminacion_comite,
+      dictamen_procedencia: proc.dictamen_procedencia === true ? 'SI' : (proc.dictamen_procedencia === false ? 'NO' : null),
+    } : null;
+
+    return res.json({ ok: true, data: { solicitud, procedimiento } });
   } catch (error) {
     console.error('ERROR getProcedimientoById =>', error);
     return res.status(500).json({ ok: false, msg: 'Error al obtener procedimiento' });
@@ -451,25 +465,82 @@ export const getProcedimientoById = async (req: Request, res: Response): Promise
 export const saveProcedimientoAdquisitivo = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const { modalidad, user_id } = req.body;
+    const { user_id, ...c } = req.body;
     const idSolicitud = Number(id);
+
+    // Mapeo: nombres del form → nombres reales de columna en la BD
+    const camposGuardar = {
+      modalidad:                    c.modalidad                    ?? null,
+      responsable:                  c.responsable                  ?? null,
+      no_procedimiento:             c.no_procedimiento             ?? null,
+      dictamen_procedencia:         c.dictamen_procedencia === 'SI' ? true : (c.dictamen_procedencia === 'NO' ? false : null),
+      convocatoria_url:             c.convocatoria_url             ?? null,
+      medio_publicacion:            c.medio_publicacion            ?? null,
+      fecha_junta_aclaracion:       c.fecha_junta_aclaracion       ?? null,
+      hora_junta_aclaracion:        c.hora_junta_aclaracion        ?? null,
+      fecha_presentacion_apertura:  c.fecha_presentacion_apertura  ?? null,
+      hora_presentacion_apertura:   c.hora_presentacion_apertura   ?? null,
+      fecha_sesion_comite_analisis: c.fecha_sesion_comite          ?? null,   // form → BD
+      hora_sesion_comite_analisis:  c.hora_sesion_comite           ?? null,
+      fecha_contraoferta:           c.fecha_contra_oferta          ?? null,   // form → BD
+      hora_contraoferta:            c.hora_contra_oferta           ?? null,
+      fecha_dictaminacion_comite:   c.fecha_dictaminacion          ?? null,   // form → BD
+      hora_dictaminacion_comite:    c.hora_dictaminacion           ?? null,
+      fecha_sesion_subcomite:       c.fecha_sesion_subcomite       ?? null,
+      hora_sesion_subcomite:        c.hora_sesion_subcomite        ?? null,
+      fecha_fallo:                  c.fecha_fallo                  ?? null,
+      hora_fallo:                   c.hora_fallo                   ?? null,
+    };
 
     const existe = await AdqProcedimientoAdquisitivo.findOne({ where: { id_solicitud: idSolicitud } });
 
     if (existe) {
-      await existe.update({ modalidad, updated_by: user_id ?? null });
+      await existe.update({ ...camposGuardar, updated_by: user_id ?? null });
     } else {
       await AdqProcedimientoAdquisitivo.create({
         id_solicitud: idSolicitud,
-        modalidad,
+        ...camposGuardar,
         created_by: user_id ?? '00000000-0000-0000-0000-000000000000',
       });
     }
+
+    // Avanzar a estatus 4 (Adquisición o Contratación)
+    await AdqSolicitudes.update({ estatus_id: 4 }, { where: { id_solicitud: idSolicitud } });
 
     return res.json({ ok: true, msg: 'Procedimiento adquisitivo guardado correctamente' });
   } catch (error) {
     console.error('ERROR saveProcedimientoAdquisitivo =>', error);
     return res.status(500).json({ ok: false, msg: 'Error al guardar procedimiento adquisitivo' });
+  }
+};
+
+export const getKpis = async (_req: Request, res: Response): Promise<any> => {
+  try {
+    const filas = await AdqSolicitudes.findAll({
+      attributes: ['estatus_id', [fn('COUNT', col('id_solicitud')), 'total']],
+      group: ['estatus_id'],
+      raw: true,
+    });
+
+    const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    filas.forEach((f: any) => { counts[Number(f.estatus_id)] = Number(f.total); });
+
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
+    return res.json({
+      ok: true,
+      data: {
+        total,
+        registradas:  counts[1],
+        estudio:      counts[2] + counts[3] + counts[4] + counts[5],
+        afectacion:   counts[3] + counts[4] + counts[5],
+        contratacion: counts[4] + counts[5],
+        adjudicacion: counts[5],
+      },
+    });
+  } catch (error) {
+    console.error('ERROR getKpis =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al obtener KPIs' });
   }
 };
 
@@ -486,6 +557,7 @@ export const getSolicitudesCola = async (req: Request, res: Response): Promise<a
     return res.status(500).json({ ok: false, msg: 'Error al obtener la cola' });
   }
 };
+
 
 export const getSolicitudesAfectacion = async (req: Request, res: Response): Promise<any> => {
   try {

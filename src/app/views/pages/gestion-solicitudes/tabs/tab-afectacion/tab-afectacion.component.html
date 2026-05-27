@@ -1,0 +1,210 @@
+@if (mensajeExito) {
+  <div class="alert alert-success mb-3">{{ mensajeExito }}</div>
+}
+@if (mensajeError) {
+  <div class="alert alert-danger mb-3">{{ mensajeError }}</div>
+}
+
+@if (readonly) {
+  <div class="alert alert-light border small mb-3">
+    <i class="feather icon-lock me-1 text-muted"></i>
+    Solo lectura. La solicitud debe estar en estatus <strong>Estudio de Mercado</strong> para editar.
+  </div>
+}
+
+<form [formGroup]="form">
+
+  <!-- PASO 1 -->
+  <div class="tab-section-title">Datos de Afectación Presupuestal</div>
+
+  <div class="row g-3 mb-3">
+
+    <div class="col-md-4">
+      <label class="form-label">Folio de Solicitud (CA)</label>
+      <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="folio_ca">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Fecha de Liberación de Estudio de Mercado</label>
+      <input type="date" class="form-control" formControlName="fecha_liberacion_estudio">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Nombre de Testigo Social</label>
+      <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="nombre_testigo_social">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Tipo de Gasto <span class="text-danger">*</span></label>
+      <select class="form-select" formControlName="tipo_gasto"
+        [class.is-invalid]="form.get('tipo_gasto')?.invalid && form.get('tipo_gasto')?.touched">
+        <option [ngValue]="null">Seleccione una opción</option>
+        <option value="PAD">PAD - Programa de Acciones para el Desarrollo</option>
+        <option value="GC">GC - Gasto Corriente</option>
+        <option value="MIXTO">Mixto - PAD y GC</option>
+      </select>
+      @if (form.get('tipo_gasto')?.invalid && form.get('tipo_gasto')?.touched) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Importe de Suficiencia Presupuestal</label>
+      <input type="number" class="form-control" placeholder="El valor debe ser un número" formControlName="importe_suficiencia">
+    </div>
+
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-12">
+      <label class="form-label">Oficio de Suficiencia</label>
+      <div class="oficio-wrap">
+        <div class="oficio-wrap__url">
+          <label class="oficio-wrap__sublabel"><i class="feather icon-link"></i> Liga / URL</label>
+          <input type="url" class="form-control form-control-sm" placeholder="https://..." formControlName="oficio_suficiencia_url">
+        </div>
+        <div class="oficio-wrap__sep">o</div>
+        <div class="oficio-wrap__file">
+          <label class="oficio-wrap__sublabel"><i class="feather icon-paperclip"></i> Adjuntar archivo</label>
+          <input type="file" class="form-control form-control-sm" accept=".pdf,.doc,.docx,.jpg,.png" (change)="onOficioFileChange($event)" [disabled]="readonly">
+          @if (oficioNombreArchivo) {
+            <small class="text-success mt-1 d-block"><i class="feather icon-check-circle"></i> {{ oficioNombreArchivo }}</small>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb-3">
+    <div class="col-12">
+      <label class="form-label">Fuente de financiamiento:</label>
+      <input type="text" class="form-control form-control-sm mb-2" placeholder="Buscar por código o nombre..." (input)="filtrarFuentes($event)" [disabled]="readonly">
+      @if (mostrarFuentes) {
+        <div style="max-height:200px; overflow-y:auto; border:1px solid #dee2e6; border-radius:4px; padding:0.5rem 0.75rem;">
+          @for (fuente of fuentesFiltradas; track fuente.id_fuente_financiamiento) {
+            <div class="form-check mb-1">
+              <input class="form-check-input" type="checkbox"
+                [id]="'g_fuente_' + fuente.id_fuente_financiamiento"
+                [checked]="esFuenteSeleccionada(fuente.id_fuente_financiamiento)"
+                [disabled]="readonly"
+                (change)="toggleFuente(fuente.id_fuente_financiamiento, $any($event.target).checked)">
+              <label class="form-check-label small" [for]="'g_fuente_' + fuente.id_fuente_financiamiento">
+                {{ fuente.codigo }} - {{ fuente.nombre }}
+              </label>
+            </div>
+          }
+          @if (fuentesFiltradas.length === 0) {
+            <p class="text-muted small mb-0">Sin resultados</p>
+          }
+        </div>
+      } @else {
+        <div class="text-muted small p-2">Cargando fuentes...</div>
+      }
+    </div>
+  </div>
+
+  @if (paso === 1 && !readonly) {
+    <div class="mb-3">
+      <button type="button" class="btn px-4 text-white" style="background-color:#9b003f;" (click)="paso = 2">
+        Siguiente <i class="feather icon-arrow-right ms-1"></i>
+      </button>
+    </div>
+  }
+
+  <!-- PASO 2 -->
+  @if (paso === 2 || readonly) {
+    <hr class="my-4">
+    <div class="tab-section-title">Bienes y Servicios</div>
+
+    <div class="row g-3 mb-3">
+
+      <div class="col-md-4">
+        <label class="form-label">Clave de Verificación</label>
+        <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="clave_verificacion">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Descripción de la Clave de Verificación</label>
+        <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="descripcion_clave_verificacion">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Unidad de Medida</label>
+        <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="unidad_medida">
+      </div>
+
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label d-block">¿Es contrato abierto?</label>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="gs_contratoSi" value="SI" formControlName="contrato_abierto">
+        <label class="form-check-label" for="gs_contratoSi">Sí</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="gs_contratoNo" value="NO" formControlName="contrato_abierto">
+        <label class="form-check-label" for="gs_contratoNo">No</label>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label d-block">¿Es consolidado?</label>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="gs_consolidadoSi" value="SI" formControlName="consolidado">
+        <label class="form-check-label" for="gs_consolidadoSi">Sí</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="gs_consolidadoNo" value="NO" formControlName="consolidado">
+        <label class="form-check-label" for="gs_consolidadoNo">No</label>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label d-block">Dictamen Técnico</label>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="gs_dictamenSi" value="SI" formControlName="dictamen">
+        <label class="form-check-label" for="gs_dictamenSi">Sí</label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" id="gs_dictamenNo" value="NO" formControlName="dictamen">
+        <label class="form-check-label" for="gs_dictamenNo">No</label>
+      </div>
+
+      @if (form.get('dictamen')?.value === 'SI') {
+        <div class="mt-3">
+          <label class="form-label">Documento del Dictamen Técnico</label>
+          <div class="oficio-wrap">
+            <div class="oficio-wrap__url">
+              <label class="oficio-wrap__sublabel"><i class="feather icon-link"></i> Liga / URL</label>
+              <input type="url" class="form-control form-control-sm" placeholder="https://..." formControlName="dictamen_path_url">
+            </div>
+            <div class="oficio-wrap__sep">o</div>
+            <div class="oficio-wrap__file">
+              <label class="oficio-wrap__sublabel"><i class="feather icon-paperclip"></i> Adjuntar archivo</label>
+              <input type="file" class="form-control form-control-sm" accept=".pdf,.doc,.docx,.jpg,.png"
+                (change)="onDictamenFileChange($event)" [disabled]="readonly">
+              @if (dictamenNombreArchivo) {
+                <small class="text-success mt-1 d-block"><i class="feather icon-check-circle"></i> {{ dictamenNombreArchivo }}</small>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (!readonly) {
+      <div class="acciones mt-4 d-flex gap-2">
+        <button type="button" class="btn btn-outline-secondary" (click)="paso = 1">
+          <i class="feather icon-arrow-left me-1"></i> Anterior
+        </button>
+        <button type="button" class="btn btn-primary px-4" (click)="guardar()" [disabled]="guardando">
+          <i class="feather icon-save me-1"></i> {{ guardando ? 'Guardando...' : 'Guardar' }}
+        </button>
+        <button type="button" class="btn btn-outline-secondary" (click)="limpiar()">
+          Limpiar
+        </button>
+      </div>
+    }
+  }
+
+</form>

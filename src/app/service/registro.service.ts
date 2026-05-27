@@ -78,6 +78,10 @@ export class RegistroService {
     return this.http.get<any>(`${this.myAppUrl}api/catalogos/fuentes-financiamiento`);
   }
 
+  getKpis(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/kpis`);
+  }
+
   getSolicitudesCola(estatus: number): Observable<any> {
     return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/cola/${estatus}`);
   }

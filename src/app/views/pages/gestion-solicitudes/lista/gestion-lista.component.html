@@ -1,0 +1,199 @@
+<div class="gl-wrapper">
+
+  <!-- ══ Encabezado de página ══════════════════════════════════════════ -->
+  <div class="gl-header">
+    <div class="gl-header-left">
+      <div class="gl-header-icon">
+        <i class="feather icon-grid"></i>
+      </div>
+      <div>
+        <h4 class="gl-title">Gestión de Solicitudes</h4>
+        <p class="gl-subtitle">Vista centralizada de todas las etapas del proceso adquisitivo</p>
+      </div>
+    </div>
+    <button class="btn gl-btn-new" routerLink="/solicitud/nuevo">
+      <i class="feather icon-plus"></i>
+      <span>Nueva solicitud</span>
+    </button>
+  </div>
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+
+
+  <!-- ══ Filtros ════════════════════════════════════════════════════════ -->
+  <div class="gl-filters-card">
+
+    <div class="gl-search-wrap">
+      <i class="feather icon-search gl-search-icon"></i>
+      <input type="text" class="gl-search-input" placeholder="Buscar por folio, dependencia..."
+        (input)="updateFilter($event)">
+    </div>
+
+    <div class="gl-filter-sep"></div>
+    <select class="gl-select" (change)="cambiarFiltroEstatus($event)">
+      <option value="">Todos los estatus</option>
+      <option value="1">Registrada</option>
+      <option value="2">Estudio de Mercado</option>
+      <option value="3">Afectación Presupuestal</option>
+      <option value="4">Adquisición</option>
+      <option value="5">Adjudicación</option>
+    </select>
+
+    <div class="gl-results-count ms-auto">
+      <i class="feather icon-list me-1"></i>
+      <span>{{ temp.length }}</span> resultado(s)
+    </div>
+
+  </div>
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+
+
+  <!-- ══ Tabla ══════════════════════════════════════════════════════════ -->
+  <div class="gl-table-card">
+
+    @if (loading) {
+      <div class="gl-state-box">
+        <div class="spinner-border spinner-border-sm gl-spinner me-2"></div>
+        <span>Cargando solicitudes...</span>
+      </div>
+    } @else if (rows.length === 0) {
+      <div class="gl-state-box">
+        <div class="gl-empty-icon"><i class="feather icon-inbox"></i></div>
+        <p class="gl-empty-text">No se encontraron solicitudes</p>
+        <p class="gl-empty-hint">Intenta ajustar los filtros o crea una nueva solicitud</p>
+      </div>
+    } @else {
+      <div class="table-responsive">
+        <table class="gl-table">
+          <thead>
+            <tr>
+              <th class="gl-th gl-th-num">#</th>
+              <th class="gl-th">Folio</th>
+              <th class="gl-th">Fecha ingreso</th>
+              <th class="gl-th">Dependencia / OPD</th>
+              <th class="gl-th gl-th-center">Tipo</th>
+              <th class="gl-th">Estatus</th>
+              <th class="gl-th gl-th-acciones">Acciones por etapa</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows; track row.id_solicitud; let i = $index) {
+              <tr class="gl-tr" (click)="abrirDetalle(row.id_solicitud)">
+
+                <td class="gl-td gl-td-num">{{ i + 1 }}</td>
+
+                <td class="gl-td">
+                  <span class="gl-folio">{{ row.folio }}</span>
+                </td>
+
+                <td class="gl-td gl-td-muted">
+                  <span class="d-inline-flex align-items-center gap-1">
+                    <i class="feather icon-calendar gl-cell-icon"></i>
+                    {{ formatDate(row.fecha_ingreso) }}
+                  </span>
+                </td>
+
+                <td class="gl-td">
+                  <span class="gl-dep">{{ row.dependencia_nombre || row.opd_nombre || '—' }}</span>
+                </td>
+
+                <td class="gl-td gl-td-center">
+                  @if (row.tipo_solicitud === 'BIEN') {
+                    <span class="gl-tipo-badge gl-tipo-bien">
+                      <i class="feather icon-package"></i> Bien
+                    </span>
+                  } @else if (row.tipo_solicitud === 'SERVICIO') {
+                    <span class="gl-tipo-badge gl-tipo-servicio">
+                      <i class="feather icon-tool"></i> Servicio
+                    </span>
+                  } @else {
+                    <span class="gl-td-muted">—</span>
+                  }
+                </td>
+
+                <td class="gl-td">
+                  <span class="gl-status {{ getEstatusClass(row.estatus_id) }}">
+                    <span class="gl-status-dot"></span>
+                    {{ getEstatusLabel(row.estatus_id) }}
+                  </span>
+                </td>
+
+                <!-- ── Acciones por etapa ─────────────────────────────── -->
+                <td class="gl-td gl-td-acciones" (click)="$event.stopPropagation()">
+                  <div class="gl-etapa-group">
+
+                    <!-- Ver (info general) — siempre habilitado -->
+                    <button
+                      class="gl-etapa-btn gl-etapa-btn--ver"
+                      (click)="abrirEtapa(row, 'ver', $event)"
+                      title="Ver información general">
+                      <i class="feather icon-eye"></i>
+                      <span>Ver</span>
+                    </button>
+
+                    <!-- Estudio de Mercado -->
+                    <button
+                      class="gl-etapa-btn"
+                      [class.gl-etapa-btn--editable]="puedeEditarEtapa(row, 'estudio')"
+                      [class.gl-etapa-btn--accesible]="puedeAcceder(row, 'estudio') && !puedeEditarEtapa(row, 'estudio')"
+                      [class.gl-etapa-btn--locked]="!puedeAcceder(row, 'estudio')"
+                      [disabled]="!puedeAcceder(row, 'estudio')"
+                      (click)="abrirEtapa(row, 'estudio', $event)"
+                      title="{{ puedeEditarEtapa(row, 'estudio') ? 'Editar estudio de mercado' : 'Ver estudio de mercado' }}">
+                      <i class="feather icon-search"></i>
+                      <span>Estudio</span>
+                    </button>
+
+                    <!-- Afectación Presupuestal -->
+                    <button
+                      class="gl-etapa-btn"
+                      [class.gl-etapa-btn--editable]="puedeEditarEtapa(row, 'afectacion')"
+                      [class.gl-etapa-btn--accesible]="puedeAcceder(row, 'afectacion') && !puedeEditarEtapa(row, 'afectacion')"
+                      [class.gl-etapa-btn--locked]="!puedeAcceder(row, 'afectacion')"
+                      [disabled]="!puedeAcceder(row, 'afectacion')"
+                      (click)="abrirEtapa(row, 'afectacion', $event)"
+                      title="{{ puedeEditarEtapa(row, 'afectacion') ? 'Editar afectación' : 'Ver afectación' }}">
+                      <i class="feather icon-dollar-sign"></i>
+                      <span>Afectación</span>
+                    </button>
+
+                    <!-- Adquisición -->
+                    <button
+                      class="gl-etapa-btn"
+                      [class.gl-etapa-btn--editable]="puedeEditarEtapa(row, 'adquisicion')"
+                      [class.gl-etapa-btn--accesible]="puedeAcceder(row, 'adquisicion') && !puedeEditarEtapa(row, 'adquisicion')"
+                      [class.gl-etapa-btn--locked]="!puedeAcceder(row, 'adquisicion')"
+                      [disabled]="!puedeAcceder(row, 'adquisicion')"
+                      (click)="abrirEtapa(row, 'adquisicion', $event)"
+                      title="{{ puedeEditarEtapa(row, 'adquisicion') ? 'Editar adquisición' : 'Ver adquisición' }}">
+                      <i class="feather icon-shopping-cart"></i>
+                      <span>Adquisición</span>
+                    </button>
+
+                    <!-- Adjudicación -->
+                    <button
+                      class="gl-etapa-btn"
+                      [class.gl-etapa-btn--editable]="puedeEditarEtapa(row, 'adjudicacion')"
+                      [class.gl-etapa-btn--accesible]="puedeAcceder(row, 'adjudicacion') && !puedeEditarEtapa(row, 'adjudicacion')"
+                      [class.gl-etapa-btn--locked]="!puedeAcceder(row, 'adjudicacion')"
+                      [disabled]="!puedeAcceder(row, 'adjudicacion')"
+                      (click)="abrirEtapa(row, 'adjudicacion', $event)"
+                      title="{{ puedeEditarEtapa(row, 'adjudicacion') ? 'Editar adjudicación' : 'Ver adjudicación' }}">
+                      <i class="feather icon-award"></i>
+                      <span>Adjudicación</span>
+                    </button>
+
+                  </div>
+                </td>
+                <!-- ────────────────────────────────────────────────────── -->
+
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  </div>
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+
+</div>

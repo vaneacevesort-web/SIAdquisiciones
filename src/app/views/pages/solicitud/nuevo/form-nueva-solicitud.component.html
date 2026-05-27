@@ -1,0 +1,266 @@
+<div class="ns-wrapper">
+
+  <!-- ══ Encabezado limpio ══════════════════════════════════════════════ -->
+  <div class="ns-page-header">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <i class="feather icon-file-plus ns-page-icon"></i>
+        <h4 class="ns-page-title">Nueva Solicitud</h4>
+      </div>
+      <p class="ns-page-subtitle">Registro inicial del expediente de adquisición</p>
+    </div>
+    <span class="ns-step-badge">
+      <i class="feather icon-layers me-1"></i>Paso 1 de 6
+    </span>
+  </div>
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+
+
+  <div class="ns-body">
+
+    @if (mensajeError) {
+      <div class="alert alert-danger d-flex align-items-center gap-2 mb-4">
+        <i class="feather icon-alert-circle"></i>
+        <span>{{ mensajeError }}</span>
+      </div>
+    }
+
+    <form [formGroup]="form">
+
+      <!-- ── Sección 1: Datos generales ───────────────────────────────── -->
+      <div class="ns-section">
+        <div class="ns-section-label">
+          <i class="feather icon-file-text"></i>
+          Datos generales
+        </div>
+
+        <div class="row g-3">
+
+          <div class="col-md-4">
+            <label class="ns-label">Folio interno <span class="text-danger">*</span></label>
+            <input type="text" class="form-control ns-control" formControlName="folio"
+              placeholder="Ej. ADQ-2026-001"
+              [class.is-invalid]="form.get('folio')?.invalid && form.get('folio')?.touched">
+            @if (form.get('folio')?.invalid && form.get('folio')?.touched) {
+              <div class="invalid-feedback">Campo obligatorio</div>
+            }
+          </div>
+
+          <div class="col-md-4">
+            <label class="ns-label">Fecha de ingreso <span class="text-danger">*</span></label>
+            <input type="date" class="form-control ns-control" formControlName="fecha_ingreso"
+              [class.is-invalid]="form.get('fecha_ingreso')?.invalid && form.get('fecha_ingreso')?.touched">
+            @if (form.get('fecha_ingreso')?.invalid && form.get('fecha_ingreso')?.touched) {
+              <div class="invalid-feedback">Campo obligatorio</div>
+            }
+          </div>
+
+          <div class="col-md-4">
+            <label class="ns-label">Origen del recurso <span class="text-danger">*</span></label>
+            <select class="form-select ns-control" formControlName="id_origen_recurso"
+              [class.is-invalid]="form.get('id_origen_recurso')?.invalid && form.get('id_origen_recurso')?.touched">
+              <option [ngValue]="null">Seleccione...</option>
+              @for (o of origenesRecurso; track o.id) {
+                <option [value]="o.id">{{ o.nombre }}</option>
+              }
+            </select>
+            @if (form.get('id_origen_recurso')?.invalid && form.get('id_origen_recurso')?.touched) {
+              <div class="invalid-feedback">Campo obligatorio</div>
+            }
+          </div>
+
+          <div class="col-md-6">
+            <label class="ns-label">Tipo de solicitud <span class="text-danger">*</span></label>
+            <select class="form-select ns-control" formControlName="tipo_solicitud"
+              [class.is-invalid]="form.get('tipo_solicitud')?.invalid && form.get('tipo_solicitud')?.touched">
+              <option [ngValue]="null">Seleccione...</option>
+              @for (t of tiposSolicitud; track t.value) {
+                <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+            @if (form.get('tipo_solicitud')?.invalid && form.get('tipo_solicitud')?.touched) {
+              <div class="invalid-feedback">Campo obligatorio</div>
+            }
+          </div>
+
+        </div>
+      </div>
+      <!-- ─────────────────────────────────────────────────────────────── -->
+
+
+      <!-- ── Sección 2: Unidad solicitante ────────────────────────────── -->
+      <div class="ns-section">
+        <div class="ns-section-label">
+          <i class="feather icon-home"></i>
+          Unidad solicitante
+        </div>
+
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="ns-label">Dependencia</label>
+            <select class="form-select ns-control" formControlName="id_dependencia"
+              (change)="onDependenciaChange($event)">
+              <option [ngValue]="null">Seleccione...</option>
+              @for (d of dependencias; track d.id_dependencia) {
+                <option [value]="d.id_dependencia">{{ d.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="ns-label">Centro de costo</label>
+            <div class="ns-cascade-wrap">
+              @if (centrosCosto.length === 0) {
+                <div class="ns-cascade-hint">
+                  <i class="feather icon-arrow-up-left"></i>
+                  Seleccione una dependencia primero
+                </div>
+              }
+              <select class="form-select ns-control" formControlName="id_centro_costo"
+                [disabled]="centrosCosto.length === 0">
+                <option [ngValue]="null">Seleccione...</option>
+                @for (c of centrosCosto; track c.id_centro_costo) {
+                  <option [value]="c.id_centro_costo">{{ c.nombre }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="ns-label">Organismo / OPD</label>
+            <select class="form-select ns-control" formControlName="id_opd">
+              <option [ngValue]="null">Seleccione...</option>
+              @for (o of opds; track o.id_opd) {
+                <option [value]="o.id_opd">{{ o.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="ns-label">Órgano desconcentrado</label>
+            <select class="form-select ns-control" formControlName="id_organo_desconcentrado">
+              <option [ngValue]="null">Seleccione...</option>
+              @for (o of organosDesconc; track o.id_organo_desconcentrado) {
+                <option [value]="o.id_organo_desconcentrado">{{ o.nombre }}</option>
+              }
+            </select>
+          </div>
+
+        </div>
+      </div>
+      <!-- ─────────────────────────────────────────────────────────────── -->
+
+
+      <!-- ── Sección 3: Clasificación presupuestal ────────────────────── -->
+      <div class="ns-section">
+        <div class="ns-section-label">
+          <i class="feather icon-layers"></i>
+          Clasificación presupuestal
+        </div>
+
+        <!-- Indicador de cascada -->
+        <div class="ns-cascade-flow mb-3">
+          <span class="ns-cf-item" [class.ns-cf-item--done]="form.get('id_capitulo')?.value">
+            <i class="feather icon-check-circle"></i> Capítulo
+          </span>
+          <i class="feather icon-chevron-right ns-cf-arrow"></i>
+          <span class="ns-cf-item" [class.ns-cf-item--done]="form.get('id_subcapitulo')?.value">
+            <i class="feather icon-check-circle"></i> Subcapítulo
+          </span>
+          <i class="feather icon-chevron-right ns-cf-arrow"></i>
+          <span class="ns-cf-item" [class.ns-cf-item--done]="form.get('id_partida_generica')?.value">
+            <i class="feather icon-check-circle"></i> Partida genérica
+          </span>
+          <i class="feather icon-chevron-right ns-cf-arrow"></i>
+          <span class="ns-cf-item" [class.ns-cf-item--done]="form.get('id_partida_especifica')?.value">
+            <i class="feather icon-check-circle"></i> Partida específica
+          </span>
+        </div>
+
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="ns-label">Capítulo</label>
+            <select class="form-select ns-control" formControlName="id_capitulo"
+              (change)="onCapituloChange($event)">
+              <option [ngValue]="null">Seleccione...</option>
+              @for (c of capitulos; track c.id_capitulo) {
+                <option [value]="c.id_capitulo">{{ c.codigo }} — {{ c.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="ns-label">Subcapítulo</label>
+            <select class="form-select ns-control" formControlName="id_subcapitulo"
+              [disabled]="subcapitulos.length === 0"
+              (change)="onSubcapituloChange($event)">
+              <option [ngValue]="null">
+                {{ subcapitulos.length === 0 ? 'Seleccione capítulo primero' : 'Seleccione...' }}
+              </option>
+              @for (s of subcapitulos; track s.id_subcapitulo) {
+                <option [value]="s.id_subcapitulo">{{ s.codigo }} — {{ s.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="ns-label">Partida genérica</label>
+            <select class="form-select ns-control" formControlName="id_partida_generica"
+              [disabled]="partidasGenericas.length === 0"
+              (change)="onPartidaGenericaChange($event)">
+              <option [ngValue]="null">
+                {{ partidasGenericas.length === 0 ? 'Seleccione subcapítulo primero' : 'Seleccione...' }}
+              </option>
+              @for (p of partidasGenericas; track p.id_partida_generica) {
+                <option [value]="p.id_partida_generica">{{ p.codigo }} — {{ p.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="ns-label">Partida específica</label>
+            <select class="form-select ns-control" formControlName="id_partida_especifica"
+              [disabled]="partidasEspecificas.length === 0">
+              <option [ngValue]="null">
+                {{ partidasEspecificas.length === 0 ? 'Seleccione partida genérica primero' : 'Seleccione...' }}
+              </option>
+              @for (p of partidasEspecificas; track p.id_partida_especifica) {
+                <option [value]="p.id_partida_especifica">{{ p.codigo }} — {{ p.nombre }}</option>
+              }
+            </select>
+          </div>
+
+        </div>
+      </div>
+      <!-- ─────────────────────────────────────────────────────────────── -->
+
+
+      <!-- ── Barra de acciones ─────────────────────────────────────────── -->
+      <div class="ns-actions">
+        <div class="ns-actions-note">
+          <i class="feather icon-info me-1"></i>
+          Los campos marcados con <span class="text-danger">*</span> son obligatorios
+        </div>
+        <div class="ns-actions-btns">
+          <button type="button" class="btn ns-btn-secondary" (click)="limpiar()">
+            <i class="feather icon-rotate-ccw me-1"></i>Limpiar
+          </button>
+          <button type="button" class="btn ns-btn-primary" (click)="guardar()" [disabled]="guardando">
+            @if (guardando) {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Guardando...
+            } @else {
+              <i class="feather icon-arrow-right me-1"></i>
+              Guardar y continuar
+            }
+          </button>
+        </div>
+      </div>
+      <!-- ─────────────────────────────────────────────────────────────── -->
+
+    </form>
+  </div>
+
+</div>

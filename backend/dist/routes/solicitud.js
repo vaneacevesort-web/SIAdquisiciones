@@ -11,6 +11,7 @@ router.put("/api/solicitud/update/:id", solicitud_1.putRegistro);
 router.post("/api/solicitud/getsolicitudes", solicitud_1.getSolicitudes);
 router.get("/api/solicitud/getestatus/:id", solicitud_1.getestatus);
 router.post("/api/solicitud/estudio-mercado", solicitud_1.createEstudioMercado);
+router.get("/api/solicitud/kpis", solicitud_1.getKpis);
 router.get("/api/solicitud/cola/:estatus", solicitud_1.getSolicitudesCola);
 router.get("/api/solicitud/afectacion-presupuestal", solicitud_1.getSolicitudesAfectacion);
 router.get("/api/solicitud/afectacion-presupuestal/:id", solicitud_1.getAfectacionById);

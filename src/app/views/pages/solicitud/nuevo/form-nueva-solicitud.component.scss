@@ -1,0 +1,301 @@
+// ── Paleta institucional ────────────────────────────────────────────────
+$vino:        #9b003f;
+$vino-dark:   #7a0032;
+$vino-light:  #f9eef3;
+$vino-faint:  #fdf5f8;
+$vino-border: #e8c4d0;
+$text-head:   #1e293b;
+$text-muted:  #64748b;
+$border:      #e2e8f0;
+$bg-page:     #f8fafc;
+
+// ── Contenedor raíz ─────────────────────────────────────────────────────
+.ns-wrapper {
+  min-height: 100%;
+  background: $bg-page;
+}
+
+// ══ ENCABEZADO LIMPIO ════════════════════════════════════════════════════
+.ns-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1.5rem 2rem 0;
+  max-width: 1200px;
+}
+
+.ns-page-icon {
+  font-size: 1.15rem;
+  color: $vino;
+}
+
+.ns-page-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: $text-head;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.ns-page-subtitle {
+  font-size: 0.8rem;
+  color: $text-muted;
+  margin: 0;
+}
+
+.ns-step-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $vino;
+  background: $vino-light;
+  border: 1px solid $vino-border;
+  border-radius: 20px;
+  padding: 0.3rem 0.85rem;
+  white-space: nowrap;
+  margin-top: 0.15rem;
+
+  i { font-size: 0.75rem; }
+}
+
+// ══ CUERPO ════════════════════════════════════════════════════════════════
+.ns-body {
+  padding: 1.75rem 2rem;
+  max-width: 1200px;
+}
+
+// ── Sección ──────────────────────────────────────────────────────────────
+.ns-section {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid $border;
+  border-left: 4px solid $vino;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  transition: box-shadow 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(155,0,63,0.07), 0 1px 3px rgba(0,0,0,0.05);
+  }
+}
+
+.ns-section-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $vino;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px dashed $vino-border;
+
+  i { font-size: 0.85rem; }
+}
+
+// ── Etiquetas ─────────────────────────────────────────────────────────────
+.ns-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.3rem;
+  display: block;
+
+  .text-danger { font-size: 0.85rem; }
+}
+
+// ── Controles ─────────────────────────────────────────────────────────────
+.ns-control {
+  font-size: 0.875rem;
+  border-radius: 7px;
+  border: 1.5px solid #d1d5db;
+  background-color: #fff;
+  color: $text-head;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &::placeholder { color: #a0aec0; }
+
+  &:focus {
+    border-color: $vino;
+    box-shadow: 0 0 0 3px rgba(155, 0, 63, 0.10);
+    outline: none;
+  }
+
+  &:disabled,
+  &[disabled] {
+    background-color: #f8fafc;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+    cursor: not-allowed;
+  }
+}
+
+// ── Cascada de clasificación ──────────────────────────────────────────────
+.ns-cascade-wrap {
+  position: relative;
+}
+
+.ns-cascade-hint {
+  position: absolute;
+  top: -1.6rem;
+  right: 0;
+  font-size: 0.7rem;
+  color: $text-muted;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  i { font-size: 0.7rem; }
+}
+
+// Flujo visual de cascada
+.ns-cascade-flow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.85rem;
+  background: $vino-faint;
+  border-radius: 7px;
+  border: 1px solid $vino-border;
+}
+
+.ns-cf-arrow {
+  font-size: 0.75rem;
+  color: #c4b5bc;
+}
+
+.ns-cf-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #b0899c;
+
+  i { font-size: 0.7rem; }
+
+  &--done {
+    color: $vino;
+    i { color: $vino; }
+  }
+}
+
+// ── Barra de acciones ─────────────────────────────────────────────────────
+.ns-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.1rem 1.5rem;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid $border;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.ns-actions-note {
+  font-size: 0.78rem;
+  color: $text-muted;
+  display: flex;
+  align-items: center;
+  i { color: #94a3b8; }
+}
+
+.ns-actions-btns {
+  display: flex;
+  gap: 0.75rem;
+}
+
+// Botón primario (vino)
+.ns-btn-primary {
+  background-color: $vino;
+  border-color: $vino;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.5rem 1.5rem;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.15s, box-shadow 0.15s, transform 0.1s;
+
+  &:hover:not(:disabled) {
+    background-color: $vino-dark;
+    border-color: $vino-dark;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(155,0,63,0.3);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    background-color: $vino;
+    border-color: $vino;
+    color: #fff;
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+// Botón secundario
+.ns-btn-secondary {
+  background-color: transparent;
+  border: 1.5px solid $border;
+  color: $text-muted;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: #94a3b8;
+    color: $text-head;
+    background-color: $bg-page;
+  }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .ns-header {
+    padding: 1.25rem 1rem;
+  }
+
+  .ns-body {
+    padding: 1rem;
+  }
+
+  .ns-section {
+    padding: 1.1rem 1.1rem;
+    border-left-width: 3px;
+  }
+
+  .ns-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ns-actions-btns {
+    width: 100%;
+    .ns-btn-primary { flex: 1; justify-content: center; }
+  }
+
+  .ns-cascade-flow {
+    display: none;
+  }
+}

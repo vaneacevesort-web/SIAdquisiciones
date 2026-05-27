@@ -1,0 +1,151 @@
+@if (mensajeExito) {
+  <div class="alert alert-success mb-3">{{ mensajeExito }}</div>
+}
+@if (mensajeError) {
+  <div class="alert alert-danger mb-3">{{ mensajeError }}</div>
+}
+
+@if (readonly) {
+  <div class="alert alert-light border small mb-3">
+    <i class="feather icon-lock me-1 text-muted"></i>
+    Solo lectura. La solicitud debe estar en estatus <strong>Afectación Presupuestal</strong> para editar.
+  </div>
+}
+
+<form [formGroup]="form">
+
+  <div class="tab-section-title">Datos del Procedimiento Adquisitivo</div>
+
+  <div class="row g-3 mb-3">
+
+    <div class="col-md-4">
+      <label class="form-label">Modalidad del Procedimiento <span class="text-danger">*</span></label>
+      <select class="form-select" formControlName="modalidad"
+        [class.is-invalid]="form.get('modalidad')?.invalid && form.get('modalidad')?.touched">
+        <option [ngValue]="null">Seleccione una modalidad</option>
+        @for (op of modalidades; track op.value) {
+          <option [value]="op.value">{{ op.label }}</option>
+        }
+      </select>
+      @if (form.get('modalidad')?.invalid && form.get('modalidad')?.touched) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label d-block">Dictamen de Procedencia</label>
+      <div class="d-flex gap-3 mt-2">
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" id="gs_dictProcSi" value="SI" formControlName="dictamen_procedencia">
+          <label class="form-check-label" for="gs_dictProcSi">Sí</label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" id="gs_dictProcNo" value="NO" formControlName="dictamen_procedencia">
+          <label class="form-check-label" for="gs_dictProcNo">No</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Responsable del Procedimiento</label>
+      <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="responsable">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">No. de Procedimiento</label>
+      <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="no_procedimiento">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Convocatoria / Invitación (URL)</label>
+      <input type="url" class="form-control" placeholder="https://..." formControlName="convocatoria_url">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Medio de Publicación</label>
+      <input type="text" class="form-control" placeholder="Compranet, DOF, etc." formControlName="medio_publicacion">
+    </div>
+
+  </div>
+
+  <hr class="my-4">
+
+  <div class="tab-section-title">Fechas y Horas del Procedimiento</div>
+
+  <div class="row g-3 mb-3">
+
+    <div class="col-md-6">
+      <label class="form-label">Fecha de Junta de Aclaración</label>
+      <input type="date" class="form-control" formControlName="fecha_junta_aclaracion">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" formControlName="hora_junta_aclaracion">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Fecha de Presentación y Apertura</label>
+      <input type="date" class="form-control" formControlName="fecha_presentacion_apertura">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" formControlName="hora_presentacion_apertura">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Fecha de Sesión del Comité (Análisis Cualitativo)</label>
+      <input type="date" class="form-control" formControlName="fecha_sesion_comite">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" formControlName="hora_sesion_comite">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Fecha de Contra Oferta</label>
+      <input type="date" class="form-control" formControlName="fecha_contra_oferta">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" formControlName="hora_contra_oferta">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Fecha de Dictaminación de Adjudicación</label>
+      <input type="date" class="form-control" formControlName="fecha_dictaminacion">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" formControlName="hora_dictaminacion">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Fecha de Sesión del Subcomité Revisor</label>
+      <input type="date" class="form-control" formControlName="fecha_sesion_subcomite">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" formControlName="hora_sesion_subcomite">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Fecha de Fallo</label>
+      <input type="date" class="form-control" formControlName="fecha_fallo">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" formControlName="hora_fallo">
+    </div>
+
+  </div>
+
+  @if (!readonly) {
+    <div class="acciones mt-4 d-flex gap-2">
+      <button type="button" class="btn btn-primary px-4" (click)="guardar()" [disabled]="guardando">
+        <i class="feather icon-save me-1"></i> {{ guardando ? 'Guardando...' : 'Guardar' }}
+      </button>
+      <button type="button" class="btn btn-outline-secondary" (click)="limpiar()">Limpiar</button>
+    </div>
+  }
+
+</form>
