@@ -7,7 +7,6 @@ import {
   ForeignKey,
 } from 'sequelize';
 import sequelize from '../database/connection';
-import User from './user';
 
 class DatosUser extends Model<
   InferAttributes<DatosUser>,
@@ -53,4 +52,3 @@ DatosUser.init(
 
 export default DatosUser;
 
-// DatosUser.belongsTo(User, { foreignKey: 'user_id', as: 'usuario' });

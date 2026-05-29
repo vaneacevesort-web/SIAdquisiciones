@@ -1,47 +1,131 @@
-<div class="container">
+<div class="container-fluid auth-background">
   <div class="row w-100 mx-0 auth-page">
-    <div class="col-md-8 col-xl-6 mx-auto">
-      <div class="card">
-        <div class="row">
-          <div class="col-md-4 pe-md-0">
-            <div class="auth-side-wrapper" [ngStyle]="{ 'background-image': 'url(https://placehold.co/250x650)' }">
-  
+    <div class="col-md-6 col-lg-5 col-xl-4 mx-auto">
+      <div class="card register-card">
+        <div class="auth-form-wrapper px-4 py-4">
+
+          <!-- Encabezado institucional -->
+          <div class="brand-block text-center mb-3">
+            <img src="/images/oficialia_mayor.png" alt="Oficialía Mayor" class="brand-logo">
+            <div class="brand-area">Dirección General de Recursos Materiales</div>
+          </div>
+
+          <div class="system-wrap text-center mb-2">
+            <div class="system-title">
+              Sistema de Adquisiciones y Contratación de Servicios
             </div>
           </div>
-          <div class="col-md-8 ps-md-0">
-            <div class="auth-form-wrapper px-4 py-5">
-              <a routerLink="." class="nobleui-logo d-block mb-2">Noble<span>UI</span></a>
-              <h5 class="text-secondary fw-normal mb-4">Create a free account.</h5>
-              <form class="forms-sample">
-                <div class="mb-3">
-                  <label for="exampleInputUsername1" class="form-label">Username</label>
-                  <input type="text" class="form-control" id="exampleInputUsername1" autocomplete="Username" placeholder="Username">
-                </div>
-                <div class="mb-3">
-                  <label for="exampleInputEmail1" class="form-label">Email address</label>
-                  <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Email">
-                </div>
-                <div class="mb-3">
-                  <label for="exampleInputPassword1" class="form-label">Password</label>
-                  <input type="password" class="form-control" id="exampleInputPassword1" autocomplete="current-password" placeholder="Password">
-                </div>
-                <div class="form-check mb-3">
-                  <input type="checkbox" class="form-check-input" id="authCheck">
-                  <label class="form-check-label" for="authCheck">
-                    Remember me
-                  </label>
-                </div>
-                <div>
-                  <button type="submit" class="btn btn-primary me-2 mb-2 mb-md-0" (click)="onRegister($event)">Sign up</button>
-                  <button type="button" class="btn btn-outline-primary btn-icon-text mb-2 mb-md-0">
-                    <i class="feather icon-twitter btn-icon-prepend"></i>
-                    Sign up with twitter
-                  </button>
-                </div>
-                <a routerLink="/auth/login" class="d-block mt-3 text-secondary">Already a user? Sign in</a>
-              </form>
+
+          <h6 class="login-title text-center">Crear cuenta</h6>
+
+          <!-- Formulario -->
+          <form [formGroup]="form" (ngSubmit)="registrar()" novalidate>
+
+            <!-- Nombre completo -->
+            <div class="mb-2">
+              <label class="label-sm">Nombre completo *</label>
+              <input formControlName="nombre" type="text" class="form-control"
+                placeholder="Nombre(s) y apellidos"
+                [class.is-invalid]="f['nombre'].invalid && f['nombre'].touched">
+              @if (f['nombre'].invalid && f['nombre'].touched) {
+                @if (f['nombre'].hasError('required')) {
+                  <div class="invalid-feedback">El nombre es requerido.</div>
+                } @else if (f['nombre'].hasError('minlength')) {
+                  <div class="invalid-feedback">Mínimo 3 caracteres.</div>
+                }
+              }
             </div>
-          </div>
+
+            <!-- Correo institucional -->
+            <div class="mb-2">
+              <label class="label-sm">Correo institucional *</label>
+              <input formControlName="correo" type="email" class="form-control"
+                placeholder="usuario@dominio.gob.mx"
+                [class.is-invalid]="f['correo'].invalid && f['correo'].touched">
+              @if (f['correo'].invalid && f['correo'].touched) {
+                @if (f['correo'].hasError('required')) {
+                  <div class="invalid-feedback">El correo es requerido.</div>
+                } @else if (f['correo'].hasError('email')) {
+                  <div class="invalid-feedback">Ingresa un correo válido.</div>
+                }
+              }
+            </div>
+
+            <!-- Contraseña -->
+            <div class="mb-2">
+              <label class="label-sm">Contraseña *</label>
+              <div class="input-group">
+                <input formControlName="password"
+                  [type]="showPass ? 'text' : 'password'"
+                  class="form-control"
+                  placeholder="Mínimo 8 caracteres"
+                  [class.is-invalid]="f['password'].invalid && f['password'].touched">
+                <button type="button" class="btn btn-eye"
+                  (click)="showPass = !showPass" tabindex="-1">
+                  <i class="feather" [class.icon-eye]="!showPass" [class.icon-eye-off]="showPass"></i>
+                </button>
+              </div>
+              @if (f['password'].invalid && f['password'].touched) {
+                <small class="text-danger">
+                  Mín. 8 caracteres, mayúscula, minúscula, número y carácter especial (&#64;$!%*#?&amp;^_-).
+                </small>
+              }
+            </div>
+
+            <!-- Confirmar contraseña -->
+            <div class="mb-3">
+              <label class="label-sm">Confirmar contraseña *</label>
+              <div class="input-group">
+                <input formControlName="confirmPassword"
+                  [type]="showPass2 ? 'text' : 'password'"
+                  class="form-control"
+                  placeholder="Repite la contraseña"
+                  [class.is-invalid]="f['confirmPassword'].touched && form.hasError('noMatch')">
+                <button type="button" class="btn btn-eye"
+                  (click)="showPass2 = !showPass2" tabindex="-1">
+                  <i class="feather" [class.icon-eye]="!showPass2" [class.icon-eye-off]="showPass2"></i>
+                </button>
+              </div>
+              @if (f['confirmPassword'].touched && form.hasError('noMatch')) {
+                <div class="invalid-feedback d-block">Las contraseñas no coinciden.</div>
+              }
+            </div>
+
+            <!-- Nota de rol -->
+            <div class="role-note mb-3">
+              <i class="feather icon-info me-1"></i>
+              Tu acceso quedará en espera de que un <strong>Administrador</strong> asigne tu rol en el sistema.
+            </div>
+
+            <!-- Aviso de privacidad -->
+            <div class="form-check privacy-check mb-3">
+              <input class="form-check-input" type="checkbox" id="privacidad" #privacidadCheck>
+              <label class="form-check-label" for="privacidad">
+                He leído y acepto el
+                <a href="#" class="link-privacidad" (click)="$event.preventDefault()">aviso de privacidad</a>
+              </label>
+            </div>
+
+            <!-- Botón principal -->
+            <div class="d-grid mb-1">
+              <button type="submit" class="btn btn-vino"
+                [disabled]="enviando || !privacidadCheck.checked">
+                @if (enviando) {
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                  Registrando...
+                } @else {
+                  <i class="feather icon-user-plus me-2"></i>
+                  Crear cuenta
+                }
+              </button>
+            </div>
+
+            <a routerLink="/auth/login" class="d-block mt-3 text-center link-login">
+              ¿Ya tienes cuenta? <strong>Iniciar sesión</strong>
+            </a>
+
+          </form>
+
         </div>
       </div>
     </div>

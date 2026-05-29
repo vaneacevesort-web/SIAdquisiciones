@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSolicitudesAfectacion = exports.getSolicitudesCola = exports.getKpis = exports.saveProcedimientoAdquisitivo = exports.getProcedimientoById = exports.saveAfectacionPresupuestal = exports.getAfectacionById = exports.createEstudioMercado = exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
+exports.getSolicitudesAfectacion = exports.getSolicitudesCola = exports.getKpis = exports.saveAdjudicacion = exports.getAdjudicacionById = exports.saveProcedimientoAdquisitivo = exports.getProcedimientoById = exports.saveAfectacionPresupuestal = exports.getAfectacionById = exports.createEstudioMercado = exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
 const AdqDependencias_1 = __importDefault(require("../models/AdqDependencias"));
 const AdqCentrosCosto_1 = __importDefault(require("../models/AdqCentrosCosto"));
 const AdqOrganismosOPDS_1 = __importDefault(require("../models/AdqOrganismosOPDS"));
@@ -259,16 +259,18 @@ exports.getestatus = getestatus;
 const createEstudioMercado = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log('BODY ESTUDIO MERCADO =>', req.body);
-        const { id_solicitud } = req.body;
+        const { id_solicitud, estado_estudio_mercado } = req.body;
         if (!id_solicitud) {
             return res.status(400).json({
                 ok: false,
                 msg: 'Falta id_solicitud'
             });
         }
-        yield AdqSolicitudes_1.default.update({
-            estatus_id: 2
-        }, {
+        const updateFields = { estatus_id: 2 };
+        if (estado_estudio_mercado) {
+            updateFields.estado_estudio_mercado = estado_estudio_mercado;
+        }
+        yield AdqSolicitudes_1.default.update(updateFields, {
             where: {
                 id_solicitud: id_solicitud
             }
@@ -451,6 +453,66 @@ const saveProcedimientoAdquisitivo = (req, res) => __awaiter(void 0, void 0, voi
     }
 });
 exports.saveProcedimientoAdquisitivo = saveProcedimientoAdquisitivo;
+const getAdjudicacionById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const [solicitud, proc] = yield Promise.all([
+            AdqSolicitudes_1.default.findByPk(id),
+            AdqProcedimientoAdquisitivo_1.default.findOne({ where: { id_solicitud: id } }),
+        ]);
+        return res.json({ ok: true, data: { solicitud, procedimiento: proc !== null && proc !== void 0 ? proc : null } });
+    }
+    catch (error) {
+        console.error('ERROR getAdjudicacionById =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al obtener adjudicación' });
+    }
+});
+exports.getAdjudicacionById = getAdjudicacionById;
+const saveAdjudicacion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
+    try {
+        const { id } = req.params;
+        const _t = req.body, { user_id } = _t, c = __rest(_t, ["user_id"]);
+        const idSolicitud = Number(id);
+        const campos = {
+            no_procedimiento: (_a = c.no_procedimiento) !== null && _a !== void 0 ? _a : null,
+            proveedor_razon_social: (_b = c.proveedor_razon_social) !== null && _b !== void 0 ? _b : null,
+            proveedor_rfc: (_c = c.proveedor_rfc) !== null && _c !== void 0 ? _c : null,
+            monto_total_adjudicado_iva: c.monto_total_adjudicado_iva ? Number(c.monto_total_adjudicado_iva) : null,
+            no_contrato: (_d = c.no_contrato) !== null && _d !== void 0 ? _d : null,
+            vigencia_inicio: (_e = c.vigencia_inicio) !== null && _e !== void 0 ? _e : null,
+            vigencia_termino: (_f = c.vigencia_termino) !== null && _f !== void 0 ? _f : null,
+            url_testimonio_testigo_social: (_g = c.url_testimonio_testigo_social) !== null && _g !== void 0 ? _g : null,
+            remanente_suficiencia_presupuestal: c.remanente_suficiencia_presupuestal ? Number(c.remanente_suficiencia_presupuestal) : null,
+            responsable: (_h = c.responsable) !== null && _h !== void 0 ? _h : null,
+            estatus_adjudicacion: (_j = c.estatus_adjudicacion) !== null && _j !== void 0 ? _j : null,
+            estatus_estudio_mercado_adj: (_k = c.estatus_estudio_mercado_adj) !== null && _k !== void 0 ? _k : null,
+            comentarios_adjudicacion: (_l = c.comentarios_adjudicacion) !== null && _l !== void 0 ? _l : null,
+            existe_reprogramacion: c.existe_reprogramacion === 'SI' ? true : (c.existe_reprogramacion === 'NO' ? false : null),
+            fecha_junta_aclaracion: c.existe_reprogramacion === 'SI' ? ((_m = c.fecha_junta_aclaracion) !== null && _m !== void 0 ? _m : null) : null,
+            hora_junta_aclaracion: c.existe_reprogramacion === 'SI' ? ((_o = c.hora_junta_aclaracion) !== null && _o !== void 0 ? _o : null) : null,
+            fecha_presentacion_apertura: c.existe_reprogramacion === 'SI' ? ((_p = c.fecha_presentacion_apertura) !== null && _p !== void 0 ? _p : null) : null,
+            hora_presentacion_apertura: c.existe_reprogramacion === 'SI' ? ((_q = c.hora_presentacion_apertura) !== null && _q !== void 0 ? _q : null) : null,
+            fecha_fallo: c.existe_reprogramacion === 'SI' ? ((_r = c.fecha_fallo) !== null && _r !== void 0 ? _r : null) : null,
+            hora_fallo: c.existe_reprogramacion === 'SI' ? ((_s = c.hora_fallo) !== null && _s !== void 0 ? _s : null) : null,
+        };
+        const existe = yield AdqProcedimientoAdquisitivo_1.default.findOne({ where: { id_solicitud: idSolicitud } });
+        if (existe) {
+            yield existe.update(Object.assign(Object.assign({}, campos), { updated_by: user_id !== null && user_id !== void 0 ? user_id : null }));
+        }
+        else {
+            yield AdqProcedimientoAdquisitivo_1.default.create(Object.assign(Object.assign({ id_solicitud: idSolicitud }, campos), { created_by: user_id !== null && user_id !== void 0 ? user_id : '00000000-0000-0000-0000-000000000000' }));
+        }
+        // Avanzar a estatus 5 (Adjudicación)
+        yield AdqSolicitudes_1.default.update({ estatus_id: 5 }, { where: { id_solicitud: idSolicitud } });
+        return res.json({ ok: true, msg: 'Adjudicación guardada correctamente' });
+    }
+    catch (error) {
+        console.error('ERROR saveAdjudicacion =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al guardar adjudicación' });
+    }
+});
+exports.saveAdjudicacion = saveAdjudicacion;
 const getKpis = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const filas = yield AdqSolicitudes_1.default.findAll({
@@ -466,9 +528,9 @@ const getKpis = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
             data: {
                 total,
                 registradas: counts[1],
-                estudio: counts[2] + counts[3] + counts[4] + counts[5],
-                afectacion: counts[3] + counts[4] + counts[5],
-                contratacion: counts[4] + counts[5],
+                estudio: counts[2],
+                afectacion: counts[3],
+                contratacion: counts[4],
                 adjudicacion: counts[5],
             },
         });

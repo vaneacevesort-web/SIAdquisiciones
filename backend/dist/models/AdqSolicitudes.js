@@ -72,6 +72,10 @@ AdqSolicitudes.init({
         allowNull: false,
         defaultValue: 1,
     },
+    estado_estudio_mercado: {
+        type: sequelize_1.DataTypes.ENUM('CONCLUIDO', 'PROCESO', 'RECHAZADO'),
+        allowNull: true,
+    },
     created_at: {
         type: sequelize_1.DataTypes.DATE,
         allowNull: false,

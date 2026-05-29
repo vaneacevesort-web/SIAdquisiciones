@@ -47,6 +47,14 @@ export class UserService {
     localStorage.setItem('currentUser', JSON.stringify(user));
   }
 
+  getRoles(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/roles`);
+  }
+
+  registerPublic(data: { nombre: string; correo: string; password: string }): Observable<any> {
+    return this.http.post<any>(`${this.myAppUrl}${this.myAPIUrl}/register-public`, data);
+  }
+
   getValidadores(): Observable<string>{
     return this.http.get<string>(`${this.myAppUrl}${this.myAPIUrl}/getvalidadores`);
   }

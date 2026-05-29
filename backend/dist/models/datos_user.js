@@ -31,4 +31,3 @@ DatosUser.init({
     timestamps: true,
 });
 exports.default = DatosUser;
-// DatosUser.belongsTo(User, { foreignKey: 'user_id', as: 'usuario' });

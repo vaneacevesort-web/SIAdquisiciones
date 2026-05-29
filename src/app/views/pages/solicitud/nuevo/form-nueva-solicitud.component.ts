@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { RegistroService } from '../../../../service/registro.service';
 import { UserService } from '../../../../service/user.service';
 
+type TipoUnidad = 'DEPENDENCIA' | 'OPD' | null;
+
 @Component({
   selector: 'app-form-nueva-solicitud',
   standalone: true,
@@ -17,6 +19,9 @@ export class FormNuevaSolicitudComponent implements OnInit {
   form!: FormGroup;
   guardando = false;
   mensajeError = '';
+
+  /** Tipo de unidad solicitante seleccionado (no se envía al backend) */
+  tipoUnidad: TipoUnidad = null;
 
   dependencias:         any[] = [];
   centrosCosto:         any[] = [];
@@ -39,10 +44,13 @@ export class FormNuevaSolicitudComponent implements OnInit {
     { value: 'SERVICIO', label: 'Servicio — Contratación de servicios generales' },
   ];
 
-  private fb             = inject(FormBuilder);
-  private router         = inject(Router);
+  get isDependencia(): boolean { return this.tipoUnidad === 'DEPENDENCIA'; }
+  get isOPD():         boolean { return this.tipoUnidad === 'OPD'; }
+
+  private fb              = inject(FormBuilder);
+  private router          = inject(Router);
   private registroService = inject(RegistroService);
-  private userService    = inject(UserService);
+  private userService     = inject(UserService);
 
   ngOnInit(): void {
     const hoy = new Date().toISOString().split('T')[0];
@@ -69,14 +77,48 @@ export class FormNuevaSolicitudComponent implements OnInit {
     this.registroService.getCapitulos().subscribe({ next: r => this.capitulos = r?.data ?? [] });
   }
 
+  // ── Tipo de unidad ───────────────────────────────────────────────────────
+
+  onTipoUnidadChange(tipo: TipoUnidad): void {
+    if (this.tipoUnidad === tipo) return;
+    this.tipoUnidad = tipo;
+    // Limpiar ambas selecciones y centros de costo al cambiar tipo
+    this.centrosCosto = [];
+    this.form.patchValue({
+      id_dependencia:           null,
+      id_opd:                   null,
+      id_centro_costo:          null,
+      id_organo_desconcentrado: null,
+    });
+  }
+
+  // ── Cambio de dependencia ────────────────────────────────────────────────
+
   onDependenciaChange(event: Event): void {
-    const id = Number((event.target as HTMLSelectElement).value);
+    const id = Number((event.target as HTMLSelectElement).value) || null;
     this.centrosCosto = [];
     this.form.patchValue({ id_centro_costo: null });
     if (id) {
-      this.registroService.getCentrosCosto(id).subscribe({ next: r => this.centrosCosto = r?.data ?? [] });
+      this.registroService.getCentrosCosto(id).subscribe({
+        next: r => this.centrosCosto = r?.data ?? [],
+      });
     }
   }
+
+  // ── Cambio de OPD ───────────────────────────────────────────────────────
+
+  onOPDChange(event: Event): void {
+    const id = Number((event.target as HTMLSelectElement).value) || null;
+    this.centrosCosto = [];
+    this.form.patchValue({ id_centro_costo: null });
+    if (id) {
+      this.registroService.getCentrosCosto(id).subscribe({
+        next: r => this.centrosCosto = r?.data ?? [],
+      });
+    }
+  }
+
+  // ── Clasificación presupuestal (cascada) ─────────────────────────────────
 
   onCapituloChange(event: Event): void {
     const id = Number((event.target as HTMLSelectElement).value);
@@ -108,6 +150,8 @@ export class FormNuevaSolicitudComponent implements OnInit {
     }
   }
 
+  // ── Guardar ──────────────────────────────────────────────────────────────
+
   guardar(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -128,7 +172,6 @@ export class FormNuevaSolicitudComponent implements OnInit {
       next: (resp: any) => {
         this.guardando = false;
         const idSolicitud = resp?.data?.id_solicitud;
-        // Ir a Gestión Integral → detalle con tab estudio de mercado activo
         this.router.navigate(['/gestion-solicitudes', idSolicitud]);
       },
       error: (err) => {
@@ -139,13 +182,16 @@ export class FormNuevaSolicitudComponent implements OnInit {
     });
   }
 
+  // ── Limpiar ──────────────────────────────────────────────────────────────
+
   limpiar(): void {
     const hoy = new Date().toISOString().split('T')[0];
+    this.tipoUnidad = null;
     this.form.reset({ fecha_ingreso: hoy });
-    this.centrosCosto = [];
-    this.subcapitulos = [];
-    this.partidasGenericas = [];
+    this.centrosCosto       = [];
+    this.subcapitulos       = [];
+    this.partidasGenericas  = [];
     this.partidasEspecificas = [];
-    this.mensajeError = '';
+    this.mensajeError       = '';
   }
 }

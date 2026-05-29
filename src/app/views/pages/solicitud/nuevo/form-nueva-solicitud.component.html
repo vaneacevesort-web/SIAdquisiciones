@@ -95,59 +95,100 @@
           Unidad solicitante
         </div>
 
-        <div class="row g-3">
-
-          <div class="col-md-6">
-            <label class="ns-label">Dependencia</label>
-            <select class="form-select ns-control" formControlName="id_dependencia"
-              (change)="onDependenciaChange($event)">
-              <option [ngValue]="null">Seleccione...</option>
-              @for (d of dependencias; track d.id_dependencia) {
-                <option [value]="d.id_dependencia">{{ d.nombre }}</option>
-              }
-            </select>
+        <!-- ── Toggle de tipo de unidad ── -->
+        <div class="mb-3">
+          <span class="ns-label d-block mb-2">Tipo de unidad <span class="text-muted ns-label-note">(selecciona uno)</span></span>
+          <div class="ns-tipo-toggle">
+            <button type="button" class="ns-tipo-btn"
+              [class.ns-tipo-btn--active]="tipoUnidad === 'DEPENDENCIA'"
+              (click)="onTipoUnidadChange('DEPENDENCIA')">
+              <i class="feather icon-home"></i>
+              Dependencia
+            </button>
+            <button type="button" class="ns-tipo-btn"
+              [class.ns-tipo-btn--active]="tipoUnidad === 'OPD'"
+              (click)="onTipoUnidadChange('OPD')">
+              <i class="feather icon-briefcase"></i>
+              Organismo OPD
+            </button>
           </div>
+        </div>
+        <!-- ──────────────────────────────── -->
 
-          <div class="col-md-6">
-            <label class="ns-label">Centro de costo</label>
-            <div class="ns-cascade-wrap">
-              @if (centrosCosto.length === 0) {
-                <div class="ns-cascade-hint">
-                  <i class="feather icon-arrow-up-left"></i>
-                  Seleccione una dependencia primero
-                </div>
-              }
-              <select class="form-select ns-control" formControlName="id_centro_costo"
-                [disabled]="centrosCosto.length === 0">
+        <!-- Indicador cuando no se ha seleccionado tipo -->
+        @if (!tipoUnidad) {
+          <div class="ns-tipo-hint">
+            <i class="feather icon-arrow-up-left"></i>
+            Selecciona el tipo de unidad para continuar
+          </div>
+        }
+
+        <!-- Campos según tipo seleccionado -->
+        @if (tipoUnidad) {
+          <div class="row g-3">
+
+            <!-- Dependencia -->
+            @if (isDependencia) {
+              <div class="col-md-6">
+                <label class="ns-label">Dependencia</label>
+                <select class="form-select ns-control" formControlName="id_dependencia"
+                  (change)="onDependenciaChange($event)">
+                  <option [ngValue]="null">Seleccione...</option>
+                  @for (d of dependencias; track d.id_dependencia) {
+                    <option [value]="d.id_dependencia">{{ d.nombre }}</option>
+                  }
+                </select>
+              </div>
+            }
+
+            <!-- Organismo OPD -->
+            @if (isOPD) {
+              <div class="col-md-6">
+                <label class="ns-label">Organismo / OPD</label>
+                <select class="form-select ns-control" formControlName="id_opd"
+                  (change)="onOPDChange($event)">
+                  <option [ngValue]="null">Seleccione...</option>
+                  @for (o of opds; track o.id_opd) {
+                    <option [value]="o.id_opd">{{ o.nombre }}</option>
+                  }
+                </select>
+              </div>
+            }
+
+            <!-- Centro de costo (siempre visible cuando hay tipo seleccionado) -->
+            <div class="col-md-6">
+              <label class="ns-label">Centro de costo</label>
+              <div class="ns-cascade-wrap">
+                @if (centrosCosto.length === 0) {
+                  <div class="ns-cascade-hint">
+                    <i class="feather icon-arrow-up-left"></i>
+                    Selecciona {{ isDependencia ? 'una dependencia' : 'un organismo' }} primero
+                  </div>
+                }
+                <select class="form-select ns-control" formControlName="id_centro_costo"
+                  [disabled]="centrosCosto.length === 0">
+                  <option [ngValue]="null">Seleccione...</option>
+                  @for (c of centrosCosto; track c.id_centro_costo) {
+                    <option [value]="c.id_centro_costo">{{ c.nombre }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <!-- Órgano desconcentrado (opcional) -->
+            <div class="col-md-6">
+              <label class="ns-label">Órgano desconcentrado <span class="text-muted ns-label-note">(opcional)</span></label>
+              <select class="form-select ns-control" formControlName="id_organo_desconcentrado">
                 <option [ngValue]="null">Seleccione...</option>
-                @for (c of centrosCosto; track c.id_centro_costo) {
-                  <option [value]="c.id_centro_costo">{{ c.nombre }}</option>
+                @for (o of organosDesconc; track o.id_organo_desconcentrado) {
+                  <option [value]="o.id_organo_desconcentrado">{{ o.nombre }}</option>
                 }
               </select>
             </div>
-          </div>
 
-          <div class="col-md-6">
-            <label class="ns-label">Organismo / OPD</label>
-            <select class="form-select ns-control" formControlName="id_opd">
-              <option [ngValue]="null">Seleccione...</option>
-              @for (o of opds; track o.id_opd) {
-                <option [value]="o.id_opd">{{ o.nombre }}</option>
-              }
-            </select>
           </div>
+        }
 
-          <div class="col-md-6">
-            <label class="ns-label">Órgano desconcentrado</label>
-            <select class="form-select ns-control" formControlName="id_organo_desconcentrado">
-              <option [ngValue]="null">Seleccione...</option>
-              @for (o of organosDesconc; track o.id_organo_desconcentrado) {
-                <option [value]="o.id_organo_desconcentrado">{{ o.nombre }}</option>
-              }
-            </select>
-          </div>
-
-        </div>
       </div>
       <!-- ─────────────────────────────────────────────────────────────── -->
 

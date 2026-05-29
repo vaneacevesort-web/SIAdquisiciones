@@ -52,15 +52,6 @@
   position: relative;
   z-index: 1;
 }
-.system-title{
-  font-weight: 700;
-  color: #7a001f;       /* vino */
-  font-size: 1.10rem;
-  line-height: 1.25;
-  max-width: 510px;
-  margin-left: auto;
-  margin-right: auto;
-}
 /* Bloque de marca (logo + textos) */
 .brand-block{
   display: grid;
@@ -138,7 +129,7 @@
 .login-title{
   font-weight: 500;
   color: #7a001f;
-  font-size: 1.15rem1.1;
+  font-size: 1.15rem;
   margin-bottom: 1rem;
 }
 

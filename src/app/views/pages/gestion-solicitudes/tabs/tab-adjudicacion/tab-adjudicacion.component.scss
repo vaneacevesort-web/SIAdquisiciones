@@ -1,0 +1,196 @@
+// ── Paleta institucional ──────────────────────────────────────────────────
+$vino:        #9b003f;
+$vino-dark:   #7a0032;
+$vino-light:  #f9eef3;
+$vino-bdr:    #e8c4d0;
+$text-head:   #1e293b;
+$text-muted:  #64748b;
+$border:      #e2e8f0;
+$bg-page:     #f8fafc;
+
+// ── Wrapper ───────────────────────────────────────────────────────────────
+.ta-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+// ── Sección ───────────────────────────────────────────────────────────────
+.ta-section {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid $border;
+  border-left: 4px solid $vino;
+  padding: 1.4rem 1.6rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  transition: box-shadow 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(155,0,63,0.07), 0 1px 3px rgba(0,0,0,0.05);
+  }
+}
+
+// ── Título de sección ─────────────────────────────────────────────────────
+.ta-section-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $vino;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px dashed $vino-bdr;
+
+  i { font-size: 0.85rem; }
+}
+
+// ── Etiquetas ─────────────────────────────────────────────────────────────
+.ta-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.3rem;
+  display: block;
+}
+
+// ── Controles ─────────────────────────────────────────────────────────────
+.ta-control {
+  font-size: 0.875rem;
+  border-radius: 7px !important;
+  border: 1.5px solid #d1d5db;
+  background-color: #fff;
+  color: $text-head;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &::placeholder { color: #a0aec0; }
+
+  &:focus {
+    border-color: $vino !important;
+    box-shadow: 0 0 0 3px rgba(155, 0, 63, 0.10) !important;
+    outline: none;
+  }
+
+  &:disabled,
+  &[disabled] {
+    background-color: #f8fafc;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+    cursor: not-allowed;
+  }
+}
+
+// ── Banner solo lectura ───────────────────────────────────────────────────
+.ta-readonly-banner {
+  display: flex;
+  align-items: center;
+  font-size: 0.83rem;
+  color: $text-muted;
+  background: #f1f5f9;
+  border: 1px solid $border;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+
+  i {
+    font-size: 0.9rem;
+    color: #94a3b8;
+  }
+}
+
+// ── Tarjeta de reprogramación ─────────────────────────────────────────────
+.ta-repro-card {
+  margin-top: 1rem;
+  background: $vino-light;
+  border: 1px solid $vino-bdr;
+  border-radius: 9px;
+  padding: 1.1rem 1.3rem;
+
+  &__title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $vino;
+    margin-bottom: 0.9rem;
+
+    i { font-size: 0.8rem; }
+  }
+}
+
+// ── Barra de acciones ─────────────────────────────────────────────────────
+.ta-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.4rem;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid $border;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.ta-actions-note {
+  font-size: 0.78rem;
+  color: $text-muted;
+  display: flex;
+  align-items: center;
+
+  i { color: #94a3b8; }
+}
+
+// ── Botón guardar ─────────────────────────────────────────────────────────
+.ta-btn-save {
+  background-color: $vino;
+  border: none;
+  border-color: $vino;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.5rem 1.5rem;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.15s, box-shadow 0.15s, transform 0.1s;
+
+  &:hover:not(:disabled) {
+    background-color: $vino-dark;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(155,0,63,0.30);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    background-color: $vino;
+    color: #fff;
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .ta-section {
+    padding: 1rem 1rem;
+    border-left-width: 3px;
+  }
+
+  .ta-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .ta-btn-save {
+    width: 100%;
+    justify-content: center;
+  }
+}

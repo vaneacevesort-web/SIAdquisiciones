@@ -33,6 +33,8 @@ export class NavbarComponent implements OnInit {
   sub: SubMenus[] = [];
   subItem: SubMenuItems[] = [];
   usuario: string | undefined;
+  nombreUsuario: string | undefined;
+  rolUsuario: string | undefined;
 
   kpis = { registradas: 0, estudio: 0, afectacion: 0, rechazadas: 0, total: 0 };
 
@@ -53,12 +55,15 @@ export class NavbarComponent implements OnInit {
 
     this.cargarKpis();
 
-    const role = this._userService.currentUserValue?.rol_users?.role?.name;
-    const email = this._userService.currentUserValue?.email;
+    const user = this._userService.currentUserValue;
+    const role = user?.rol_users?.role?.name;
+    const email = user?.email;
     this.menuItems = MENU;
-    this.usuario = this._userService.currentUserValue?.email;
+    this.usuario = email;
+    this.nombreUsuario = user?.datos_user?.nombre || email;
+    this.rolUsuario = role;
     if (role) {
-      this.menuItems = this.filterMenuByRole(MENU, role, email);
+      this.menuItems = this.filterMenuByRole(MENU, role);
     } else {
       this.menuItems = []; 
     }
@@ -85,40 +90,18 @@ export class NavbarComponent implements OnInit {
     });
   }
 
-  private filterMenuByRole(menu: MenuItem[], role: string, email: string | undefined): MenuItem[] {
+  private filterMenuByRole(menu: MenuItem[], role: string): MenuItem[] {
     return menu
-    .filter(item => {
-      if (email === 'validador2@congresoedomex.gob.mx' && item.label === 'Validadores') {
-        return false;
-      }
-
-      return !item.roles || item.roles.includes(role);
-    })
-    .map(item => {
-      if (email === 'validador2@congresoedomex.gob.mx' && item.label === 'Bandeja de entrada') {
-        const filteredSubMenus = item.subMenus?.map(sub => ({
-          ...sub,
-          subMenuItems: (sub.subMenuItems ?? []).filter(subItem =>
-            subItem.label === 'Solicitudes' || subItem.label === 'En tramite'
-          )
-        }));
-
-        return {
-          ...item,
-          subMenus: filteredSubMenus
-        };
-      }
-
-      return {
-        ...item,
-        subMenus: item.subMenus?.map((sub: SubMenus) => ({
-          ...sub,
-          subMenuItems: (sub.subMenuItems ?? []).filter((subItem: SubMenuItems) =>
-            !subItem.roles || subItem.roles.includes(role)
-          )
-        }))
-      };
-    });
+    .filter(item => !item.roles || item.roles.includes(role))
+    .map(item => ({
+      ...item,
+      subMenus: item.subMenus?.map((sub: SubMenus) => ({
+        ...sub,
+        subMenuItems: (sub.subMenuItems ?? []).filter((subItem: SubMenuItems) =>
+          !subItem.roles || subItem.roles.includes(role)
+        )
+      }))
+    }));
   }
 
   showActiveTheme(theme: string) {

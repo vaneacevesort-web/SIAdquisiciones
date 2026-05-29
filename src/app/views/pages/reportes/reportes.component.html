@@ -1,117 +1,100 @@
-<div class="page-header mb-4">
-  <h5 class="page-title">Reportes</h5>
-  <div class="page-subtitle-1">Resumen general del estado de las solicitudes</div>
-</div>
+<div class="rep-wrapper">
 
-<!-- KPI Cards -->
-<div class="kpi-grid mb-4">
-
-  <div class="kpi-card kpi-card--blue">
-    <div class="kpi-card__icon"><i class="feather icon-file-plus"></i></div>
-    <div class="kpi-card__body">
-      <span class="kpi-card__number">{{ kpis.solicitudes }}</span>
-      <span class="kpi-card__label">Total Solicitudes</span>
-      <span class="kpi-card__pct">{{ pct(kpis.solicitudes, kpis.solicitudes) }}</span>
+  <!-- ══ Encabezado ════════════════════════════════════════════════════ -->
+  <div class="rep-header">
+    <div class="rep-header-icon">
+      <i class="feather icon-bar-chart-2"></i>
+    </div>
+    <div>
+      <h4 class="rep-title">Reportes</h4>
+      <p class="rep-subtitle">Resumen general del estado de las solicitudes de adquisición</p>
     </div>
   </div>
+  <!-- ════════════════════════════════════════════════════════════════════ -->
 
-  <div class="kpi-card kpi-card--amber">
-    <div class="kpi-card__icon"><i class="feather icon-bar-chart-2"></i></div>
-    <div class="kpi-card__body">
-      <span class="kpi-card__number">{{ kpis.estudio }}</span>
-      <span class="kpi-card__label">Estudio de Mercado</span>
-      <span class="kpi-card__pct">{{ pct(kpis.estudio, kpis.solicitudes) }}</span>
+
+  <!-- ══ KPI Cards ══════════════════════════════════════════════════════ -->
+  @if (cargando) {
+    <div class="rep-loading">
+      <div class="spinner-border spinner-border-sm rep-spinner me-2"></div>
+      <span>Cargando indicadores...</span>
     </div>
-  </div>
+  } @else {
 
-  <div class="kpi-card kpi-card--rose">
-    <div class="kpi-card__icon"><i class="feather icon-credit-card"></i></div>
-    <div class="kpi-card__body">
-      <span class="kpi-card__number">{{ kpis.afectacion }}</span>
-      <span class="kpi-card__label">Afectación Presupuestal</span>
-      <span class="kpi-card__pct">{{ pct(kpis.afectacion, kpis.solicitudes) }}</span>
+    <div class="kpi-grid mb-4">
+
+      <div class="kpi-card kpi-card--blue">
+        <div class="kpi-card__icon"><i class="feather icon-layers"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number">{{ kpis.solicitudes }}</span>
+          <span class="kpi-card__label">Total Solicitudes</span>
+          <span class="kpi-card__pct">100%</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--amber">
+        <div class="kpi-card__icon"><i class="feather icon-search"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number">{{ kpis.estudio }}</span>
+          <span class="kpi-card__label">Estudio de Mercado</span>
+          <span class="kpi-card__pct">{{ pct(kpis.estudio, kpis.solicitudes) }} del total</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--rose">
+        <div class="kpi-card__icon"><i class="feather icon-dollar-sign"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number">{{ kpis.afectacion }}</span>
+          <span class="kpi-card__label">Afectación Presupuestal</span>
+          <span class="kpi-card__pct">{{ pct(kpis.afectacion, kpis.solicitudes) }} del total</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--teal">
+        <div class="kpi-card__icon"><i class="feather icon-shopping-cart"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number">{{ kpis.contratacion }}</span>
+          <span class="kpi-card__label">Adquisición o Contratación</span>
+          <span class="kpi-card__pct">{{ pct(kpis.contratacion, kpis.solicitudes) }} del total</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--green">
+        <div class="kpi-card__icon"><i class="feather icon-award"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number">{{ kpis.adjudicacion }}</span>
+          <span class="kpi-card__label">Adjudicación</span>
+          <span class="kpi-card__pct">{{ pct(kpis.adjudicacion, kpis.solicitudes) }} del total</span>
+        </div>
+      </div>
+
     </div>
-  </div>
 
-  <div class="kpi-card kpi-card--teal">
-    <div class="kpi-card__icon"><i class="feather icon-shopping-bag"></i></div>
-    <div class="kpi-card__body">
-      <span class="kpi-card__number">{{ kpis.contratacion }}</span>
-      <span class="kpi-card__label">Adquisición o Contratación</span>
-      <span class="kpi-card__pct">{{ pct(kpis.contratacion, kpis.solicitudes) }}</span>
+    <!-- ══ Acceso rápido ══════════════════════════════════════════════ -->
+    <div class="accesos-reporte">
+      <a class="acceso-card" routerLink="/gestion-solicitudes">
+        <div class="acceso-card__icon acceso-card__icon--rose">
+          <i class="feather icon-grid"></i>
+        </div>
+        <div class="acceso-card__body">
+          <span class="acceso-card__num">{{ kpis.solicitudes }}</span>
+          <span class="acceso-card__label">Ver todas las solicitudes</span>
+        </div>
+        <i class="feather icon-arrow-right acceso-card__arrow"></i>
+      </a>
+
+      <a class="acceso-card" routerLink="/solicitud/nuevo">
+        <div class="acceso-card__icon acceso-card__icon--blue">
+          <i class="feather icon-file-plus"></i>
+        </div>
+        <div class="acceso-card__body">
+          <span class="acceso-card__num">+</span>
+          <span class="acceso-card__label">Registrar nueva solicitud</span>
+        </div>
+        <i class="feather icon-arrow-right acceso-card__arrow"></i>
+      </a>
     </div>
-  </div>
 
-  <div class="kpi-card kpi-card--green">
-    <div class="kpi-card__icon"><i class="feather icon-award"></i></div>
-    <div class="kpi-card__body">
-      <span class="kpi-card__number">{{ kpis.adjudicacion }}</span>
-      <span class="kpi-card__label">Adjudicación</span>
-      <span class="kpi-card__pct">{{ pct(kpis.adjudicacion, kpis.solicitudes) }}</span>
-    </div>
-  </div>
+  }
 
-</div>
-
-<!-- Flujo del proceso -->
-<div class="flujo mb-4">
-
-  <div class="flujo__paso" [class.flujo__paso--done]="kpis.solicitudes > 0">
-    <div class="flujo__circulo"><i class="feather icon-file-plus"></i></div>
-    <span class="flujo__etiqueta">Solicitud</span>
-  </div>
-
-  <div class="flujo__linea" [class.flujo__linea--done]="kpis.estudio > 0"></div>
-
-  <div class="flujo__paso" [class.flujo__paso--done]="kpis.estudio > 0">
-    <div class="flujo__circulo"><i class="feather icon-bar-chart-2"></i></div>
-    <span class="flujo__etiqueta">Estudio de Mercado</span>
-  </div>
-
-  <div class="flujo__linea" [class.flujo__linea--done]="kpis.afectacion > 0"></div>
-
-  <div class="flujo__paso" [class.flujo__paso--done]="kpis.afectacion > 0">
-    <div class="flujo__circulo"><i class="feather icon-credit-card"></i></div>
-    <span class="flujo__etiqueta">Afectación Presupuestal</span>
-  </div>
-
-  <div class="flujo__linea" [class.flujo__linea--done]="kpis.contratacion > 0"></div>
-
-  <div class="flujo__paso" [class.flujo__paso--done]="kpis.contratacion > 0">
-    <div class="flujo__circulo"><i class="feather icon-shopping-bag"></i></div>
-    <span class="flujo__etiqueta">Adquisición o Contratación</span>
-  </div>
-
-  <div class="flujo__linea" [class.flujo__linea--done]="kpis.adjudicacion > 0"></div>
-
-  <div class="flujo__paso" [class.flujo__paso--done]="kpis.adjudicacion > 0">
-    <div class="flujo__circulo"><i class="feather icon-award"></i></div>
-    <span class="flujo__etiqueta">Adjudicación</span>
-  </div>
-
-</div>
-
-<!-- Accesos rápidos a listas -->
-<div class="accesos-reporte mb-2">
-  <a class="acceso-card" routerLink="/solicitud/afectacion-presupuestal">
-    <div class="acceso-card__icon acceso-card__icon--rose">
-      <i class="feather icon-credit-card"></i>
-    </div>
-    <div class="acceso-card__body">
-      <span class="acceso-card__num">{{ kpis.afectacion }}</span>
-      <span class="acceso-card__label">Ver afectación presupuestal</span>
-    </div>
-    <i class="feather icon-arrow-right acceso-card__arrow"></i>
-  </a>
-
-  <a class="acceso-card" routerLink="/solicitud/tramite">
-    <div class="acceso-card__icon acceso-card__icon--blue">
-      <i class="feather icon-inbox"></i>
-    </div>
-    <div class="acceso-card__body">
-      <span class="acceso-card__num">{{ kpis.estudio }}</span>
-      <span class="acceso-card__label">Ver bandeja de entrada</span>
-    </div>
-    <i class="feather icon-arrow-right acceso-card__arrow"></i>
-  </a>
 </div>

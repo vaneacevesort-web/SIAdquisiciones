@@ -93,6 +93,14 @@ export class RegistroService {
   saveProcedimientoAdquisitivo(id: number, data: any): Observable<any> {
     return this.http.post<any>(`${this.myAppUrl}${this.myAPIUrl}/adquisicion/${id}`, data);
   }
+
+  getAdjudicacionById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/adjudicacion/${id}`);
+  }
+
+  saveAdjudicacion(id: number, data: any): Observable<any> {
+    return this.http.post<any>(`${this.myAppUrl}${this.myAPIUrl}/adjudicacion/${id}`, data);
+  }
 }
 
 

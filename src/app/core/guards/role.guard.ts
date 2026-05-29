@@ -8,19 +8,11 @@ export const roleGuard: CanActivateFn = (route, state) => {
 
   const role = userService.currentUserValue?.rol_users?.role?.name;
 
-  console.log('ROL EN roleGuard:', role);
-
+  // Sin sesión activa → ir al login
   if (!role) {
-    return router.createUrlTree(['/']);
+    return router.createUrlTree(['/auth/login']);
   }
 
-  if (role === 'Usuario') {
-    return router.createUrlTree(['/registro/documentos']);
-  }
-
-  if (role === 'Administrador' || role === 'Validador') {
-    return router.createUrlTree(['/gestion-solicitudes']);
-  }
-
-  return router.createUrlTree(['/error/404']);
+  // Todos los roles válidos del sistema aterrizan en gestion-solicitudes
+  return router.createUrlTree(['/gestion-solicitudes']);
 };

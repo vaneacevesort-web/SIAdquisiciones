@@ -30,6 +30,7 @@ class AdqSolicitudes extends Model<
 
   declare user_id: string | null;
   declare estatus_id: number;
+  declare estado_estudio_mercado: string | null;
 
   declare created_at: CreationOptional<Date>;
   declare updated_at: Date | null;
@@ -114,6 +115,11 @@ AdqSolicitudes.init(
       type: DataTypes.TINYINT.UNSIGNED,
       allowNull: false,
       defaultValue: 1,
+    },
+
+    estado_estudio_mercado: {
+      type: DataTypes.ENUM('CONCLUIDO', 'PROCESO', 'RECHAZADO'),
+      allowNull: true,
     },
 
     created_at: {

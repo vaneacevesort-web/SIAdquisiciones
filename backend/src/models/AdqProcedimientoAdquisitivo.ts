@@ -38,6 +38,12 @@ class AdqProcedimientoAdquisitivo extends Model<
   declare no_contrato:                 string | null;
   declare vigencia_inicio:             string | null;
   declare vigencia_termino:            string | null;
+  declare url_testimonio_testigo_social:   string | null;
+  declare remanente_suficiencia_presupuestal: number | null;
+  declare estatus_adjudicacion:            string | null;
+  declare estatus_estudio_mercado_adj:     string | null;
+  declare comentarios_adjudicacion:        string | null;
+  declare existe_reprogramacion:           boolean | null;
   declare created_by:                  string;
   declare updated_by:                  string | null;
   declare created_at:                  CreationOptional<Date>;
@@ -79,6 +85,12 @@ AdqProcedimientoAdquisitivo.init(
     no_contrato:                { type: DataTypes.STRING(80), allowNull: true },
     vigencia_inicio:            { type: DataTypes.DATEONLY, allowNull: true },
     vigencia_termino:           { type: DataTypes.DATEONLY, allowNull: true },
+    url_testimonio_testigo_social:      { type: DataTypes.STRING(500), allowNull: true },
+    remanente_suficiencia_presupuestal: { type: DataTypes.DECIMAL(18, 2), allowNull: true },
+    estatus_adjudicacion:               { type: DataTypes.STRING(60), allowNull: true },
+    estatus_estudio_mercado_adj:        { type: DataTypes.STRING(30), allowNull: true },
+    comentarios_adjudicacion:           { type: DataTypes.TEXT, allowNull: true },
+    existe_reprogramacion:              { type: DataTypes.BOOLEAN, allowNull: true },
     created_by:  { type: DataTypes.CHAR(36), allowNull: false, defaultValue: '00000000-0000-0000-0000-000000000000' },
     updated_by:  { type: DataTypes.CHAR(36), allowNull: true },
     created_at:  { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },

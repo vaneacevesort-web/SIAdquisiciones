@@ -2,7 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { RegistroService } from '../../../../service/registro.service';
-import { UserService } from '../../../../service/user.service';
+import { PermissionService } from '../../../../service/permission.service';
+import { calcularSemaforo, SemaforoInfo } from '../../../../utils/semaforo';
 
 import { TabInfoGeneralComponent }          from '../tabs/tab-info-general/tab-info-general.component';
 import { TabEstudioMercadoComponent }       from '../tabs/tab-estudio-mercado/tab-estudio-mercado.component';
@@ -52,10 +53,10 @@ export class GestionDetalleComponent implements OnInit {
   /** Tab solicitado vía query param (?tab=estudio) — se aplica tras cargar */
   private pendingTab: string | null = null;
 
-  private route           = inject(ActivatedRoute);
-  private router          = inject(Router);
-  private registroService = inject(RegistroService);
-  private userService     = inject(UserService);
+  private route             = inject(ActivatedRoute);
+  private router            = inject(Router);
+  private registroService   = inject(RegistroService);
+  private permissionService = inject(PermissionService);
 
   ngOnInit(): void {
     // Capturar tab solicitado desde la lista (?tab=estudio)
@@ -110,24 +111,14 @@ export class GestionDetalleComponent implements OnInit {
     return estatus >= (tab?.minEstatus ?? 999);
   }
 
-  isTabEditable(tabKey: string): boolean {
-    const role   = this.userService.currentUserValue?.rol_users?.role?.name ?? '';
-    const estatus = Number(this.solicitud?.estatus_id ?? 0);
+  getSemaforo(): SemaforoInfo {
+    return calcularSemaforo(this.solicitud);
+  }
 
-    switch (tabKey) {
-      case 'info':
-        return role === 'Administrador' && estatus === 1;
-      case 'estudio':
-        return (role === 'Administrador' || role === 'Validador') && estatus === 1;
-      case 'afectacion':
-        return role === 'Administrador' && estatus === 2;
-      case 'adquisicion':
-        return role === 'Administrador' && estatus === 3;
-      case 'adjudicacion':
-        return role === 'Administrador' && estatus === 4;
-      default:
-        return false;
-    }
+  isTabEditable(tabKey: string): boolean {
+    const estatus = this.solicitud?.estatus_id ?? 0;
+    const etapa = tabKey as 'info' | 'estudio' | 'afectacion' | 'adquisicion' | 'adjudicacion';
+    return this.permissionService.canEdit(etapa, estatus, this.solicitud?.user_id);
   }
 
   onSaved(): void {

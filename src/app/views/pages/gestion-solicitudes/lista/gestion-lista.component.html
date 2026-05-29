@@ -11,10 +11,12 @@
         <p class="gl-subtitle">Vista centralizada de todas las etapas del proceso adquisitivo</p>
       </div>
     </div>
-    <button class="btn gl-btn-new" routerLink="/solicitud/nuevo">
-      <i class="feather icon-plus"></i>
-      <span>Nueva solicitud</span>
-    </button>
+    @if (puedeCrear()) {
+      <button class="btn gl-btn-new" routerLink="/solicitud/nuevo">
+        <i class="feather icon-plus"></i>
+        <span>Nueva solicitud</span>
+      </button>
+    }
   </div>
   <!-- ════════════════════════════════════════════════════════════════════ -->
 
@@ -69,6 +71,7 @@
               <th class="gl-th gl-th-num">#</th>
               <th class="gl-th">Folio</th>
               <th class="gl-th">Fecha ingreso</th>
+              <th class="gl-th gl-th-center">Semáforo</th>
               <th class="gl-th">Dependencia / OPD</th>
               <th class="gl-th gl-th-center">Tipo</th>
               <th class="gl-th">Estatus</th>
@@ -89,6 +92,17 @@
                   <span class="d-inline-flex align-items-center gap-1">
                     <i class="feather icon-calendar gl-cell-icon"></i>
                     {{ formatDate(row.fecha_ingreso) }}
+                  </span>
+                </td>
+
+                <td class="gl-td gl-td-center">
+                  @let s = getSemaforo(row);
+                  <span class="semaforo-badge {{ s.cssClass }}">
+                    <span class="semaforo-dot"></span>
+                    {{ s.label }}
+                    @if (s.dias !== null) {
+                      <span class="semaforo-dias">({{ s.dias }}d)</span>
+                    }
                   </span>
                 </td>
 
@@ -151,9 +165,9 @@
                       [class.gl-etapa-btn--locked]="!puedeAcceder(row, 'afectacion')"
                       [disabled]="!puedeAcceder(row, 'afectacion')"
                       (click)="abrirEtapa(row, 'afectacion', $event)"
-                      title="{{ puedeEditarEtapa(row, 'afectacion') ? 'Editar afectación' : 'Ver afectación' }}">
+                      title="{{ puedeEditarEtapa(row, 'afectacion') ? 'Editar afectación presupuestal' : 'Ver afectación presupuestal' }}">
                       <i class="feather icon-dollar-sign"></i>
-                      <span>Afectación</span>
+                      <span>Afect.</span>
                     </button>
 
                     <!-- Adquisición -->
@@ -166,7 +180,7 @@
                       (click)="abrirEtapa(row, 'adquisicion', $event)"
                       title="{{ puedeEditarEtapa(row, 'adquisicion') ? 'Editar adquisición' : 'Ver adquisición' }}">
                       <i class="feather icon-shopping-cart"></i>
-                      <span>Adquisición</span>
+                      <span>Adquis.</span>
                     </button>
 
                     <!-- Adjudicación -->
@@ -179,7 +193,7 @@
                       (click)="abrirEtapa(row, 'adjudicacion', $event)"
                       title="{{ puedeEditarEtapa(row, 'adjudicacion') ? 'Editar adjudicación' : 'Ver adjudicación' }}">
                       <i class="feather icon-award"></i>
-                      <span>Adjudicación</span>
+                      <span>Adjudic.</span>
                     </button>
 
                   </div>

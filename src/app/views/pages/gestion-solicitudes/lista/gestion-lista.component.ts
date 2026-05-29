@@ -1,8 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { RegistroService } from '../../../../service/registro.service';
-import { UserService }     from '../../../../service/user.service';
+import { RegistroService }    from '../../../../service/registro.service';
+import { PermissionService }  from '../../../../service/permission.service';
+import { calcularSemaforo, SemaforoInfo } from '../../../../utils/semaforo';
 
 // ── Etapas del proceso ────────────────────────────────────────────────────
 export type Etapa = 'ver' | 'estudio' | 'afectacion' | 'adquisicion' | 'adjudicacion';
@@ -16,14 +17,6 @@ const MIN_ESTATUS: Record<Etapa, number> = {
   adjudicacion:4,
 };
 
-// Etapa activa por estatus_id (para autoselect al abrir el detalle)
-const TAB_BY_ESTATUS: Record<number, string> = {
-  1: 'estudio',
-  2: 'afectacion',
-  3: 'adquisicion',
-  4: 'adjudicacion',
-  5: 'adjudicacion',
-};
 
 @Component({
   selector: 'app-gestion-lista',
@@ -41,60 +34,32 @@ export class GestionListaComponent implements OnInit {
   textoBusqueda = '';
   filtroEstatus = '';
 
-  private registroService = inject(RegistroService);
-  private router          = inject(Router);
-  private userService     = inject(UserService);
-
-  // ── Helpers de rol ──────────────────────────────────────────────────────
-  private get role(): string {
-    return this.userService.currentUserValue?.rol_users?.role?.name ?? '';
-  }
+  private registroService   = inject(RegistroService);
+  private router            = inject(Router);
+  private permissionService = inject(PermissionService);
 
   // ── API pública de permisos ─────────────────────────────────────────────
 
-  /**
-   * ¿El usuario puede ACCEDER (ver) esta etapa según el estatus de la solicitud?
-   * Independiente del rol: solo depende de que la solicitud haya avanzado lo suficiente.
-   */
+  /** ¿Puede el usuario ACCEDER (ver) la etapa según el estatus de la solicitud? */
   puedeAcceder(solicitud: any, etapa: Etapa): boolean {
     const estatus = Number(solicitud?.estatus_id ?? 0);
     return estatus >= MIN_ESTATUS[etapa];
   }
 
-  /**
-   * Función central de permisos de edición.
-   * Combina ROL del usuario + ESTATUS de la solicitud.
-   * Preparada para roles futuros — al agregar un nuevo rol solo se toca aquí.
-   */
+  /** ¿Puede el usuario crear nuevas solicitudes? */
+  puedeCrear(): boolean {
+    return this.permissionService.canCreate();
+  }
+
+  /** ¿Puede el usuario EDITAR la etapa? Delega en PermissionService. */
   puedeEditarEtapa(solicitud: any, etapa: Etapa): boolean {
-    const estatus = Number(solicitud?.estatus_id ?? 0);
-    const r = this.role;
-
-    switch (etapa) {
-      case 'ver':
-        // Todos pueden ver — solo acceso de lectura
-        return true;
-
-      case 'estudio':
-        // Administrador o Validador, mientras siga en estatus 1
-        return (r === 'Administrador' || r === 'Validador' || r === 'Estudio de Mercado')
-               && estatus === 1;
-
-      case 'afectacion':
-        return (r === 'Administrador' || r === 'Afectación Presupuestal')
-               && estatus === 2;
-
-      case 'adquisicion':
-        return (r === 'Administrador' || r === 'Adquisiciones')
-               && estatus === 3;
-
-      case 'adjudicacion':
-        return (r === 'Administrador' || r === 'Adjudicación')
-               && estatus === 4;
-
-      default:
-        return false;
-    }
+    if (etapa === 'ver') return true;
+    const estatus = solicitud?.estatus_id ?? 0;
+    return this.permissionService.canEdit(
+      etapa as 'estudio' | 'afectacion' | 'adquisicion' | 'adjudicacion',
+      estatus,
+      solicitud?.user_id
+    );
   }
 
   // ── Navegación ──────────────────────────────────────────────────────────
@@ -180,6 +145,10 @@ export class GestionListaComponent implements OnInit {
       case 5: return 'badge-adjudicacion';
       default: return 'bg-secondary';
     }
+  }
+
+  getSemaforo(solicitud: any): SemaforoInfo {
+    return calcularSemaforo(solicitud);
   }
 
   formatDate(fecha: string): string {

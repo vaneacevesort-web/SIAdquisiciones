@@ -145,6 +145,59 @@ $radius:     10px;
   .gd-status-dot { background: #0ea5e9; }
 }
 
+// ── Semáforo badge ────────────────────────────────────────────────────────
+.semaforo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.22rem 0.6rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.semaforo-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.semaforo-dias {
+  font-weight: 400;
+  opacity: 0.75;
+  font-size: 0.65rem;
+}
+
+.semaforo-en-tiempo {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  .semaforo-dot { background: #22c55e; }
+}
+
+.semaforo-atrasado {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  .semaforo-dot { background: #ef4444; }
+}
+
+.semaforo-concluido {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  .semaforo-dot { background: #3b82f6; }
+}
+
+.semaforo-rechazado {
+  background: #fdf2f8;
+  color: #7a0032;
+  border: 1px solid #e8c4d0;
+  .semaforo-dot { background: #9b003f; }
+}
+
 // ══ ESTADOS (cargando / vacío) ════════════════════════════════════════════
 .gd-state-box {
   display: flex;

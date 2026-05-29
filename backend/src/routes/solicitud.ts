@@ -15,6 +15,8 @@ import {
   saveProcedimientoAdquisitivo,
   getSolicitudesCola,
   getKpis,
+  getAdjudicacionById,
+  saveAdjudicacion,
 } from "../controllers/solicitud";
 
 const router = Router();
@@ -34,5 +36,7 @@ router.get("/api/solicitud/afectacion-presupuestal/:id", getAfectacionById);
 router.post("/api/solicitud/afectacion-presupuestal/:id", saveAfectacionPresupuestal);
 router.get("/api/solicitud/adquisicion/:id", getProcedimientoById);
 router.post("/api/solicitud/adquisicion/:id", saveProcedimientoAdquisitivo);
+router.get("/api/solicitud/adjudicacion/:id", getAdjudicacionById);
+router.post("/api/solicitud/adjudicacion/:id", saveAdjudicacion);
 
 export default router

@@ -13,7 +13,7 @@ $radius:     10px;
 
 // ── Wrapper ──────────────────────────────────────────────────────────────
 .gl-wrapper {
-  padding: 1.5rem 1.75rem;
+  padding: 1rem 1.25rem;
   background: $bg-page;
   min-height: 100%;
 }
@@ -112,7 +112,7 @@ $radius:     10px;
 .gl-search-wrap {
   position: relative;
   flex: 1;
-  min-width: 220px;
+  min-width: 160px;
 }
 
 .gl-search-icon {
@@ -156,12 +156,12 @@ $radius:     10px;
 .gl-select {
   height: 36px;
   padding: 0 2rem 0 0.75rem;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   border: 1.5px solid $border;
   border-radius: 7px;
   color: $text-body;
   background: #f8fafc;
-  min-width: 185px;
+  min-width: 155px;
   appearance: auto;
   transition: border-color 0.15s, box-shadow 0.15s;
 
@@ -246,17 +246,17 @@ $radius:     10px;
 
 // Cabecera
 .gl-th {
-  padding: 0.65rem 1rem;
-  font-size: 0.7rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: $text-muted;
   background: #f8fafc;
   border-bottom: 1.5px solid $border;
   white-space: nowrap;
 
-  &.gl-th-num    { width: 44px; padding-left: 1.25rem; }
+  &.gl-th-num    { width: 34px; padding-left: 0.85rem; }
   &.gl-th-center { text-align: center; }
 }
 
@@ -282,22 +282,22 @@ $radius:     10px;
 }
 
 .gl-td {
-  padding: 0.7rem 1rem;
-  font-size: 0.84rem;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.82rem;
   color: $text-body;
   vertical-align: middle;
 
   &.gl-td-num {
-    padding-left: 1.25rem;
+    padding-left: 0.85rem;
     color: $text-muted;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    width: 44px;
+    width: 34px;
   }
 
   &.gl-td-muted {
     color: $text-muted;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
   }
 
   &.gl-td-center { text-align: center; }
@@ -319,13 +319,13 @@ $radius:     10px;
 
 // Dependencia
 .gl-dep {
-  font-size: 0.83rem;
+  font-size: 0.8rem;
   color: $text-body;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  max-width: 220px;
+  max-width: 155px;
 }
 
 // ── Badge tipo (Bien / Servicio) ───────────────────────────────────────
@@ -359,10 +359,10 @@ $radius:     10px;
 .gl-status {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.72rem;
+  gap: 0.35rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  padding: 0.28rem 0.65rem;
+  padding: 0.2rem 0.5rem;
   border-radius: 20px;
   white-space: nowrap;
 }
@@ -407,18 +407,18 @@ $radius:     10px;
 
 // ── Columna de acciones ──────────────────────────────────────────────────
 .gl-th-acciones {
-  min-width: 360px;
+  min-width: 240px;
 }
 
 .gl-td-acciones {
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.5rem;
 }
 
 // Grupo de botones de etapa
 .gl-etapa-group {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   flex-wrap: nowrap;
 }
 
@@ -426,9 +426,9 @@ $radius:     10px;
 .gl-etapa-btn {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 0.22rem 0.5rem;
-  font-size: 0.68rem;
+  gap: 2px;
+  padding: 0.16rem 0.38rem;
+  font-size: 0.64rem;
   font-weight: 600;
   border-radius: 5px;
   border: 1.5px solid transparent;
@@ -438,7 +438,7 @@ $radius:     10px;
   line-height: 1.3;
   background: transparent;
 
-  i { font-size: 0.65rem; flex-shrink: 0; }
+  i { font-size: 0.62rem; flex-shrink: 0; }
 
   // Estado: bloqueado (estatus insuficiente)
   &.gl-etapa-btn--locked,
@@ -491,17 +491,70 @@ $radius:     10px;
   }
 }
 
+// ── Semáforo badge ────────────────────────────────────────────────────
+.semaforo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.22rem 0.6rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.semaforo-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.semaforo-dias {
+  font-weight: 400;
+  opacity: 0.75;
+  font-size: 0.65rem;
+}
+
+.semaforo-en-tiempo {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  .semaforo-dot { background: #22c55e; }
+}
+
+.semaforo-atrasado {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  .semaforo-dot { background: #ef4444; }
+}
+
+.semaforo-concluido {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  .semaforo-dot { background: #3b82f6; }
+}
+
+.semaforo-rechazado {
+  background: #fdf2f8;
+  color: #7a0032;
+  border: 1px solid #e8c4d0;
+  .semaforo-dot { background: #9b003f; }
+}
+
 // ── Responsive ────────────────────────────────────────────────────────
 @media (max-width: 768px) {
-  .gl-wrapper { padding: 1rem; }
+  .gl-wrapper { padding: 0.75rem; }
   .gl-subtitle { display: none; }
   .gl-filter-sep { display: none; }
-  .gl-select { min-width: 150px; width: 100%; }
+  .gl-select { min-width: 130px; width: 100%; }
   .gl-search-wrap { min-width: 100%; }
-  .gl-dep { max-width: 130px; }
+  .gl-dep { max-width: 100px; }
 
   // En móvil los botones de etapa solo muestran ícono
   .gl-etapa-btn span { display: none; }
-  .gl-etapa-btn { padding: 0.25rem 0.4rem; }
-  .gl-etapa-group { gap: 3px; }
+  .gl-etapa-btn { padding: 0.22rem 0.35rem; }
+  .gl-etapa-group { gap: 2px; }
 }

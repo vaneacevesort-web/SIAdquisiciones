@@ -5,7 +5,14 @@ import { UserService } from '../../../app/service/user.service';
 export const adminGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const _userService = inject(UserService) ;
-  const userRole = ['Administrador', 'Validador']
+  const userRole = [
+    'Administrador',
+    'Validador',
+    'Estudio de Mercado',
+    'Afectación Presupuestal',
+    'Adquisiciones',
+    'Adjudicación',
+  ];
   const role = _userService.currentUserValue?.rol_users?.role?.name;
 
   if (role && userRole.includes(role)) {

@@ -136,6 +136,69 @@ $bg-page:     #f8fafc;
   }
 }
 
+// ── Nota de label ─────────────────────────────────────────────────────────
+.ns-label-note {
+  font-weight: 400;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+// ── Toggle de tipo de unidad ──────────────────────────────────────────────
+.ns-tipo-toggle {
+  display: inline-flex;
+  border: 1.5px solid $border;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.ns-tipo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $text-muted;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  i { font-size: 0.82rem; }
+
+  &:not(:last-child) {
+    border-right: 1.5px solid $border;
+  }
+
+  &:hover:not(.ns-tipo-btn--active) {
+    background: #f1f5f9;
+    color: $text-head;
+  }
+
+  &--active {
+    background: $vino;
+    color: #fff;
+
+    i { color: #fff; }
+  }
+}
+
+// Hint cuando no se ha seleccionado tipo
+.ns-tipo-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  color: $text-muted;
+  padding: 0.7rem 0.85rem;
+  background: #fafafa;
+  border: 1px dashed $border;
+  border-radius: 7px;
+  i { font-size: 0.78rem; color: #94a3b8; }
+}
+
 // ── Cascada de clasificación ──────────────────────────────────────────────
 .ns-cascade-wrap {
   position: relative;

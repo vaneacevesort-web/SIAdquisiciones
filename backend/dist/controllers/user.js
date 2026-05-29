@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetpassword = exports.updatepassword = exports.validatoken = exports.getvalidador = exports.updatevalidador = exports.deletevali = exports.saveValidador = exports.changevalidador = exports.getvalidadores = exports.LoginUser = exports.CreateUser = exports.ReadUser = void 0;
+exports.resetpassword = exports.updatepassword = exports.validatoken = exports.getvalidador = exports.updatevalidador = exports.deletevali = exports.registerPublic = exports.saveValidador = exports.changevalidador = exports.getvalidadores = exports.getRoles = exports.LoginUser = exports.CreateUser = exports.ReadUser = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const user_1 = __importDefault(require("../models/user"));
 const role_users_1 = __importDefault(require("../models/role_users"));
@@ -78,51 +78,69 @@ const CreateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.CreateUser = CreateUser;
 const LoginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const { email, password } = req.body;
-    console.log(req.body);
-    const user = yield user_1.default.findOne({
-        where: { email: email },
-        include: [
-            {
-                model: role_users_1.default,
-                as: 'rol_users',
-                include: [
-                    {
-                        model: role_1.default,
-                        as: 'role'
-                    }
-                ]
-            }
-        ]
-    });
-    console.log(user);
-    if (!user) {
-        //return next(JSON.stringify({ msg: `Usuario no existe con el email ${email}`}));
-        return res.status(400).json({
-            msg: `Usuario no existe con el email ${email}`
-        });
+    try {
+        // Raw query para evitar que asociaciones de otros modelos contaminen el JOIN
+        const sequelize = user_1.default.sequelize;
+        const [rows] = yield sequelize.query(`SELECT
+               u.id, u.name, u.email, u.password,
+               ru.id        AS ru_id,
+               ru.role_id   AS ru_role_id,
+               ru.user_id   AS ru_user_id,
+               r.id         AS r_id,
+               r.name       AS r_name,
+               r.desc       AS r_desc
+             FROM users u
+             LEFT JOIN rol_users ru ON ru.user_id = u.id
+             LEFT JOIN roles r      ON r.id = ru.role_id
+             WHERE u.email = ?
+             LIMIT 1`, { replacements: [email] });
+        if (!rows || rows.length === 0) {
+            return res.status(400).json({ msg: `Usuario no existe con el email ${email}` });
+        }
+        const row = rows[0];
+        const passwordValid = yield bcrypt_1.default.compare(password, row.password);
+        if (!passwordValid) {
+            return res.status(400).json({ msg: 'Contraseña incorrecta' });
+        }
+        // Reconstruir la estructura que espera el frontend: { id, name, email, rol_users: { role_id, role: { name } } }
+        const user = {
+            id: row.id,
+            name: row.name,
+            email: row.email,
+            rol_users: row.ru_id ? {
+                id: row.ru_id,
+                role_id: row.ru_role_id,
+                user_id: row.ru_user_id,
+                role: row.r_id ? {
+                    id: row.r_id,
+                    name: row.r_name,
+                    desc: row.r_desc,
+                } : null,
+            } : null,
+        };
+        const token = jsonwebtoken_1.default.sign({ email }, process.env.SECRET_KEY || 'TSE-Poder-legislativo', { expiresIn: 10000 });
+        return res.json({ token, user });
     }
-    const passwordValid = yield bcrypt_1.default.compare(password, user.password);
-    if (!passwordValid) {
-        //return next(JSON.stringify({ msg: `Password Incorrecto => ${password}`}));
-        return res.status(400).json({
-            msg: `Password Incorrecto => ${password}`
-        });
+    catch (err) {
+        console.error('Error en LoginUser:', (_a = err === null || err === void 0 ? void 0 : err.message) !== null && _a !== void 0 ? _a : err);
+        return res.status(500).json({ msg: 'Error interno en login.' });
     }
-    const token = jsonwebtoken_1.default.sign({
-        email: email
-    }, process.env.SECRET_KEY || 'TSE-Poder-legislativo', { expiresIn: 10000 });
-    return res.json({ token, user });
 });
 exports.LoginUser = LoginUser;
+const getRoles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const roles = yield role_1.default.findAll({ order: [['id', 'ASC']] });
+    return res.json({ data: roles });
+});
+exports.getRoles = getRoles;
 const getvalidadores = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_1.default.findAll({
         include: [
             {
                 model: role_users_1.default,
                 as: 'rol_users',
-                where: { role_id: 2 },
-                attributes: []
+                include: [{ model: role_1.default, as: 'role' }],
             },
             {
                 model: datos_user_1.default,
@@ -160,6 +178,7 @@ const changevalidador = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.changevalidador = changevalidador;
 const saveValidador = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const { body } = req;
     function generateRandomPassword(length = 10) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$!';
@@ -183,7 +202,7 @@ const saveValidador = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             email: body.correo,
             password: UpasswordHash,
             rol_users: {
-                role_id: 2,
+                role_id: (_a = body.role_id) !== null && _a !== void 0 ? _a : 2,
             },
         }, {
             include: [{ model: role_users_1.default, as: 'rol_users' }],
@@ -209,10 +228,10 @@ const saveValidador = (req, res) => __awaiter(void 0, void 0, void 0, function* 
           </p>
 
           <p>Se le recuerda que podrá iniciar su proceso de registro
-            a través del micrositio 
-            <a href="https://dev5.siasaf.gob.mx/auth/login" target="_blank">
-              https://dev5.siasaf.gob.mx/auth/login
-            </a> 
+            a través del micrositio
+            <a href="${process.env.APP_URL || 'http://localhost:4200'}/auth/login" target="_blank">
+              ${process.env.APP_URL || 'http://localhost:4200'}/auth/login
+            </a>
             durante el periodo comprendido del XXXXX al XXXXX de XXXXX de 2025.
           </p>
 
@@ -233,6 +252,35 @@ const saveValidador = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.saveValidador = saveValidador;
+const registerPublic = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { nombre, correo, password } = req.body;
+    if (!nombre || !correo || !password) {
+        return res.status(400).json({ msg: 'Nombre, correo y contraseña son requeridos' });
+    }
+    const existingUser = yield user_1.default.findOne({ where: { email: correo } });
+    if (existingUser) {
+        return res.status(400).json({ msg: 'El correo ya está registrado en el sistema' });
+    }
+    try {
+        const hashedPassword = yield bcrypt_1.default.hash(password, 10);
+        yield user_1.default.create({
+            name: nombre,
+            email: correo,
+            password: hashedPassword,
+            rol_users: {
+                role_id: 2, // Validador por defecto — el Administrador puede reasignar el rol
+            },
+        }, {
+            include: [{ model: role_users_1.default, as: 'rol_users' }],
+        });
+        return res.json({ msg: 'Usuario registrado correctamente' });
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: 'Error al registrar el usuario' });
+    }
+});
+exports.registerPublic = registerPublic;
 function generarHtmlCorreo(contenidoHtml) {
     return `
     <html>
@@ -426,7 +474,8 @@ const resetpassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 email: correo,
                 userId: usuario.id,
             }, process.env.JWT_SECRET || 'sUP3r_s3creT_ClavE-4321!', { expiresIn: '2d' });
-            const enlace = `https://dev5.siasaf.gob.mx/auth/cambiar-contrasena?token=${token}`;
+            const appUrl = process.env.APP_URL || 'http://localhost:4200';
+            const enlace = `${appUrl}/auth/cambiar-contrasena?token=${token}`;
             const nombreCompleto = usuario.name || usuario.email || 'Usuario';
             (() => __awaiter(void 0, void 0, void 0, function* () {
                 try {

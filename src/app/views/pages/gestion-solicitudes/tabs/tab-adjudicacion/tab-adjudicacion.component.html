@@ -1,12 +1,233 @@
-@if (readonly) {
-  <div class="alert alert-light border small mb-3">
-    <i class="feather icon-lock me-1 text-muted"></i>
-    Solo lectura. La solicitud debe estar en estatus <strong>Adquisición</strong> para editar esta sección.
+@if (cargando) {
+  <div class="text-center py-5 text-muted">
+    <div class="spinner-border spinner-border-sm" style="color:#9b003f;"></div>
+    <span class="ms-2 small">Cargando datos de adjudicación...</span>
   </div>
-}
+} @else {
 
-<div class="text-center py-5 text-muted">
-  <i class="feather icon-award" style="font-size: 3rem; opacity:0.3;"></i>
-  <p class="mt-3 mb-1 fw-semibold">Módulo de Adjudicación</p>
-  <p class="small mb-0">Próximamente — en desarrollo</p>
-</div>
+  @if (mensajeExito) {
+    <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+      <i class="feather icon-check-circle"></i>
+      {{ mensajeExito }}
+    </div>
+  }
+  @if (mensajeError) {
+    <div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+      <i class="feather icon-alert-circle"></i>
+      {{ mensajeError }}
+    </div>
+  }
+
+  @if (readonly) {
+    <div class="ta-readonly-banner mb-3">
+      <i class="feather icon-lock me-2"></i>
+      Solo lectura. La solicitud debe estar en estatus <strong>Adquisición</strong> para editar esta sección.
+    </div>
+  }
+
+  <form [formGroup]="form" class="ta-wrapper">
+
+    <!-- ══ SECCIÓN 1: Datos de la adjudicación ════════════════════════════ -->
+    <div class="ta-section">
+      <div class="ta-section-label">
+        <i class="feather icon-award"></i>
+        Datos de la Adjudicación
+      </div>
+
+      <div class="row g-3">
+
+        <div class="col-md-4">
+          <label class="ta-label">No. de Procedimiento</label>
+          <input type="text" class="form-control ta-control" placeholder="Ej. CADM-001/2026"
+            formControlName="no_procedimiento">
+        </div>
+
+        <div class="col-md-4">
+          <label class="ta-label">Proveedor / Razón Social</label>
+          <input type="text" class="form-control ta-control" placeholder="Nombre o razón social"
+            formControlName="proveedor_razon_social">
+        </div>
+
+        <div class="col-md-4">
+          <label class="ta-label">RFC del Proveedor</label>
+          <input type="text" class="form-control ta-control" placeholder="XAXX010101000"
+            formControlName="proveedor_rfc">
+        </div>
+
+        <div class="col-md-4">
+          <label class="ta-label">Monto Total Adjudicado (IVA incluido)</label>
+          <div class="input-group">
+            <span class="input-group-text" style="border-radius:7px 0 0 7px; border-right:0; font-size:0.875rem;">$</span>
+            <input type="number" min="0" step="0.01" class="form-control ta-control"
+              style="border-radius:0 7px 7px 0; border-left:0;"
+              placeholder="0.00" formControlName="monto_total_adjudicado_iva">
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="ta-label">No. de Contrato</label>
+          <input type="text" class="form-control ta-control" placeholder="Número de contrato"
+            formControlName="no_contrato">
+        </div>
+
+        <div class="col-md-4">
+          <label class="ta-label">Responsable del Procedimiento</label>
+          <input type="text" class="form-control ta-control" placeholder="Nombre del responsable"
+            formControlName="responsable">
+        </div>
+
+        <div class="col-md-3">
+          <label class="ta-label">Vigencia Inicio</label>
+          <input type="date" class="form-control ta-control" formControlName="vigencia_inicio">
+        </div>
+
+        <div class="col-md-3">
+          <label class="ta-label">Vigencia Término</label>
+          <input type="date" class="form-control ta-control" formControlName="vigencia_termino">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ SECCIÓN 2: Información adicional ═════════════════════════════ -->
+    <div class="ta-section">
+      <div class="ta-section-label">
+        <i class="feather icon-info"></i>
+        Información Adicional
+      </div>
+
+      <div class="row g-3">
+
+        <div class="col-md-6">
+          <label class="ta-label">URL Testimonio Testigo Social</label>
+          <input type="url" class="form-control ta-control" placeholder="https://..."
+            formControlName="url_testimonio_testigo_social">
+        </div>
+
+        <div class="col-md-6">
+          <label class="ta-label">Remanente de Suficiencia Presupuestal</label>
+          <div class="input-group">
+            <span class="input-group-text" style="border-radius:7px 0 0 7px; border-right:0; font-size:0.875rem;">$</span>
+            <input type="number" min="0" step="0.01" class="form-control ta-control"
+              style="border-radius:0 7px 7px 0; border-left:0;"
+              placeholder="0.00" formControlName="remanente_suficiencia_presupuestal">
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <label class="ta-label">Estatus de Adjudicación</label>
+          <input type="text" class="form-control ta-control" placeholder="Ej. En proceso, Firmado..."
+            formControlName="estatus_adjudicacion">
+        </div>
+
+        <div class="col-md-4">
+          <label class="ta-label">Estatus Estudio de Mercado</label>
+          <select class="form-select ta-control" formControlName="estatus_estudio_mercado_adj">
+            <option [ngValue]="null">Seleccione una opción</option>
+            @for (op of estatusEstudioOpts; track op.value) {
+              <option [value]="op.value">{{ op.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="col-md-12">
+          <label class="ta-label">Comentarios de Adjudicación</label>
+          <textarea class="form-control ta-control" rows="3"
+            placeholder="Observaciones o comentarios relevantes sobre la adjudicación..."
+            formControlName="comentarios_adjudicacion"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ SECCIÓN 3: Reprogramación ═══════════════════════════════════ -->
+    <div class="ta-section">
+      <div class="ta-section-label">
+        <i class="feather icon-calendar"></i>
+        Reprogramación
+      </div>
+
+      <div class="mb-3">
+        <label class="ta-label d-block mb-2">¿Existe Reprogramación?</label>
+        <div class="d-flex gap-4">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" id="ta_reprSi" value="SI"
+              formControlName="existe_reprogramacion">
+            <label class="form-check-label" for="ta_reprSi">Sí</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" id="ta_reprNo" value="NO"
+              formControlName="existe_reprogramacion">
+            <label class="form-check-label" for="ta_reprNo">No</label>
+          </div>
+        </div>
+      </div>
+
+      @if (mostrarReprogramacion) {
+        <div class="ta-repro-card">
+          <div class="ta-repro-card__title">
+            <i class="feather icon-refresh-cw me-1"></i>
+            Fechas y Horas Reprogramadas
+          </div>
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <label class="ta-label">Fecha de Junta de Aclaración</label>
+              <input type="date" class="form-control ta-control"
+                formControlName="fecha_junta_aclaracion">
+            </div>
+            <div class="col-md-3">
+              <label class="ta-label">Hora</label>
+              <input type="time" class="form-control ta-control"
+                formControlName="hora_junta_aclaracion">
+            </div>
+
+            <div class="col-md-6">
+              <label class="ta-label">Fecha de Presentación y Apertura</label>
+              <input type="date" class="form-control ta-control"
+                formControlName="fecha_presentacion_apertura">
+            </div>
+            <div class="col-md-3">
+              <label class="ta-label">Hora</label>
+              <input type="time" class="form-control ta-control"
+                formControlName="hora_presentacion_apertura">
+            </div>
+
+            <div class="col-md-6">
+              <label class="ta-label">Fecha de Fallo</label>
+              <input type="date" class="form-control ta-control"
+                formControlName="fecha_fallo">
+            </div>
+            <div class="col-md-3">
+              <label class="ta-label">Hora</label>
+              <input type="time" class="form-control ta-control"
+                formControlName="hora_fallo">
+            </div>
+
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- ══ BARRA DE ACCIONES ═══════════════════════════════════════════ -->
+    @if (!readonly) {
+      <div class="ta-actions">
+        <span class="ta-actions-note">
+          <i class="feather icon-info me-1"></i>
+          Guarda los datos para avanzar la solicitud a estatus <strong>Adjudicación</strong>.
+        </span>
+        <button type="button" class="ta-btn-save" (click)="guardar()" [disabled]="guardando">
+          @if (guardando) {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Guardando...
+          } @else {
+            <i class="feather icon-save me-2"></i>
+            Guardar Adjudicación
+          }
+        </button>
+      </div>
+    }
+
+  </form>
+
+}

@@ -2,19 +2,22 @@ import { MenuItem } from './menu.model';
 
 export const MENU: MenuItem[] = [
 
-  // ── Administrador / Validador ─────────────────────────────────────────────
+  // Sin restricción de rol → visible para todos los usuarios autenticados
   {
     label: 'Solicitudes',
     icon: 'grid',
-    roles: ['Administrador', 'Validador'],
     link: '/gestion-solicitudes',
   },
+
+  // Solo pueden crear solicitudes: Administrador y Estudio de Mercado
   {
     label: 'Nueva Solicitud',
     icon: 'plus-circle',
-    roles: ['Administrador', 'Validador'],
+    roles: ['Administrador', 'Estudio de Mercado'],
     link: '/solicitud/nuevo',
   },
+
+  // Solo el Administrador gestiona usuarios
   {
     label: 'Validadores',
     icon: 'users',
@@ -34,31 +37,12 @@ export const MENU: MenuItem[] = [
       },
     ]
   },
+
+  // Sin restricción de rol → todos pueden consultar reportes
   {
     label: 'Reportes',
     icon: 'bar-chart-2',
-    roles: ['Administrador', 'Validador'],
     link: '/reportes',
   },
 
-  // ── Usuario (rol solicitante) ─────────────────────────────────────────────
-  {
-    label: 'Mi Solicitud',
-    icon: 'file-text',
-    roles: ['Usuario'],
-    subMenus: [
-      {
-        subMenuItems: [
-          {
-            label: 'Mi solicitud',
-            isTitle: true,
-          },
-          {
-            label: 'Documentos',
-            link: '/registro'
-          }
-        ]
-      },
-    ]
-  },
 ];

@@ -24,6 +24,15 @@
             <i class="feather icon-calendar"></i>
             Ingreso: {{ solicitud.fecha_ingreso | date:'dd/MM/yyyy' }}
           </span>
+          <span class="gd-meta-sep">·</span>
+          @let sem = getSemaforo();
+          <span class="semaforo-badge {{ sem.cssClass }}">
+            <span class="semaforo-dot"></span>
+            {{ sem.label }}
+            @if (sem.dias !== null) {
+              <span class="semaforo-dias">({{ sem.dias }} días)</span>
+            }
+          </span>
           @if (solicitud.dependencia_nombre) {
             <span class="gd-meta-sep">·</span>
             <span class="gd-meta-item">

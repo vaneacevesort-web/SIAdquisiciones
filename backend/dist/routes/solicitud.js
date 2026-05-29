@@ -18,4 +18,6 @@ router.get("/api/solicitud/afectacion-presupuestal/:id", solicitud_1.getAfectaci
 router.post("/api/solicitud/afectacion-presupuestal/:id", solicitud_1.saveAfectacionPresupuestal);
 router.get("/api/solicitud/adquisicion/:id", solicitud_1.getProcedimientoById);
 router.post("/api/solicitud/adquisicion/:id", solicitud_1.saveProcedimientoAdquisitivo);
+router.get("/api/solicitud/adjudicacion/:id", solicitud_1.getAdjudicacionById);
+router.post("/api/solicitud/adjudicacion/:id", solicitud_1.saveAdjudicacion);
 exports.default = router;

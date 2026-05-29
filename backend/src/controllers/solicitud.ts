@@ -287,7 +287,7 @@ export const createEstudioMercado = async (req: Request, res: Response): Promise
   try {
     console.log('BODY ESTUDIO MERCADO =>', req.body);
 
-    const { id_solicitud } = req.body;
+    const { id_solicitud, estado_estudio_mercado } = req.body;
 
     if (!id_solicitud) {
       return res.status(400).json({
@@ -296,10 +296,13 @@ export const createEstudioMercado = async (req: Request, res: Response): Promise
       });
     }
 
+    const updateFields: any = { estatus_id: 2 };
+    if (estado_estudio_mercado) {
+      updateFields.estado_estudio_mercado = estado_estudio_mercado;
+    }
+
     await AdqSolicitudes.update(
-      {
-        estatus_id: 2
-      },
+      updateFields,
       {
         where: {
           id_solicitud: id_solicitud
@@ -514,6 +517,71 @@ export const saveProcedimientoAdquisitivo = async (req: Request, res: Response):
   }
 };
 
+export const getAdjudicacionById = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const [solicitud, proc] = await Promise.all([
+      AdqSolicitudes.findByPk(id),
+      AdqProcedimientoAdquisitivo.findOne({ where: { id_solicitud: id } }),
+    ]);
+    return res.json({ ok: true, data: { solicitud, procedimiento: proc ?? null } });
+  } catch (error) {
+    console.error('ERROR getAdjudicacionById =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al obtener adjudicación' });
+  }
+};
+
+export const saveAdjudicacion = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const { user_id, ...c } = req.body;
+    const idSolicitud = Number(id);
+
+    const campos = {
+      no_procedimiento:                    c.no_procedimiento                    ?? null,
+      proveedor_razon_social:              c.proveedor_razon_social              ?? null,
+      proveedor_rfc:                       c.proveedor_rfc                       ?? null,
+      monto_total_adjudicado_iva:          c.monto_total_adjudicado_iva          ? Number(c.monto_total_adjudicado_iva) : null,
+      no_contrato:                         c.no_contrato                         ?? null,
+      vigencia_inicio:                     c.vigencia_inicio                     ?? null,
+      vigencia_termino:                    c.vigencia_termino                    ?? null,
+      url_testimonio_testigo_social:       c.url_testimonio_testigo_social       ?? null,
+      remanente_suficiencia_presupuestal:  c.remanente_suficiencia_presupuestal  ? Number(c.remanente_suficiencia_presupuestal) : null,
+      responsable:                         c.responsable                         ?? null,
+      estatus_adjudicacion:                c.estatus_adjudicacion                ?? null,
+      estatus_estudio_mercado_adj:         c.estatus_estudio_mercado_adj         ?? null,
+      comentarios_adjudicacion:            c.comentarios_adjudicacion            ?? null,
+      existe_reprogramacion:               c.existe_reprogramacion === 'SI' ? true : (c.existe_reprogramacion === 'NO' ? false : null),
+      fecha_junta_aclaracion:              c.existe_reprogramacion === 'SI' ? (c.fecha_junta_aclaracion       ?? null) : null,
+      hora_junta_aclaracion:               c.existe_reprogramacion === 'SI' ? (c.hora_junta_aclaracion        ?? null) : null,
+      fecha_presentacion_apertura:         c.existe_reprogramacion === 'SI' ? (c.fecha_presentacion_apertura  ?? null) : null,
+      hora_presentacion_apertura:          c.existe_reprogramacion === 'SI' ? (c.hora_presentacion_apertura   ?? null) : null,
+      fecha_fallo:                         c.existe_reprogramacion === 'SI' ? (c.fecha_fallo                  ?? null) : null,
+      hora_fallo:                          c.existe_reprogramacion === 'SI' ? (c.hora_fallo                   ?? null) : null,
+    };
+
+    const existe = await AdqProcedimientoAdquisitivo.findOne({ where: { id_solicitud: idSolicitud } });
+
+    if (existe) {
+      await existe.update({ ...campos, updated_by: user_id ?? null });
+    } else {
+      await AdqProcedimientoAdquisitivo.create({
+        id_solicitud: idSolicitud,
+        ...campos,
+        created_by: user_id ?? '00000000-0000-0000-0000-000000000000',
+      });
+    }
+
+    // Avanzar a estatus 5 (Adjudicación)
+    await AdqSolicitudes.update({ estatus_id: 5 }, { where: { id_solicitud: idSolicitud } });
+
+    return res.json({ ok: true, msg: 'Adjudicación guardada correctamente' });
+  } catch (error) {
+    console.error('ERROR saveAdjudicacion =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al guardar adjudicación' });
+  }
+};
+
 export const getKpis = async (_req: Request, res: Response): Promise<any> => {
   try {
     const filas = await AdqSolicitudes.findAll({
@@ -532,9 +600,9 @@ export const getKpis = async (_req: Request, res: Response): Promise<any> => {
       data: {
         total,
         registradas:  counts[1],
-        estudio:      counts[2] + counts[3] + counts[4] + counts[5],
-        afectacion:   counts[3] + counts[4] + counts[5],
-        contratacion: counts[4] + counts[5],
+        estudio:      counts[2],
+        afectacion:   counts[3],
+        contratacion: counts[4],
         adjudicacion: counts[5],
       },
     });

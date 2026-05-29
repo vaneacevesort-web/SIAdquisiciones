@@ -1,9 +1,11 @@
 import { Router } from "express";
-import { CreateUser, LoginUser, ReadUser, getvalidadores, changevalidador, saveValidador, deletevali, updatevalidador, getvalidador, validatoken, updatepassword, resetpassword } from "../controllers/user";
+import { CreateUser, LoginUser, ReadUser, getRoles, registerPublic, getvalidadores, changevalidador, saveValidador, deletevali, updatevalidador, getvalidador, validatoken, updatepassword, resetpassword } from "../controllers/user";
 
 const router = Router();
 
 router.get("/api/user/read", ReadUser)
+router.get("/api/user/roles", getRoles)
+router.post("/api/user/register-public", registerPublic)
 router.post("/api/user/create", CreateUser)
 router.post("/api/user/register", CreateUser)
 router.post("/api/user/login", LoginUser)

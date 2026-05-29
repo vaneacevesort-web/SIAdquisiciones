@@ -221,19 +221,21 @@
             </div>
           </li>-->
           <li class="nav-item nav-profile" ngbDropdown>
-              @if(this.usuario == 'admin@congresoedomex.gob.mx'){ Luis Roberto Mancilla Uriostegui }@else if(this.usuario == 'validador2@congresoedomex.gob.mx') { Comision de Derechos Humanos } @else { Bienvenido }
+            <div class="d-flex flex-column align-items-end me-2 lh-sm" style="font-size: 0.85rem;">
+              <span class="fw-semibold">{{ nombreUsuario }}</span>
+              <small class="text-secondary" style="font-size: 0.75rem;">{{ rolUsuario }}</small>
+            </div>
             <a class="nav-link" ngbDropdownToggle id="profileDropdown">
               <img class="w-30px h-30px ms-1 rounded-circle" src="https://static.vecteezy.com/system/resources/thumbnails/024/983/914/small_2x/simple-user-default-icon-free-png.png"  alt="profile">
             </a>
             <div ngbDropdownMenu class="px-0" aria-labelledby="profileDropdown">
               <div class="d-flex flex-column align-items-center border-bottom px-5 py-3">
-               
                 <div class="mb-3">
                   <img class="w-80px h-80px rounded-circle" src="https://static.vecteezy.com/system/resources/thumbnails/024/983/914/small_2x/simple-user-default-icon-free-png.png" style="height: 80px; width: auto;" alt="">
                 </div>
                 <div class="text-center">
-                  <p class="tx-16 fw-bolder"></p>
-                  <p class="fs-12px text-secondary">{{ this.usuario }}</p>
+                  <p class="tx-16 fw-bolder">{{ nombreUsuario }}</p>
+                  <p class="fs-12px text-secondary">{{ rolUsuario }}</p>
                 </div>
               </div>
               <ul class="list-unstyled p-1">
