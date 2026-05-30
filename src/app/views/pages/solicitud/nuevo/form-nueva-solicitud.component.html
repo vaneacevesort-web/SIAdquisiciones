@@ -41,8 +41,11 @@
             <input type="text" class="form-control ns-control" formControlName="folio"
               placeholder="Ej. ADQ-2026-001"
               [class.is-invalid]="form.get('folio')?.invalid && form.get('folio')?.touched">
-            @if (form.get('folio')?.invalid && form.get('folio')?.touched) {
+            @if (form.get('folio')?.touched && form.get('folio')?.hasError('required')) {
               <div class="invalid-feedback">Campo obligatorio</div>
+            }
+            @if (form.get('folio')?.hasError('duplicado')) {
+              <div class="invalid-feedback" style="display:block">El folio interno ya existe. Ingresa un folio diferente.</div>
             }
           </div>
 
@@ -127,8 +130,9 @@
         @if (tipoUnidad) {
           <div class="row g-3">
 
-            <!-- Dependencia -->
+            <!-- ── Flujo DEPENDENCIA ─────────────────────────────────── -->
             @if (isDependencia) {
+
               <div class="col-md-6">
                 <label class="ns-label">Dependencia</label>
                 <select class="form-select ns-control" formControlName="id_dependencia"
@@ -139,52 +143,77 @@
                   }
                 </select>
               </div>
-            }
 
-            <!-- Organismo OPD -->
-            @if (isOPD) {
               <div class="col-md-6">
-                <label class="ns-label">Organismo / OPD</label>
-                <select class="form-select ns-control" formControlName="id_opd"
-                  (change)="onOPDChange($event)">
-                  <option [ngValue]="null">Seleccione...</option>
-                  @for (o of opds; track o.id_opd) {
-                    <option [value]="o.id_opd">{{ o.nombre }}</option>
+                <label class="ns-label">Centro de costo</label>
+                <div class="ns-cascade-wrap">
+                  @if (centrosCosto.length === 0) {
+                    <div class="ns-cascade-hint">
+                      <i class="feather icon-arrow-up-left"></i>
+                      Selecciona una dependencia primero
+                    </div>
                   }
-                </select>
+                  <select class="form-select ns-control" formControlName="id_centro_costo"
+                    [disabled]="centrosCosto.length === 0">
+                    <option [ngValue]="null">Seleccione...</option>
+                    @for (c of centrosCosto; track c.id_centro_costo) {
+                      <option [value]="c.id_centro_costo">{{ c.nombre }} ({{ c.codigo }})</option>
+                    }
+                  </select>
+                </div>
               </div>
+
             }
 
-            <!-- Centro de costo (siempre visible cuando hay tipo seleccionado) -->
-            <div class="col-md-6">
-              <label class="ns-label">Centro de costo</label>
-              <div class="ns-cascade-wrap">
-                @if (centrosCosto.length === 0) {
-                  <div class="ns-cascade-hint">
-                    <i class="feather icon-arrow-up-left"></i>
-                    Selecciona {{ isDependencia ? 'una dependencia' : 'un organismo' }} primero
-                  </div>
-                }
-                <select class="form-select ns-control" formControlName="id_centro_costo"
-                  [disabled]="centrosCosto.length === 0">
-                  <option [ngValue]="null">Seleccione...</option>
-                  @for (c of centrosCosto; track c.id_centro_costo) {
-                    <option [value]="c.id_centro_costo">{{ c.nombre }}</option>
-                  }
-                </select>
-              </div>
-            </div>
+            <!-- ── Flujo ORGANISMO OPD ──────────────────────────────── -->
+            @if (isOPD) {
 
-            <!-- Órgano desconcentrado (opcional) -->
-            <div class="col-md-6">
-              <label class="ns-label">Órgano desconcentrado <span class="text-muted ns-label-note">(opcional)</span></label>
-              <select class="form-select ns-control" formControlName="id_organo_desconcentrado">
-                <option [ngValue]="null">Seleccione...</option>
-                @for (o of organosDesconc; track o.id_organo_desconcentrado) {
-                  <option [value]="o.id_organo_desconcentrado">{{ o.nombre }}</option>
-                }
-              </select>
-            </div>
+              <!-- Tipo de organismo -->
+              <div class="col-12">
+                <span class="ns-label d-block mb-2">Tipo de organismo <span class="text-muted ns-label-note">(selecciona uno)</span></span>
+                <div class="ns-tipo-toggle">
+                  <button type="button" class="ns-tipo-btn"
+                    [class.ns-tipo-btn--active]="tipoOrganismo === 'DESCENTRALIZADO'"
+                    (click)="onTipoOrganismoChange('DESCENTRALIZADO')">
+                    <i class="feather icon-briefcase"></i>
+                    Descentralizado
+                  </button>
+                  <button type="button" class="ns-tipo-btn"
+                    [class.ns-tipo-btn--active]="tipoOrganismo === 'DESCONCENTRADO'"
+                    (click)="onTipoOrganismoChange('DESCONCENTRADO')">
+                    <i class="feather icon-git-branch"></i>
+                    Desconcentrado
+                  </button>
+                </div>
+              </div>
+
+              <!-- Organismo descentralizado -->
+              @if (tipoOrganismo === 'DESCENTRALIZADO') {
+                <div class="col-md-6">
+                  <label class="ns-label">Organismo descentralizado</label>
+                  <select class="form-select ns-control" formControlName="id_opd">
+                    <option [ngValue]="null">Seleccione...</option>
+                    @for (o of opds; track o.id_organismo_opds) {
+                      <option [value]="o.id_organismo_opds">{{ o.nombre }}</option>
+                    }
+                  </select>
+                </div>
+              }
+
+              <!-- Órgano desconcentrado -->
+              @if (tipoOrganismo === 'DESCONCENTRADO') {
+                <div class="col-md-6">
+                  <label class="ns-label">Órgano desconcentrado</label>
+                  <select class="form-select ns-control" formControlName="id_organo_desconcentrado">
+                    <option [ngValue]="null">Seleccione...</option>
+                    @for (o of organosDesconc; track o.id_organo_desconcentrado) {
+                      <option [value]="o.id_organo_desconcentrado">{{ o.nombre }}</option>
+                    }
+                  </select>
+                </div>
+              }
+
+            }
 
           </div>
         }
@@ -289,13 +318,11 @@
             <i class="feather icon-rotate-ccw me-1"></i>Limpiar
           </button>
           <button type="button" class="btn ns-btn-primary" (click)="guardar()" [disabled]="guardando">
-            @if (guardando) {
-              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-              Guardando...
-            } @else {
-              <i class="feather icon-arrow-right me-1"></i>
-              Guardar y continuar
-            }
+            <span class="spinner-border spinner-border-sm me-2" role="status"
+              [class.d-none]="!guardando"></span>
+            <i class="feather icon-arrow-right me-1"
+              [class.d-none]="guardando"></i>
+            {{ guardando ? 'Guardando...' : 'Guardar y continuar' }}
           </button>
         </div>
       </div>

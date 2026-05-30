@@ -134,13 +134,27 @@
           }
         </div>
         @if (isTabEditable(activeTab)) {
-          <span class="gd-editable-badge">
-            <i class="feather icon-edit-2 me-1"></i>Edición activa
-          </span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="gd-editable-badge">
+              <i class="feather icon-edit-2 me-1"></i>Edición activa
+            </span>
+            @if (isAdmin && adminEditingTab === activeTab) {
+              <button class="gd-admin-cancel-btn" (click)="cancelAdminEdit()">
+                <i class="feather icon-x me-1"></i>Cancelar
+              </button>
+            }
+          </div>
         } @else {
-          <span class="gd-readonly-badge">
-            <i class="feather icon-eye me-1"></i>Solo lectura
-          </span>
+          <div class="d-flex align-items-center gap-2">
+            <span class="gd-readonly-badge">
+              <i class="feather icon-eye me-1"></i>Solo lectura
+            </span>
+            @if (isAdmin && isTabAccessible(activeTab)) {
+              <button class="gd-admin-edit-btn" (click)="startAdminEdit(activeTab)">
+                <i class="feather icon-edit-2 me-1"></i>Editar
+              </button>
+            }
+          </div>
         }
       </div>
 

@@ -24,10 +24,28 @@ export class TabAdquisicionComponent implements OnInit, OnChanges {
     { value: 'LICITACION_PUBLICA_PRESENCIAL',     label: 'Licitación Pública Presencial' },
     { value: 'INVITACION_RESTRINGIDA_PRESENCIAL', label: 'Invitación Restringida Presencial' },
     { value: 'ADJUDICACION_DIRECTA_PRESENCIAL',   label: 'Adjudicación Directa Presencial' },
-    { value: 'ACUERDO_MARCO',                     label: 'Acuerdo Marco' },
-    { value: 'LICITACION_PUBLICA_ELECTRONICA',    label: 'Licitación Pública Nacional Electrónica' },
-    { value: 'INVITACION_TRES_PERSONAS',          label: 'Invitación a Cuando Menos Tres Personas Nacional Electrónica' },
   ];
+
+  dictamenArchivo: File | null = null;
+  dictamenNombreArchivo = '';
+
+  get esAdjudicacionDirecta(): boolean {
+    return this.form?.get('modalidad')?.value === 'ADJUDICACION_DIRECTA_PRESENCIAL';
+  }
+
+  private camposFecha = [
+    'fecha_junta_aclaracion', 'hora_junta_aclaracion',
+    'fecha_presentacion_apertura', 'hora_presentacion_apertura',
+    'fecha_sesion_comite', 'hora_sesion_comite',
+    'fecha_contra_oferta', 'hora_contra_oferta',
+    'fecha_dictaminacion', 'hora_dictaminacion',
+    'fecha_sesion_subcomite', 'hora_sesion_subcomite',
+    'fecha_fallo', 'hora_fallo',
+  ];
+
+  tieneFechaCapturada(): boolean {
+    return this.camposFecha.some(c => !!this.form.get(c)?.value);
+  }
 
   private fb              = inject(FormBuilder);
   private registroService = inject(RegistroService);
@@ -50,10 +68,11 @@ export class TabAdquisicionComponent implements OnInit, OnChanges {
     this.form = this.fb.group({
       modalidad:                   [null, Validators.required],
       dictamen_procedencia:        [null],
-      responsable:                 [null],
-      no_procedimiento:            [null],
-      convocatoria_url:            [null],
-      medio_publicacion:           [null],
+      dictamen_procedencia_url:    [null],
+      responsable:                 [null, Validators.required],
+      no_procedimiento:            [null, Validators.required],
+      convocatoria_url:            [null, Validators.required],
+      medio_publicacion:           [null, Validators.required],
       fecha_junta_aclaracion:      [null],
       hora_junta_aclaracion:       [null],
       fecha_presentacion_apertura: [null],
@@ -110,17 +129,52 @@ export class TabAdquisicionComponent implements OnInit, OnChanges {
     });
   }
 
+  onDictamenFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.dictamenArchivo       = input.files[0];
+      this.dictamenNombreArchivo = this.dictamenArchivo.name;
+    }
+  }
+
   guardar(): void {
+    if (this.guardando) return;
     if (this.form.invalid) {
-      this.mensajeError = 'Selecciona una modalidad para continuar.';
+      this.form.markAllAsTouched();
+      this.mensajeError = 'Completa todos los campos obligatorios antes de guardar.';
       return;
+    }
+
+    if (!this.tieneFechaCapturada()) {
+      this.mensajeError = 'Captura al menos una fecha u hora del procedimiento antes de guardar.';
+      return;
+    }
+
+    // Validación condicional: Adjudicación Directa requiere Dictamen de Procedencia
+    if (this.esAdjudicacionDirecta) {
+      const url = this.form.get('dictamen_procedencia_url')?.value;
+      if (!url && !this.dictamenArchivo) {
+        this.mensajeError = 'Para Adjudicación Directa Presencial, el Dictamen de Procedencia es obligatorio (URL o archivo).';
+        return;
+      }
     }
 
     this.guardando    = true;
     this.mensajeExito = '';
     this.mensajeError = '';
 
-    this.registroService.saveProcedimientoAdquisitivo(this.idSolicitud, this.form.value).subscribe({
+    const v = this.form.value;
+    const payload = {
+      ...v,
+      // Mapea la URL del dictamen al campo del modelo
+      dictamen_procedencia_path: v.dictamen_procedencia_url || null,
+      // Marca dictamen como SI si hay URL o archivo
+      dictamen_procedencia: this.esAdjudicacionDirecta
+        ? (v.dictamen_procedencia_url || this.dictamenArchivo ? 'SI' : 'NO')
+        : v.dictamen_procedencia,
+    };
+
+    this.registroService.saveProcedimientoAdquisitivo(this.idSolicitud, payload).subscribe({
       next: () => {
         this.guardando    = false;
         this.mensajeExito = 'Adquisición guardada correctamente.';

@@ -51,8 +51,8 @@ export class TabAfectacionComponent implements OnInit, OnChanges {
 
   inicializarForm(): void {
     this.form = this.fb.group({
-      folio_ca:                       [null],
-      fecha_liberacion_estudio:       [null],
+      folio_ca:                       [null, Validators.required],
+      fecha_liberacion_estudio:       [null, Validators.required],
       oficio_suficiencia_url:         [null],
       nombre_testigo_social:          [null],
       tipo_gasto:                     [null, Validators.required],
@@ -60,10 +60,10 @@ export class TabAfectacionComponent implements OnInit, OnChanges {
       clave_verificacion:             [null],
       descripcion_clave_verificacion: [null],
       unidad_medida:                  [null],
-      dictamen:                       [null],
+      dictamen:                       [null, Validators.required],
       dictamen_path_url:              [null],
-      contrato_abierto:               [null],
-      consolidado:                    [null],
+      contrato_abierto:               [null, Validators.required],
+      consolidado:                    [null, Validators.required],
     });
 
     if (this.readonly) this.form.disable();
@@ -164,8 +164,10 @@ export class TabAfectacionComponent implements OnInit, OnChanges {
   }
 
   guardar(): void {
-    if (this.form.get('tipo_gasto')?.invalid) {
-      this.mensajeError = 'El tipo de gasto es obligatorio.';
+    if (this.guardando) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.mensajeError = 'Completa todos los campos obligatorios antes de guardar.';
       return;
     }
 
@@ -177,6 +179,8 @@ export class TabAfectacionComponent implements OnInit, OnChanges {
 
     const payload = {
       afectacion: {
+        folio_ca:               v.folio_ca,
+        fecha_liberacion_estudio: v.fecha_liberacion_estudio,
         nombre_testigo_social:  v.nombre_testigo_social,
         tipo_gasto:             v.tipo_gasto,
         fuentes_financiamiento: this.fuentesSeleccionadas,

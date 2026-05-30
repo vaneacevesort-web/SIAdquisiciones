@@ -27,4 +27,15 @@ export class TabInfoGeneralComponent {
   getTipoSolicitud(tipo: string): string {
     return tipo === 'BIEN' ? 'Bien — Adquisición de materiales' : tipo === 'SERVICIO' ? 'Servicio — Contratación de servicios' : tipo || '—';
   }
+
+  hasClasificacion(): boolean {
+    const s = this.solicitud;
+    if (!s) return false;
+    return !!(
+      s.dependencia_nombre  || s.opd_nombre          ||
+      s.centro_costo_nombre || s.capitulo_nombre      ||
+      s.subcapitulo_nombre  || s.partida_generica_nombre ||
+      s.partida_especifica_nombre
+    );
+  }
 }

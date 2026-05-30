@@ -8,6 +8,7 @@ import {
   getSolicitudes,
   getestatus,
   createEstudioMercado,
+  getEstudioMercadoById,
   getSolicitudesAfectacion,
   getAfectacionById,
   saveAfectacionPresupuestal,
@@ -28,6 +29,7 @@ router.post("/api/solicitud/edit/:id", getRegistro)
 router.put("/api/solicitud/update/:id", putRegistro)
 router.post("/api/solicitud/getsolicitudes", getSolicitudes)
 router.get("/api/solicitud/getestatus/:id", getestatus)
+router.get("/api/solicitud/estudio-mercado/:id", getEstudioMercadoById);
 router.post("/api/solicitud/estudio-mercado", createEstudioMercado);
 router.get("/api/solicitud/kpis", getKpis);
 router.get("/api/solicitud/cola/:estatus", getSolicitudesCola);

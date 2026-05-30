@@ -73,7 +73,7 @@
               <th class="gl-th">Fecha ingreso</th>
               <th class="gl-th gl-th-center">Semáforo</th>
               <th class="gl-th">Dependencia / OPD</th>
-              <th class="gl-th gl-th-center">Tipo</th>
+              <th class="gl-th">Origen del recurso</th>
               <th class="gl-th">Estatus</th>
               <th class="gl-th gl-th-acciones">Acciones por etapa</th>
             </tr>
@@ -110,14 +110,10 @@
                   <span class="gl-dep">{{ row.dependencia_nombre || row.opd_nombre || '—' }}</span>
                 </td>
 
-                <td class="gl-td gl-td-center">
-                  @if (row.tipo_solicitud === 'BIEN') {
-                    <span class="gl-tipo-badge gl-tipo-bien">
-                      <i class="feather icon-package"></i> Bien
-                    </span>
-                  } @else if (row.tipo_solicitud === 'SERVICIO') {
-                    <span class="gl-tipo-badge gl-tipo-servicio">
-                      <i class="feather icon-tool"></i> Servicio
+                <td class="gl-td">
+                  @if (row.origen_recurso_nombre) {
+                    <span class="gl-origen-badge gl-origen-{{ getOrigenClass(row.id_origen_recurso) }}">
+                      {{ row.origen_recurso_nombre }}
                     </span>
                   } @else {
                     <span class="gl-td-muted">—</span>

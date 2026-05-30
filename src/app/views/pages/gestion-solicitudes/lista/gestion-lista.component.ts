@@ -125,6 +125,16 @@ export class GestionListaComponent implements OnInit {
 
   // ── Helpers de presentación ─────────────────────────────────────────────
 
+  getOrigenClass(id: number): string {
+    switch (Number(id)) {
+      case 1: return 'estatal';
+      case 2: return 'federal';
+      case 3: return 'fideicomiso';
+      case 4: return 'concurrente';
+      default: return 'default';
+    }
+  }
+
   getEstatusLabel(estatus: number): string {
     switch (Number(estatus)) {
       case 1: return 'Registrada';

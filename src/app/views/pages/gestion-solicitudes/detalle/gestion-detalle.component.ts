@@ -50,6 +50,9 @@ export class GestionDetalleComponent implements OnInit {
   activeTab     = 'info';
   loading       = true;
 
+  /** Tab que el Administrador ha desbloqueado manualmente para edición */
+  adminEditingTab: string | null = null;
+
   /** Tab solicitado vía query param (?tab=estudio) — se aplica tras cargar */
   private pendingTab: string | null = null;
 
@@ -99,10 +102,25 @@ export class GestionDetalleComponent implements OnInit {
     else                   this.activeTab = 'info';
   }
 
+  get isAdmin(): boolean {
+    return this.permissionService.role === 'Administrador';
+  }
+
   selectTab(key: string): void {
     if (this.isTabAccessible(key)) {
+      if (this.adminEditingTab && this.adminEditingTab !== key) {
+        this.adminEditingTab = null;
+      }
       this.activeTab = key;
     }
+  }
+
+  startAdminEdit(tabKey: string): void {
+    this.adminEditingTab = tabKey;
+  }
+
+  cancelAdminEdit(): void {
+    this.adminEditingTab = null;
   }
 
   isTabAccessible(tabKey: string): boolean {
@@ -116,13 +134,16 @@ export class GestionDetalleComponent implements OnInit {
   }
 
   isTabEditable(tabKey: string): boolean {
+    // Admin override: puede editar cualquier sección que él mismo haya desbloqueado
+    if (this.isAdmin && this.adminEditingTab === tabKey) return true;
+
     const estatus = this.solicitud?.estatus_id ?? 0;
     const etapa = tabKey as 'info' | 'estudio' | 'afectacion' | 'adquisicion' | 'adjudicacion';
     return this.permissionService.canEdit(etapa, estatus, this.solicitud?.user_id);
   }
 
   onSaved(): void {
-    // Reload solicitud to get updated estatus
+    this.adminEditingTab = null;  // cierra la edición manual al guardar
     this.cargarSolicitud();
   }
 

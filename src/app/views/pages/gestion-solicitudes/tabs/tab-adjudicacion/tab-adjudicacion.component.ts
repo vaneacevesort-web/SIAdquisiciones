@@ -118,6 +118,7 @@ export class TabAdjudicacionComponent implements OnInit, OnChanges {
   }
 
   guardar(): void {
+    if (this.guardando) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

@@ -2,6 +2,7 @@ import AdqDependencias from '../models/AdqDependencias';
 import AdqCentrosCosto from '../models/AdqCentrosCosto';
 import AdqOrganismosOPDS from '../models/AdqOrganismosOPDS';
 import AdqCatCapitulos from '../models/AdqCatCapitulos';
+import AdqCatSubcapitulos from '../models/AdqCatSubcapitulos';
 import AdqCatPartidasGenericas from '../models/AdqCatPartidasGenericas';
 import AdqCatPartidasEspecificas from '../models/AdqCatPartidasEspecificas';
 import { Request, Response } from 'express';
@@ -16,6 +17,7 @@ import AdqAfectacionPresupuestal from '../models/AdqAfectacionPresupuestal';
 import AdqBienesServicios from '../models/AdqBienesServicios';
 import AdqAfectacionFuentes from '../models/AdqAfectacionFuentes';
 import AdqProcedimientoAdquisitivo from '../models/AdqProcedimientoAdquisitivo';
+import AdqEstudioMercado from '../models/AdqEstudioMercado';
 
 dotenv.config();
 
@@ -135,6 +137,11 @@ export const deleteRegistro = async (req: Request, res: Response): Promise<any> 
     msg: `No existe el id ${id}`,
   });
 };
+function safeId(val: any): number | null {
+  const n = parseInt(val, 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 function getOrigenRecursoNombre(id: number): string {
   switch (Number(id)) {
     case 1: return 'Estatal';
@@ -168,15 +175,15 @@ export const saveRegistro = async (req: Request, res: Response): Promise<any> =>
       id_origen_recurso: Number(origenRecurso),
       tipo_solicitud: body.tipo_solicitud || 'BIEN',
 
-      id_dependencia: body.id_dependencia ? Number(body.id_dependencia) : null,
-      id_opd: body.id_opd ? Number(body.id_opd) : null,
-      id_organo_desconcentrado: body.id_organo_desconcentrado ? Number(body.id_organo_desconcentrado) : null,
-      id_centro_costo: body.id_centro_costo ? Number(body.id_centro_costo) : null,
+      id_dependencia:           safeId(body.id_dependencia),
+      id_opd:                   safeId(body.id_opd),
+      id_organo_desconcentrado: safeId(body.id_organo_desconcentrado),
+      id_centro_costo:          safeId(body.id_centro_costo),
 
-      id_capitulo: body.id_capitulo ? Number(body.id_capitulo) : null,
-      id_subcapitulo: body.id_subcapitulo ? Number(body.id_subcapitulo) : null,
-      id_partida_generica: body.id_partida_generica ? Number(body.id_partida_generica) : null,
-      id_partida_especifica: body.id_partida_especifica ? Number(body.id_partida_especifica) : null,
+      id_capitulo:              safeId(body.id_capitulo),
+      id_subcapitulo:           safeId(body.id_subcapitulo),
+      id_partida_generica:      safeId(body.id_partida_generica),
+      id_partida_especifica:    safeId(body.id_partida_especifica),
 
       user_id: body.userId || body.user_id || null,
       estatus_id: 1,
@@ -191,13 +198,20 @@ export const saveRegistro = async (req: Request, res: Response): Promise<any> =>
       }
     });
     
-  } catch (error) {
-    console.log('ERROR EN saveRegistro:', error);
+  } catch (error: any) {
+    if (
+      error.name === 'SequelizeUniqueConstraintError' ||
+      error.original?.code === 'ER_DUP_ENTRY'
+    ) {
+      return res.status(409).json({
+        ok: false,
+        code: 'FOLIO_DUPLICADO',
+        msg: 'El folio interno ya existe. Ingresa un folio diferente.',
+      });
+    }
 
-    return res.status(500).json({
-      msg: 'Ocurrió un error al cargar',
-      error
-    });
+    console.error('ERROR EN saveRegistro:', error);
+    return res.status(500).json({ ok: false, msg: 'Ocurrió un error al guardar la solicitud.' });
   }
 };
 
@@ -283,51 +297,87 @@ export const getestatus = async (req: Request, res: Response): Promise<any> => {
     msg: `No existe el id ${id}`,
   });
 };
-export const createEstudioMercado = async (req: Request, res: Response): Promise<any> => {
+export const getEstudioMercadoById = async (req: Request, res: Response): Promise<any> => {
   try {
-    console.log('BODY ESTUDIO MERCADO =>', req.body);
-
-    const { id_solicitud, estado_estudio_mercado } = req.body;
-
-    if (!id_solicitud) {
-      return res.status(400).json({
-        ok: false,
-        msg: 'Falta id_solicitud'
-      });
-    }
-
-    const updateFields: any = { estatus_id: 2 };
-    if (estado_estudio_mercado) {
-      updateFields.estado_estudio_mercado = estado_estudio_mercado;
-    }
-
-    await AdqSolicitudes.update(
-      updateFields,
-      {
-        where: {
-          id_solicitud: id_solicitud
-        }
-      }
-    );
-
-    const actualizada = await AdqSolicitudes.findByPk(id_solicitud);
-
-      console.log('SOLICITUD ACTUALIZADA =>', actualizada?.toJSON());
-
-    return res.status(200).json({
-      ok: true,
-      msg: 'Estudio de mercado guardado correctamente',
-      data: req.body
-    });
-
+    const { id } = req.params;
+    const estudio = await AdqEstudioMercado.findOne({ where: { id_solicitud: id } });
+    return res.json({ ok: true, data: { estudio: estudio ?? null } });
   } catch (error) {
-    console.error('ERROR ESTUDIO MERCADO =>', error);
-
-    return res.status(500).json({
-      ok: false,
-      msg: 'Error al guardar estudio de mercado'
-    });
+    console.error('ERROR getEstudioMercadoById =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al obtener estudio de mercado' });
   }
+};
+
+export const createEstudioMercado = async (req: Request, res: Response): Promise<any> => {
+  const {
+    id_solicitud,
+    estado_estudio_mercado,
+    tipo_solicitud,
+    tipo_contratacion,
+    descripcion_bien_servicio,
+    valor_estudio_mercado,
+    monto_sabys,
+    contratacion_plurianual,
+    monto_2026, monto_2027, monto_2028, monto_2029,
+  } = req.body;
+
+  if (!id_solicitud) {
+    return res.status(400).json({ ok: false, msg: 'Falta id_solicitud' });
+  }
+
+  // ── 1. Avanza estatus (esta columna siempre existe) ───────────────────────
+  try {
+    await AdqSolicitudes.update({ estatus_id: 2 }, { where: { id_solicitud } });
+  } catch (e: any) {
+    console.error('[EM] Error al actualizar estatus_id:', e?.message);
+    return res.status(500).json({ ok: false, msg: 'Error al actualizar estatus de la solicitud.', detail: e?.message });
+  }
+
+  // ── 2. Actualiza semáforo en adq_solicitudes (columna puede no existir aún) ─
+  if (estado_estudio_mercado) {
+    try {
+      await AdqSolicitudes.update({ estado_estudio_mercado }, { where: { id_solicitud } });
+    } catch (e: any) {
+      console.warn('[EM] estado_estudio_mercado no guardado (¿ejecutaste add_estado_estudio_mercado.sql?):', e?.message);
+    }
+  }
+
+  // ── 3. Upsert en adq_estudio_mercado ─────────────────────────────────────
+  const n = (v: any) => (v != null && v !== '' ? Number(v) : null);
+  const estudioData = {
+    tipo_solicitud:            tipo_solicitud            || null,
+    tipo_contratacion:         tipo_contratacion         || null,
+    descripcion_bien_servicio: descripcion_bien_servicio || null,
+    valor_estudio_mercado:     n(valor_estudio_mercado),
+    estatus_estudio:           estado_estudio_mercado    || null,
+    monto_sabys:               n(monto_sabys),
+    contratacion_plurianual:   contratacion_plurianual   || null,
+    monto_2026:                n(monto_2026),
+    monto_2027:                n(monto_2027),
+    monto_2028:                n(monto_2028),
+    monto_2029:                n(monto_2029),
+  };
+
+  try {
+    const existente = await AdqEstudioMercado.findOne({ where: { id_solicitud } });
+    if (existente) {
+      await existente.update(estudioData);
+    } else {
+      await AdqEstudioMercado.create({ id_solicitud: Number(id_solicitud), ...estudioData });
+    }
+  } catch (e: any) {
+    console.error('[EM] Error en adq_estudio_mercado:', e?.message);
+    const msg = (e?.message ?? '').toLowerCase();
+    if (msg.includes("doesn't exist") || msg.includes('no existe')) {
+      return res.status(500).json({ ok: false, msg: 'La tabla adq_estudio_mercado no existe. Ejecuta alter_adq_estudio_mercado.sql.', detail: e?.message });
+    }
+    if (msg.includes("unknown column") || msg.includes("doesn't have a default")) {
+      return res.status(500).json({ ok: false, msg: 'Faltan columnas en adq_estudio_mercado. Ejecuta alter_adq_estudio_mercado.sql.', detail: e?.message });
+    }
+    return res.status(500).json({ ok: false, msg: 'Error al guardar estudio de mercado.', detail: e?.message });
+  }
+
+  return res.status(200).json({ ok: true, msg: 'Estudio de mercado guardado correctamente' });
 };
 
 export const getAfectacionById = async (req: Request, res: Response): Promise<any> => {
@@ -441,10 +491,34 @@ export const saveAfectacionPresupuestal = async (req: Request, res: Response): P
 export const getProcedimientoById = async (req: Request, res: Response): Promise<any> => {
   try {
     const { id } = req.params;
-    const [solicitud, proc] = await Promise.all([
+    const [sol, proc] = await Promise.all([
       AdqSolicitudes.findByPk(id),
       AdqProcedimientoAdquisitivo.findOne({ where: { id_solicitud: id } }),
     ]);
+
+    // Lookups de catálogos en paralelo para mostrar nombres en la vista
+    const item = sol ? sol.toJSON() as any : null;
+    if (item) {
+      const [dep, cc, opd, cap, sub, pg, pe] = await Promise.all([
+        item.id_dependencia       ? AdqDependencias.findByPk(item.id_dependencia)             : Promise.resolve(null),
+        item.id_centro_costo      ? AdqCentrosCosto.findByPk(item.id_centro_costo)            : Promise.resolve(null),
+        item.id_opd               ? AdqOrganismosOPDS.findByPk(item.id_opd)                  : Promise.resolve(null),
+        item.id_capitulo          ? AdqCatCapitulos.findByPk(item.id_capitulo)                : Promise.resolve(null),
+        item.id_subcapitulo       ? AdqCatSubcapitulos.findByPk(item.id_subcapitulo)          : Promise.resolve(null),
+        item.id_partida_generica  ? AdqCatPartidasGenericas.findByPk(item.id_partida_generica): Promise.resolve(null),
+        item.id_partida_especifica? AdqCatPartidasEspecificas.findByPk(item.id_partida_especifica): Promise.resolve(null),
+      ]);
+      const n = (m: any, f = 'nombre') => m?.getDataValue(f) ?? null;
+      const cn = (m: any) => m ? `${n(m,'codigo')} — ${n(m,'nombre')}` : null;
+      item.dependencia_nombre          = n(dep);
+      item.centro_costo_nombre         = cn(cc);
+      item.opd_nombre                  = cn(opd);
+      item.capitulo_nombre             = cn(cap);
+      item.subcapitulo_nombre          = cn(sub);
+      item.partida_generica_nombre     = cn(pg);
+      item.partida_especifica_nombre   = cn(pe);
+      item.origen_recurso_nombre       = getOrigenRecursoNombre(item.id_origen_recurso);
+    }
 
     // Mapeo inverso: columnas BD → nombres del form
     const procedimiento = proc ? {
@@ -458,7 +532,7 @@ export const getProcedimientoById = async (req: Request, res: Response): Promise
       dictamen_procedencia: proc.dictamen_procedencia === true ? 'SI' : (proc.dictamen_procedencia === false ? 'NO' : null),
     } : null;
 
-    return res.json({ ok: true, data: { solicitud, procedimiento } });
+    return res.json({ ok: true, data: { solicitud: item, procedimiento } });
   } catch (error) {
     console.error('ERROR getProcedimientoById =>', error);
     return res.status(500).json({ ok: false, msg: 'Error al obtener procedimiento' });

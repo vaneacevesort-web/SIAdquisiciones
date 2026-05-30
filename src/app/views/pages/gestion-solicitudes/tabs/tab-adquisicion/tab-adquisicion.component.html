@@ -32,38 +32,67 @@
       }
     </div>
 
-    <div class="col-md-4">
-      <label class="form-label d-block">Dictamen de Procedencia</label>
-      <div class="d-flex gap-3 mt-2">
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" id="gs_dictProcSi" value="SI" formControlName="dictamen_procedencia">
-          <label class="form-check-label" for="gs_dictProcSi">Sí</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" id="gs_dictProcNo" value="NO" formControlName="dictamen_procedencia">
-          <label class="form-check-label" for="gs_dictProcNo">No</label>
+    @if (esAdjudicacionDirecta) {
+      <div class="col-12">
+        <label class="form-label">Dictamen de Procedencia <span class="text-danger">*</span></label>
+        <p class="text-muted small mb-2">Adjunta la URL o el archivo del dictamen de procedencia.</p>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="form-label small text-muted"><i class="feather icon-link me-1"></i>Liga / URL</label>
+            <input type="url" class="form-control" placeholder="https://..." formControlName="dictamen_procedencia_url">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small text-muted"><i class="feather icon-paperclip me-1"></i>o Adjuntar archivo</label>
+            <input type="file" class="form-control" accept=".pdf,.doc,.docx,.jpg,.png"
+              (change)="onDictamenFileChange($event)" [disabled]="readonly">
+            @if (dictamenNombreArchivo) {
+              <small class="text-success mt-1 d-block">
+                <i class="feather icon-check-circle me-1"></i>{{ dictamenNombreArchivo }}
+              </small>
+            }
+          </div>
         </div>
       </div>
+    }
+
+    <div class="col-md-4">
+      <label class="form-label">Responsable del Procedimiento <span class="text-danger">*</span></label>
+      <input type="text" class="form-control" placeholder="Nombre del responsable"
+        formControlName="responsable"
+        [class.is-invalid]="form.get('responsable')?.invalid && form.get('responsable')?.touched">
+      @if (form.get('responsable')?.invalid && form.get('responsable')?.touched) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
     </div>
 
     <div class="col-md-4">
-      <label class="form-label">Responsable del Procedimiento</label>
-      <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="responsable">
+      <label class="form-label">No. de Procedimiento <span class="text-danger">*</span></label>
+      <input type="text" class="form-control" placeholder="Ej. LA-000-000-000"
+        formControlName="no_procedimiento"
+        [class.is-invalid]="form.get('no_procedimiento')?.invalid && form.get('no_procedimiento')?.touched">
+      @if (form.get('no_procedimiento')?.invalid && form.get('no_procedimiento')?.touched) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
     </div>
 
     <div class="col-md-4">
-      <label class="form-label">No. de Procedimiento</label>
-      <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="no_procedimiento">
+      <label class="form-label">Convocatoria / Invitación (URL) <span class="text-danger">*</span></label>
+      <input type="url" class="form-control" placeholder="https://..."
+        formControlName="convocatoria_url"
+        [class.is-invalid]="form.get('convocatoria_url')?.invalid && form.get('convocatoria_url')?.touched">
+      @if (form.get('convocatoria_url')?.invalid && form.get('convocatoria_url')?.touched) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
     </div>
 
     <div class="col-md-4">
-      <label class="form-label">Convocatoria / Invitación (URL)</label>
-      <input type="url" class="form-control" placeholder="https://..." formControlName="convocatoria_url">
-    </div>
-
-    <div class="col-md-4">
-      <label class="form-label">Medio de Publicación</label>
-      <input type="text" class="form-control" placeholder="Compranet, DOF, etc." formControlName="medio_publicacion">
+      <label class="form-label">Medio de Publicación <span class="text-danger">*</span></label>
+      <input type="text" class="form-control" placeholder="Compranet, DOF, etc."
+        formControlName="medio_publicacion"
+        [class.is-invalid]="form.get('medio_publicacion')?.invalid && form.get('medio_publicacion')?.touched">
+      @if (form.get('medio_publicacion')?.invalid && form.get('medio_publicacion')?.touched) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
     </div>
 
   </div>
@@ -115,37 +144,4 @@
       <input type="date" class="form-control" formControlName="fecha_dictaminacion">
     </div>
     <div class="col-md-3">
-      <label class="form-label">Hora</label>
-      <input type="time" class="form-control" formControlName="hora_dictaminacion">
-    </div>
-
-    <div class="col-md-6">
-      <label class="form-label">Fecha de Sesión del Subcomité Revisor</label>
-      <input type="date" class="form-control" formControlName="fecha_sesion_subcomite">
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">Hora</label>
-      <input type="time" class="form-control" formControlName="hora_sesion_subcomite">
-    </div>
-
-    <div class="col-md-6">
-      <label class="form-label">Fecha de Fallo</label>
-      <input type="date" class="form-control" formControlName="fecha_fallo">
-    </div>
-    <div class="col-md-3">
-      <label class="form-label">Hora</label>
-      <input type="time" class="form-control" formControlName="hora_fallo">
-    </div>
-
-  </div>
-
-  @if (!readonly) {
-    <div class="acciones mt-4 d-flex gap-2">
-      <button type="button" class="btn btn-primary px-4" (click)="guardar()" [disabled]="guardando">
-        <i class="feather icon-save me-1"></i> {{ guardando ? 'Guardando...' : 'Guardar' }}
-      </button>
-      <button type="button" class="btn btn-outline-secondary" (click)="limpiar()">Limpiar</button>
-    </div>
-  }
-
-</form>
+      <label cl

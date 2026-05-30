@@ -23,11 +23,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSolicitudesAfectacion = exports.getSolicitudesCola = exports.getKpis = exports.saveAdjudicacion = exports.getAdjudicacionById = exports.saveProcedimientoAdquisitivo = exports.getProcedimientoById = exports.saveAfectacionPresupuestal = exports.getAfectacionById = exports.createEstudioMercado = exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
+exports.getSolicitudesAfectacion = exports.getSolicitudesCola = exports.getKpis = exports.saveAdjudicacion = exports.getAdjudicacionById = exports.saveProcedimientoAdquisitivo = exports.getProcedimientoById = exports.saveAfectacionPresupuestal = exports.getAfectacionById = exports.createEstudioMercado = exports.getEstudioMercadoById = exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
 const AdqDependencias_1 = __importDefault(require("../models/AdqDependencias"));
 const AdqCentrosCosto_1 = __importDefault(require("../models/AdqCentrosCosto"));
 const AdqOrganismosOPDS_1 = __importDefault(require("../models/AdqOrganismosOPDS"));
 const AdqCatCapitulos_1 = __importDefault(require("../models/AdqCatCapitulos"));
+const AdqCatSubcapitulos_1 = __importDefault(require("../models/AdqCatSubcapitulos"));
 const AdqCatPartidasGenericas_1 = __importDefault(require("../models/AdqCatPartidasGenericas"));
 const AdqCatPartidasEspecificas_1 = __importDefault(require("../models/AdqCatPartidasEspecificas"));
 const sequelize_1 = require("sequelize");
@@ -41,6 +42,7 @@ const AdqAfectacionPresupuestal_1 = __importDefault(require("../models/AdqAfecta
 const AdqBienesServicios_1 = __importDefault(require("../models/AdqBienesServicios"));
 const AdqAfectacionFuentes_1 = __importDefault(require("../models/AdqAfectacionFuentes"));
 const AdqProcedimientoAdquisitivo_1 = __importDefault(require("../models/AdqProcedimientoAdquisitivo"));
+const AdqEstudioMercado_1 = __importDefault(require("../models/AdqEstudioMercado"));
 dotenv_1.default.config();
 const getRegistros = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -123,6 +125,10 @@ const deleteRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function*
     });
 });
 exports.deleteRegistro = deleteRegistro;
+function safeId(val) {
+    const n = parseInt(val, 10);
+    return Number.isFinite(n) && n > 0 ? n : null;
+}
 function getOrigenRecursoNombre(id) {
     switch (Number(id)) {
         case 1: return 'Estatal';
@@ -133,6 +139,7 @@ function getOrigenRecursoNombre(id) {
     }
 }
 const saveRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const { body } = req;
     console.log('BODY RECIBIDO:', body);
     try {
@@ -150,14 +157,14 @@ const saveRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             fecha_ingreso: fechaIngreso,
             id_origen_recurso: Number(origenRecurso),
             tipo_solicitud: body.tipo_solicitud || 'BIEN',
-            id_dependencia: body.id_dependencia ? Number(body.id_dependencia) : null,
-            id_opd: body.id_opd ? Number(body.id_opd) : null,
-            id_organo_desconcentrado: body.id_organo_desconcentrado ? Number(body.id_organo_desconcentrado) : null,
-            id_centro_costo: body.id_centro_costo ? Number(body.id_centro_costo) : null,
-            id_capitulo: body.id_capitulo ? Number(body.id_capitulo) : null,
-            id_subcapitulo: body.id_subcapitulo ? Number(body.id_subcapitulo) : null,
-            id_partida_generica: body.id_partida_generica ? Number(body.id_partida_generica) : null,
-            id_partida_especifica: body.id_partida_especifica ? Number(body.id_partida_especifica) : null,
+            id_dependencia: safeId(body.id_dependencia),
+            id_opd: safeId(body.id_opd),
+            id_organo_desconcentrado: safeId(body.id_organo_desconcentrado),
+            id_centro_costo: safeId(body.id_centro_costo),
+            id_capitulo: safeId(body.id_capitulo),
+            id_subcapitulo: safeId(body.id_subcapitulo),
+            id_partida_generica: safeId(body.id_partida_generica),
+            id_partida_especifica: safeId(body.id_partida_especifica),
             user_id: body.userId || body.user_id || null,
             estatus_id: 1,
         });
@@ -171,11 +178,16 @@ const saveRegistro = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         });
     }
     catch (error) {
-        console.log('ERROR EN saveRegistro:', error);
-        return res.status(500).json({
-            msg: 'Ocurrió un error al cargar',
-            error
-        });
+        if (error.name === 'SequelizeUniqueConstraintError' ||
+            ((_a = error.original) === null || _a === void 0 ? void 0 : _a.code) === 'ER_DUP_ENTRY') {
+            return res.status(409).json({
+                ok: false,
+                code: 'FOLIO_DUPLICADO',
+                msg: 'El folio interno ya existe. Ingresa un folio diferente.',
+            });
+        }
+        console.error('ERROR EN saveRegistro:', error);
+        return res.status(500).json({ ok: false, msg: 'Ocurrió un error al guardar la solicitud.' });
     }
 });
 exports.saveRegistro = saveRegistro;
@@ -256,40 +268,77 @@ const getestatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     });
 });
 exports.getestatus = getestatus;
-const createEstudioMercado = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getEstudioMercadoById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log('BODY ESTUDIO MERCADO =>', req.body);
-        const { id_solicitud, estado_estudio_mercado } = req.body;
-        if (!id_solicitud) {
-            return res.status(400).json({
-                ok: false,
-                msg: 'Falta id_solicitud'
-            });
-        }
-        const updateFields = { estatus_id: 2 };
-        if (estado_estudio_mercado) {
-            updateFields.estado_estudio_mercado = estado_estudio_mercado;
-        }
-        yield AdqSolicitudes_1.default.update(updateFields, {
-            where: {
-                id_solicitud: id_solicitud
-            }
-        });
-        const actualizada = yield AdqSolicitudes_1.default.findByPk(id_solicitud);
-        console.log('SOLICITUD ACTUALIZADA =>', actualizada === null || actualizada === void 0 ? void 0 : actualizada.toJSON());
-        return res.status(200).json({
-            ok: true,
-            msg: 'Estudio de mercado guardado correctamente',
-            data: req.body
-        });
+        const { id } = req.params;
+        const estudio = yield AdqEstudioMercado_1.default.findOne({ where: { id_solicitud: id } });
+        return res.json({ ok: true, data: { estudio: estudio !== null && estudio !== void 0 ? estudio : null } });
     }
     catch (error) {
-        console.error('ERROR ESTUDIO MERCADO =>', error);
-        return res.status(500).json({
-            ok: false,
-            msg: 'Error al guardar estudio de mercado'
-        });
+        console.error('ERROR getEstudioMercadoById =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al obtener estudio de mercado' });
     }
+});
+exports.getEstudioMercadoById = getEstudioMercadoById;
+const createEstudioMercado = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const { id_solicitud, estado_estudio_mercado, tipo_solicitud, tipo_contratacion, descripcion_bien_servicio, valor_estudio_mercado, monto_sabys, contratacion_plurianual, monto_2026, monto_2027, monto_2028, monto_2029, } = req.body;
+    if (!id_solicitud) {
+        return res.status(400).json({ ok: false, msg: 'Falta id_solicitud' });
+    }
+    // ── 1. Avanza estatus (esta columna siempre existe) ───────────────────────
+    try {
+        yield AdqSolicitudes_1.default.update({ estatus_id: 2 }, { where: { id_solicitud } });
+    }
+    catch (e) {
+        console.error('[EM] Error al actualizar estatus_id:', e === null || e === void 0 ? void 0 : e.message);
+        return res.status(500).json({ ok: false, msg: 'Error al actualizar estatus de la solicitud.', detail: e === null || e === void 0 ? void 0 : e.message });
+    }
+    // ── 2. Actualiza semáforo en adq_solicitudes (columna puede no existir aún) ─
+    if (estado_estudio_mercado) {
+        try {
+            yield AdqSolicitudes_1.default.update({ estado_estudio_mercado }, { where: { id_solicitud } });
+        }
+        catch (e) {
+            console.warn('[EM] estado_estudio_mercado no guardado (¿ejecutaste add_estado_estudio_mercado.sql?):', e === null || e === void 0 ? void 0 : e.message);
+        }
+    }
+    // ── 3. Upsert en adq_estudio_mercado ─────────────────────────────────────
+    const n = (v) => (v != null && v !== '' ? Number(v) : null);
+    const estudioData = {
+        tipo_solicitud: tipo_solicitud || null,
+        tipo_contratacion: tipo_contratacion || null,
+        descripcion_bien_servicio: descripcion_bien_servicio || null,
+        valor_estudio_mercado: n(valor_estudio_mercado),
+        estatus_estudio: estado_estudio_mercado || null,
+        monto_sabys: n(monto_sabys),
+        contratacion_plurianual: contratacion_plurianual || null,
+        monto_2026: n(monto_2026),
+        monto_2027: n(monto_2027),
+        monto_2028: n(monto_2028),
+        monto_2029: n(monto_2029),
+    };
+    try {
+        const existente = yield AdqEstudioMercado_1.default.findOne({ where: { id_solicitud } });
+        if (existente) {
+            yield existente.update(estudioData);
+        }
+        else {
+            yield AdqEstudioMercado_1.default.create(Object.assign({ id_solicitud: Number(id_solicitud) }, estudioData));
+        }
+    }
+    catch (e) {
+        console.error('[EM] Error en adq_estudio_mercado:', e === null || e === void 0 ? void 0 : e.message);
+        const msg = ((_a = e === null || e === void 0 ? void 0 : e.message) !== null && _a !== void 0 ? _a : '').toLowerCase();
+        if (msg.includes("doesn't exist") || msg.includes('no existe')) {
+            return res.status(500).json({ ok: false, msg: 'La tabla adq_estudio_mercado no existe. Ejecuta alter_adq_estudio_mercado.sql.', detail: e === null || e === void 0 ? void 0 : e.message });
+        }
+        if (msg.includes("unknown column") || msg.includes("doesn't have a default")) {
+            return res.status(500).json({ ok: false, msg: 'Faltan columnas en adq_estudio_mercado. Ejecuta alter_adq_estudio_mercado.sql.', detail: e === null || e === void 0 ? void 0 : e.message });
+        }
+        return res.status(500).json({ ok: false, msg: 'Error al guardar estudio de mercado.', detail: e === null || e === void 0 ? void 0 : e.message });
+    }
+    return res.status(200).json({ ok: true, msg: 'Estudio de mercado guardado correctamente' });
 });
 exports.createEstudioMercado = createEstudioMercado;
 const getAfectacionById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -393,13 +442,36 @@ exports.saveAfectacionPresupuestal = saveAfectacionPresupuestal;
 const getProcedimientoById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const [solicitud, proc] = yield Promise.all([
+        const [sol, proc] = yield Promise.all([
             AdqSolicitudes_1.default.findByPk(id),
             AdqProcedimientoAdquisitivo_1.default.findOne({ where: { id_solicitud: id } }),
         ]);
+        // Lookups de catálogos en paralelo para mostrar nombres en la vista
+        const item = sol ? sol.toJSON() : null;
+        if (item) {
+            const [dep, cc, opd, cap, sub, pg, pe] = yield Promise.all([
+                item.id_dependencia ? AdqDependencias_1.default.findByPk(item.id_dependencia) : Promise.resolve(null),
+                item.id_centro_costo ? AdqCentrosCosto_1.default.findByPk(item.id_centro_costo) : Promise.resolve(null),
+                item.id_opd ? AdqOrganismosOPDS_1.default.findByPk(item.id_opd) : Promise.resolve(null),
+                item.id_capitulo ? AdqCatCapitulos_1.default.findByPk(item.id_capitulo) : Promise.resolve(null),
+                item.id_subcapitulo ? AdqCatSubcapitulos_1.default.findByPk(item.id_subcapitulo) : Promise.resolve(null),
+                item.id_partida_generica ? AdqCatPartidasGenericas_1.default.findByPk(item.id_partida_generica) : Promise.resolve(null),
+                item.id_partida_especifica ? AdqCatPartidasEspecificas_1.default.findByPk(item.id_partida_especifica) : Promise.resolve(null),
+            ]);
+            const n = (m, f = 'nombre') => { var _a; return (_a = m === null || m === void 0 ? void 0 : m.getDataValue(f)) !== null && _a !== void 0 ? _a : null; };
+            const cn = (m) => m ? `${n(m, 'codigo')} — ${n(m, 'nombre')}` : null;
+            item.dependencia_nombre = n(dep);
+            item.centro_costo_nombre = cn(cc);
+            item.opd_nombre = cn(opd);
+            item.capitulo_nombre = cn(cap);
+            item.subcapitulo_nombre = cn(sub);
+            item.partida_generica_nombre = cn(pg);
+            item.partida_especifica_nombre = cn(pe);
+            item.origen_recurso_nombre = getOrigenRecursoNombre(item.id_origen_recurso);
+        }
         // Mapeo inverso: columnas BD → nombres del form
         const procedimiento = proc ? Object.assign(Object.assign({}, proc.toJSON()), { fecha_sesion_comite: proc.fecha_sesion_comite_analisis, hora_sesion_comite: proc.hora_sesion_comite_analisis, fecha_contra_oferta: proc.fecha_contraoferta, hora_contra_oferta: proc.hora_contraoferta, fecha_dictaminacion: proc.fecha_dictaminacion_comite, hora_dictaminacion: proc.hora_dictaminacion_comite, dictamen_procedencia: proc.dictamen_procedencia === true ? 'SI' : (proc.dictamen_procedencia === false ? 'NO' : null) }) : null;
-        return res.json({ ok: true, data: { solicitud, procedimiento } });
+        return res.json({ ok: true, data: { solicitud: item, procedimiento } });
     }
     catch (error) {
         console.error('ERROR getProcedimientoById =>', error);

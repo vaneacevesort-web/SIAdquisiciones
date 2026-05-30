@@ -20,13 +20,23 @@
   <div class="row g-3 mb-3">
 
     <div class="col-md-4">
-      <label class="form-label">Folio de Solicitud (CA)</label>
-      <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="folio_ca">
+      <label class="form-label">Folio de Solicitud (CA) <span class="text-danger">*</span></label>
+      <input type="text" class="form-control" placeholder="Ej. CA-000-000 o F-00-000-000"
+        formControlName="folio_ca"
+        [class.is-invalid]="form.get('folio_ca')?.invalid && form.get('folio_ca')?.touched">
+      @if (form.get('folio_ca')?.invalid && form.get('folio_ca')?.touched) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
     </div>
 
     <div class="col-md-4">
-      <label class="form-label">Fecha de Liberación de Estudio de Mercado</label>
-      <input type="date" class="form-control" formControlName="fecha_liberacion_estudio">
+      <label class="form-label">Fecha de Liberación de Estudio de Mercado <span class="text-danger">*</span></label>
+      <input type="date" class="form-control"
+        formControlName="fecha_liberacion_estudio"
+        [class.is-invalid]="form.get('fecha_liberacion_estudio')?.invalid && form.get('fecha_liberacion_estudio')?.touched">
+      @if (form.get('fecha_liberacion_estudio')?.invalid && form.get('fecha_liberacion_estudio')?.touched) {
+        <div class="invalid-feedback">Campo obligatorio</div>
+      }
     </div>
 
     <div class="col-md-4">
@@ -136,7 +146,7 @@
     </div>
 
     <div class="mb-3">
-      <label class="form-label d-block">¿Es contrato abierto?</label>
+      <label class="form-label d-block">¿Es contrato abierto? <span class="text-danger">*</span></label>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" id="gs_contratoSi" value="SI" formControlName="contrato_abierto">
         <label class="form-check-label" for="gs_contratoSi">Sí</label>
@@ -145,10 +155,13 @@
         <input class="form-check-input" type="radio" id="gs_contratoNo" value="NO" formControlName="contrato_abierto">
         <label class="form-check-label" for="gs_contratoNo">No</label>
       </div>
+      @if (form.get('contrato_abierto')?.invalid && form.get('contrato_abierto')?.touched) {
+        <div class="text-danger small mt-1">Campo obligatorio</div>
+      }
     </div>
 
     <div class="mb-3">
-      <label class="form-label d-block">¿Es consolidado?</label>
+      <label class="form-label d-block">¿Es consolidado? <span class="text-danger">*</span></label>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" id="gs_consolidadoSi" value="SI" formControlName="consolidado">
         <label class="form-check-label" for="gs_consolidadoSi">Sí</label>
@@ -157,10 +170,13 @@
         <input class="form-check-input" type="radio" id="gs_consolidadoNo" value="NO" formControlName="consolidado">
         <label class="form-check-label" for="gs_consolidadoNo">No</label>
       </div>
+      @if (form.get('consolidado')?.invalid && form.get('consolidado')?.touched) {
+        <div class="text-danger small mt-1">Campo obligatorio</div>
+      }
     </div>
 
     <div class="mb-3">
-      <label class="form-label d-block">Dictamen Técnico</label>
+      <label class="form-label d-block">Dictamen Técnico <span class="text-danger">*</span></label>
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="radio" id="gs_dictamenSi" value="SI" formControlName="dictamen">
         <label class="form-check-label" for="gs_dictamenSi">Sí</label>
@@ -169,6 +185,9 @@
         <input class="form-check-input" type="radio" id="gs_dictamenNo" value="NO" formControlName="dictamen">
         <label class="form-check-label" for="gs_dictamenNo">No</label>
       </div>
+      @if (form.get('dictamen')?.invalid && form.get('dictamen')?.touched) {
+        <div class="text-danger small mt-1">Campo obligatorio</div>
+      }
 
       @if (form.get('dictamen')?.value === 'SI') {
         <div class="mt-3">

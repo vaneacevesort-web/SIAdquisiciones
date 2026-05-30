@@ -5,7 +5,8 @@ import { Router } from '@angular/router';
 import { RegistroService } from '../../../../service/registro.service';
 import { UserService } from '../../../../service/user.service';
 
-type TipoUnidad = 'DEPENDENCIA' | 'OPD' | null;
+type TipoUnidad    = 'DEPENDENCIA' | 'OPD' | null;
+type TipoOrganismo = 'DESCENTRALIZADO' | 'DESCONCENTRADO' | null;
 
 @Component({
   selector: 'app-form-nueva-solicitud',
@@ -21,7 +22,8 @@ export class FormNuevaSolicitudComponent implements OnInit {
   mensajeError = '';
 
   /** Tipo de unidad solicitante seleccionado (no se envía al backend) */
-  tipoUnidad: TipoUnidad = null;
+  tipoUnidad:    TipoUnidad    = null;
+  tipoOrganismo: TipoOrganismo = null;
 
   dependencias:         any[] = [];
   centrosCosto:         any[] = [];
@@ -47,6 +49,7 @@ export class FormNuevaSolicitudComponent implements OnInit {
   get isDependencia(): boolean { return this.tipoUnidad === 'DEPENDENCIA'; }
   get isOPD():         boolean { return this.tipoUnidad === 'OPD'; }
 
+
   private fb              = inject(FormBuilder);
   private router          = inject(Router);
   private registroService = inject(RegistroService);
@@ -71,7 +74,15 @@ export class FormNuevaSolicitudComponent implements OnInit {
     });
 
     // Cargar catálogos independientes en paralelo
-    this.registroService.getDependencias().subscribe({ next: r => this.dependencias = r?.data ?? [] });
+    this.registroService.getDependencias().subscribe({
+      next: r => {
+        const todas = r?.data ?? [];
+        this.dependencias = todas.filter(
+          (d: any) => !d.nombre?.toUpperCase().includes('ORGANISMOS OPD')
+        );
+        console.log('[dependencias cargadas]', this.dependencias.map((d: any) => d.nombre));
+      }
+    });
     this.registroService.getOrganismosOPDS().subscribe({ next: r => this.opds = r?.data ?? [] });
     this.registroService.getOrganosDesconcentrados().subscribe({ next: r => this.organosDesconc = r?.data ?? [] });
     this.registroService.getCapitulos().subscribe({ next: r => this.capitulos = r?.data ?? [] });
@@ -81,9 +92,9 @@ export class FormNuevaSolicitudComponent implements OnInit {
 
   onTipoUnidadChange(tipo: TipoUnidad): void {
     if (this.tipoUnidad === tipo) return;
-    this.tipoUnidad = tipo;
-    // Limpiar ambas selecciones y centros de costo al cambiar tipo
-    this.centrosCosto = [];
+    this.tipoUnidad    = tipo;
+    this.tipoOrganismo = null;
+    this.centrosCosto  = [];
     this.form.patchValue({
       id_dependencia:           null,
       id_opd:                   null,
@@ -92,22 +103,20 @@ export class FormNuevaSolicitudComponent implements OnInit {
     });
   }
 
+  // ── Tipo de organismo OPD ────────────────────────────────────────────────
+
+  onTipoOrganismoChange(tipo: TipoOrganismo): void {
+    if (this.tipoOrganismo === tipo) return;
+    this.tipoOrganismo = tipo;
+    this.form.patchValue({
+      id_opd:                   null,
+      id_organo_desconcentrado: null,
+    });
+  }
+
   // ── Cambio de dependencia ────────────────────────────────────────────────
 
   onDependenciaChange(event: Event): void {
-    const id = Number((event.target as HTMLSelectElement).value) || null;
-    this.centrosCosto = [];
-    this.form.patchValue({ id_centro_costo: null });
-    if (id) {
-      this.registroService.getCentrosCosto(id).subscribe({
-        next: r => this.centrosCosto = r?.data ?? [],
-      });
-    }
-  }
-
-  // ── Cambio de OPD ───────────────────────────────────────────────────────
-
-  onOPDChange(event: Event): void {
     const id = Number((event.target as HTMLSelectElement).value) || null;
     this.centrosCosto = [];
     this.form.patchValue({ id_centro_costo: null });
@@ -153,6 +162,7 @@ export class FormNuevaSolicitudComponent implements OnInit {
   // ── Guardar ──────────────────────────────────────────────────────────────
 
   guardar(): void {
+    if (this.guardando) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.mensajeError = 'Completa los campos obligatorios.';
@@ -175,9 +185,16 @@ export class FormNuevaSolicitudComponent implements OnInit {
         this.router.navigate(['/gestion-solicitudes', idSolicitud]);
       },
       error: (err) => {
-        console.error('ERROR al guardar solicitud =>', err);
-        this.mensajeError = err?.error?.msg ?? 'Ocurrió un error al guardar. Intente de nuevo.';
         this.guardando = false;
+        if (err?.status === 409 || err?.error?.code === 'FOLIO_DUPLICADO') {
+          this.mensajeError = 'El folio interno ya existe. Ingresa un folio diferente.';
+          const folioCtrl = this.form.get('folio');
+          folioCtrl?.setErrors({ duplicado: true });
+          folioCtrl?.markAsTouched();
+        } else {
+          console.error('ERROR al guardar solicitud =>', err);
+          this.mensajeError = err?.error?.msg ?? 'Ocurrió un error al guardar. Intente de nuevo.';
+        }
       },
     });
   }
@@ -186,12 +203,13 @@ export class FormNuevaSolicitudComponent implements OnInit {
 
   limpiar(): void {
     const hoy = new Date().toISOString().split('T')[0];
-    this.tipoUnidad = null;
+    this.tipoUnidad         = null;
+    this.tipoOrganismo      = null;
     this.form.reset({ fecha_ingreso: hoy });
-    this.centrosCosto       = [];
-    this.subcapitulos       = [];
-    this.partidasGenericas  = [];
+    this.centrosCosto        = [];
+    this.subcapitulos        = [];
+    this.partidasGenericas   = [];
     this.partidasEspecificas = [];
-    this.mensajeError       = '';
+    this.mensajeError        = '';
   }
 }

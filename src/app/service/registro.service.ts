@@ -19,6 +19,10 @@ export class RegistroService {
   saveRegistro(data: any): Observable<any> {
     return this.http.post<any>(`${this.myAppUrl}${this.myAPIUrl}/create`, data);
   }
+  getEstudioMercado(id: number): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/estudio-mercado/${id}`);
+  }
+
   saveEstudioMercado(data: any): Observable<any> {
     return this.http.post<any>(`${this.myAppUrl}${this.myAPIUrl}/estudio-mercado`, data);
   }

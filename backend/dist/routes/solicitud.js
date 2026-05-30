@@ -10,6 +10,7 @@ router.post("/api/solicitud/edit/:id", solicitud_1.getRegistro);
 router.put("/api/solicitud/update/:id", solicitud_1.putRegistro);
 router.post("/api/solicitud/getsolicitudes", solicitud_1.getSolicitudes);
 router.get("/api/solicitud/getestatus/:id", solicitud_1.getestatus);
+router.get("/api/solicitud/estudio-mercado/:id", solicitud_1.getEstudioMercadoById);
 router.post("/api/solicitud/estudio-mercado", solicitud_1.createEstudioMercado);
 router.get("/api/solicitud/kpis", solicitud_1.getKpis);
 router.get("/api/solicitud/cola/:estatus", solicitud_1.getSolicitudesCola);
