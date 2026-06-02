@@ -1,3 +1,28 @@
+@if (guardadoExitoso) {
+  <div class="ta-success-panel">
+    <div class="ta-success-icon">
+      <i class="feather icon-check-circle"></i>
+    </div>
+    <div class="ta-success-body">
+      <h5 class="ta-success-title">Solicitud guardada correctamente</h5>
+      <p class="ta-success-subtitle">
+        El expediente ha sido registrado y finalizado exitosamente.
+      </p>
+    </div>
+    <div class="ta-success-actions">
+      <button type="button" class="ta-btn-success-sec" (click)="irInicio()">
+        <i class="feather icon-home me-1"></i>Ir al inicio
+      </button>
+      <button type="button" class="ta-btn-success-pri" (click)="irSolicitudes()">
+        <i class="feather icon-list me-1"></i>Regresar a solicitudes
+      </button>
+      <button type="button" class="ta-btn-success-ghost" (click)="guardadoExitoso = false">
+        <i class="feather icon-eye me-1"></i>Seguir viendo esta solicitud
+      </button>
+    </div>
+  </div>
+}
+
 @if (cargando) {
   <div class="text-center py-5 text-muted">
     <div class="spinner-border spinner-border-sm" style="color:#9b003f;"></div>
@@ -37,53 +62,86 @@
       <div class="row g-3">
 
         <div class="col-md-4">
-          <label class="ta-label">No. de Procedimiento</label>
+          <label class="ta-label">No. de Procedimiento <span class="text-danger">*</span></label>
           <input type="text" class="form-control ta-control" placeholder="Ej. CADM-001/2026"
-            formControlName="no_procedimiento">
+            formControlName="no_procedimiento"
+            [class.is-invalid]="form.get('no_procedimiento')?.invalid && form.get('no_procedimiento')?.touched">
+          @if (form.get('no_procedimiento')?.invalid && form.get('no_procedimiento')?.touched) {
+            <div class="invalid-feedback">Campo obligatorio</div>
+          }
         </div>
 
         <div class="col-md-4">
-          <label class="ta-label">Proveedor / Razón Social</label>
+          <label class="ta-label">Proveedor / Razón Social <span class="text-danger">*</span></label>
           <input type="text" class="form-control ta-control" placeholder="Nombre o razón social"
-            formControlName="proveedor_razon_social">
+            formControlName="proveedor_razon_social"
+            [class.is-invalid]="form.get('proveedor_razon_social')?.invalid && form.get('proveedor_razon_social')?.touched">
+          @if (form.get('proveedor_razon_social')?.invalid && form.get('proveedor_razon_social')?.touched) {
+            <div class="invalid-feedback">Campo obligatorio</div>
+          }
         </div>
 
         <div class="col-md-4">
-          <label class="ta-label">RFC del Proveedor</label>
+          <label class="ta-label">RFC del Proveedor <span class="text-danger">*</span></label>
           <input type="text" class="form-control ta-control" placeholder="XAXX010101000"
-            formControlName="proveedor_rfc">
+            formControlName="proveedor_rfc"
+            [class.is-invalid]="form.get('proveedor_rfc')?.invalid && form.get('proveedor_rfc')?.touched">
+          @if (form.get('proveedor_rfc')?.invalid && form.get('proveedor_rfc')?.touched) {
+            <div class="invalid-feedback">Campo obligatorio</div>
+          }
         </div>
 
         <div class="col-md-4">
-          <label class="ta-label">Monto Total Adjudicado (IVA incluido)</label>
-          <div class="input-group">
+          <label class="ta-label">Monto Total Adjudicado (IVA incluido) <span class="text-danger">*</span></label>
+          <div class="input-group"
+            [class.is-invalid]="form.get('monto_total_adjudicado_iva')?.invalid && form.get('monto_total_adjudicado_iva')?.touched">
             <span class="input-group-text" style="border-radius:7px 0 0 7px; border-right:0; font-size:0.875rem;">$</span>
             <input type="number" min="0" step="0.01" class="form-control ta-control"
               style="border-radius:0 7px 7px 0; border-left:0;"
-              placeholder="0.00" formControlName="monto_total_adjudicado_iva">
+              placeholder="0.00" formControlName="monto_total_adjudicado_iva"
+              [class.is-invalid]="form.get('monto_total_adjudicado_iva')?.invalid && form.get('monto_total_adjudicado_iva')?.touched">
           </div>
+          @if (form.get('monto_total_adjudicado_iva')?.invalid && form.get('monto_total_adjudicado_iva')?.touched) {
+            <div class="invalid-feedback" style="display:block">Campo obligatorio</div>
+          }
         </div>
 
         <div class="col-md-4">
-          <label class="ta-label">No. de Contrato</label>
+          <label class="ta-label">No. de Contrato <span class="text-danger">*</span></label>
           <input type="text" class="form-control ta-control" placeholder="Número de contrato"
-            formControlName="no_contrato">
+            formControlName="no_contrato"
+            [class.is-invalid]="form.get('no_contrato')?.invalid && form.get('no_contrato')?.touched">
+          @if (form.get('no_contrato')?.invalid && form.get('no_contrato')?.touched) {
+            <div class="invalid-feedback">Campo obligatorio</div>
+          }
         </div>
 
         <div class="col-md-4">
-          <label class="ta-label">Responsable del Procedimiento</label>
+          <label class="ta-label">Responsable del Procedimiento <span class="text-danger">*</span></label>
           <input type="text" class="form-control ta-control" placeholder="Nombre del responsable"
-            formControlName="responsable">
+            formControlName="responsable"
+            [class.is-invalid]="form.get('responsable')?.invalid && form.get('responsable')?.touched">
+          @if (form.get('responsable')?.invalid && form.get('responsable')?.touched) {
+            <div class="invalid-feedback">Campo obligatorio</div>
+          }
         </div>
 
         <div class="col-md-3">
-          <label class="ta-label">Vigencia Inicio</label>
-          <input type="date" class="form-control ta-control" formControlName="vigencia_inicio">
+          <label class="ta-label">Vigencia Inicio <span class="text-danger">*</span></label>
+          <input type="date" class="form-control ta-control" formControlName="vigencia_inicio"
+            [class.is-invalid]="form.get('vigencia_inicio')?.invalid && form.get('vigencia_inicio')?.touched">
+          @if (form.get('vigencia_inicio')?.invalid && form.get('vigencia_inicio')?.touched) {
+            <div class="invalid-feedback">Campo obligatorio</div>
+          }
         </div>
 
         <div class="col-md-3">
-          <label class="ta-label">Vigencia Término</label>
-          <input type="date" class="form-control ta-control" formControlName="vigencia_termino">
+          <label class="ta-label">Vigencia Término <span class="text-danger">*</span></label>
+          <input type="date" class="form-control ta-control" formControlName="vigencia_termino"
+            [class.is-invalid]="form.get('vigencia_termino')?.invalid && form.get('vigencia_termino')?.touched">
+          @if (form.get('vigencia_termino')?.invalid && form.get('vigencia_termino')?.touched) {
+            <div class="invalid-feedback">Campo obligatorio</div>
+          }
         </div>
 
       </div>
@@ -105,29 +163,44 @@
         </div>
 
         <div class="col-md-6">
-          <label class="ta-label">Remanente de Suficiencia Presupuestal</label>
+          <label class="ta-label">Remanente de Suficiencia Presupuestal <span class="text-danger">*</span></label>
           <div class="input-group">
             <span class="input-group-text" style="border-radius:7px 0 0 7px; border-right:0; font-size:0.875rem;">$</span>
             <input type="number" min="0" step="0.01" class="form-control ta-control"
               style="border-radius:0 7px 7px 0; border-left:0;"
-              placeholder="0.00" formControlName="remanente_suficiencia_presupuestal">
+              placeholder="0.00" formControlName="remanente_suficiencia_presupuestal"
+              [class.is-invalid]="form.get('remanente_suficiencia_presupuestal')?.invalid && form.get('remanente_suficiencia_presupuestal')?.touched">
           </div>
+          @if (form.get('remanente_suficiencia_presupuestal')?.invalid && form.get('remanente_suficiencia_presupuestal')?.touched) {
+            <div class="invalid-feedback" style="display:block">Campo obligatorio</div>
+          }
         </div>
 
         <div class="col-md-4">
-          <label class="ta-label">Estatus de Adjudicación</label>
-          <input type="text" class="form-control ta-control" placeholder="Ej. En proceso, Firmado..."
-            formControlName="estatus_adjudicacion">
+          <label class="ta-label">Estatus de Adjudicación <span class="text-danger">*</span></label>
+          <select class="form-select ta-control" formControlName="estatus_adjudicacion"
+            [class.is-invalid]="form.get('estatus_adjudicacion')?.invalid && form.get('estatus_adjudicacion')?.touched">
+            <option [ngValue]="null">Seleccione una opción</option>
+            <option value="ADJUDICADO">Adjudicado</option>
+            <option value="DESIERTA">Desierta</option>
+          </select>
+          @if (form.get('estatus_adjudicacion')?.invalid && form.get('estatus_adjudicacion')?.touched) {
+            <div class="invalid-feedback">Campo obligatorio</div>
+          }
         </div>
 
         <div class="col-md-4">
-          <label class="ta-label">Estatus Estudio de Mercado</label>
-          <select class="form-select ta-control" formControlName="estatus_estudio_mercado_adj">
+          <label class="ta-label">Estatus Estudio de Mercado <span class="text-danger">*</span></label>
+          <select class="form-select ta-control" formControlName="estatus_estudio_mercado_adj"
+            [class.is-invalid]="form.get('estatus_estudio_mercado_adj')?.invalid && form.get('estatus_estudio_mercado_adj')?.touched">
             <option [ngValue]="null">Seleccione una opción</option>
             @for (op of estatusEstudioOpts; track op.value) {
               <option [value]="op.value">{{ op.label }}</option>
             }
           </select>
+          @if (form.get('estatus_estudio_mercado_adj')?.invalid && form.get('estatus_estudio_mercado_adj')?.touched) {
+            <div class="invalid-feedback">Campo obligatorio</div>
+          }
         </div>
 
         <div class="col-md-12">
@@ -148,7 +221,7 @@
       </div>
 
       <div class="mb-3">
-        <label class="ta-label d-block mb-2">¿Existe Reprogramación?</label>
+        <label class="ta-label d-block mb-2">¿Existe Reprogramación? <span class="text-danger">*</span></label>
         <div class="d-flex gap-4">
           <div class="form-check">
             <input class="form-check-input" type="radio" id="ta_reprSi" value="SI"
@@ -161,6 +234,9 @@
             <label class="form-check-label" for="ta_reprNo">No</label>
           </div>
         </div>
+        @if (form.get('existe_reprogramacion')?.invalid && form.get('existe_reprogramacion')?.touched) {
+          <div class="text-danger small mt-1">Campo obligatorio</div>
+        }
       </div>
 
       @if (mostrarReprogramacion) {

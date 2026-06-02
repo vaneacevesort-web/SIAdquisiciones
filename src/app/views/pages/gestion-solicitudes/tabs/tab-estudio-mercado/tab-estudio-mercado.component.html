@@ -28,19 +28,6 @@
   <div class="row g-3">
 
     <div class="col-md-4">
-      <label class="form-label">Tipo de Solicitud <span class="text-danger">*</span></label>
-      <select class="form-select" formControlName="tipoSolicitud"
-        [class.is-invalid]="hasError('tipoSolicitud','required')">
-        <option value="">Selecciona una opción</option>
-        <option value="BIEN">Bien — Adquisición de materiales y suministros</option>
-        <option value="SERVICIO">Servicio — Contratación de servicios generales</option>
-      </select>
-      @if (hasError('tipoSolicitud','required')) {
-        <div class="invalid-feedback">Campo obligatorio</div>
-      }
-    </div>
-
-    <div class="col-md-4">
       <label class="form-label">Tipo de Contratación <span class="text-danger">*</span></label>
       <select class="form-select" formControlName="tipoContratacion"
         [class.is-invalid]="hasError('tipoContratacion','required')">

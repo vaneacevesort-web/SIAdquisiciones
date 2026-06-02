@@ -312,7 +312,6 @@ export const createEstudioMercado = async (req: Request, res: Response): Promise
   const {
     id_solicitud,
     estado_estudio_mercado,
-    tipo_solicitud,
     tipo_contratacion,
     descripcion_bien_servicio,
     valor_estudio_mercado,
@@ -345,7 +344,6 @@ export const createEstudioMercado = async (req: Request, res: Response): Promise
   // ── 3. Upsert en adq_estudio_mercado ─────────────────────────────────────
   const n = (v: any) => (v != null && v !== '' ? Number(v) : null);
   const estudioData = {
-    tipo_solicitud:            tipo_solicitud            || null,
     tipo_contratacion:         tipo_contratacion         || null,
     descripcion_bien_servicio: descripcion_bien_servicio || null,
     valor_estudio_mercado:     n(valor_estudio_mercado),
@@ -585,9 +583,13 @@ export const saveProcedimientoAdquisitivo = async (req: Request, res: Response):
     await AdqSolicitudes.update({ estatus_id: 4 }, { where: { id_solicitud: idSolicitud } });
 
     return res.json({ ok: true, msg: 'Procedimiento adquisitivo guardado correctamente' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('ERROR saveProcedimientoAdquisitivo =>', error);
-    return res.status(500).json({ ok: false, msg: 'Error al guardar procedimiento adquisitivo' });
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error al guardar procedimiento adquisitivo',
+      detail: error?.message ?? String(error),
+    });
   }
 };
 
@@ -650,9 +652,13 @@ export const saveAdjudicacion = async (req: Request, res: Response): Promise<any
     await AdqSolicitudes.update({ estatus_id: 5 }, { where: { id_solicitud: idSolicitud } });
 
     return res.json({ ok: true, msg: 'Adjudicación guardada correctamente' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('ERROR saveAdjudicacion =>', error);
-    return res.status(500).json({ ok: false, msg: 'Error al guardar adjudicación' });
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error al guardar adjudicación',
+      detail: error?.message ?? String(error),
+    });
   }
 };
 

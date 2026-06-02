@@ -15,7 +15,6 @@ class AdqEstudioMercado extends Model<
   declare id_solicitud:            number;
   declare valor_estudio_mercado:   number | null;
   declare estatus_estudio:         string | null;
-  declare tipo_solicitud:          string | null;
   declare tipo_contratacion:       string | null;
   declare descripcion_bien_servicio: string | null;
   declare monto_sabys:             number | null;
@@ -48,10 +47,6 @@ AdqEstudioMercado.init(
     },
     estatus_estudio: {
       type: DataTypes.STRING(20),
-      allowNull: true,
-    },
-    tipo_solicitud: {
-      type: DataTypes.ENUM('BIEN', 'SERVICIO'),
       allowNull: true,
     },
     tipo_contratacion: {

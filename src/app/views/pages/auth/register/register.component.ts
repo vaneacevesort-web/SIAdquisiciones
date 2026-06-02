@@ -42,19 +42,34 @@ export class RegisterComponent {
         Validators.pattern(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*#?&^_-]).{8,}/),
       ]],
       confirmPassword: ['', Validators.required],
+      privacidad: [false, Validators.requiredTrue],
     }, { validators: matchPasswords });
   }
 
   get f() { return this.form.controls; }
 
   registrar(): void {
+    console.log('[Registro] form.valid:', this.form.valid);
+    console.log('[Registro] form.value:', this.form.value);
+    console.log('[Registro] form.errors:', this.form.errors);
+    console.log('[Registro] errores por control:', {
+      nombre:          this.form.get('nombre')?.errors,
+      correo:          this.form.get('correo')?.errors,
+      password:        this.form.get('password')?.errors,
+      confirmPassword: this.form.get('confirmPassword')?.errors,
+      privacidad:      this.form.get('privacidad')?.errors,
+    });
+
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
 
     this.enviando = true;
     const { nombre, correo, password } = this.form.value;
 
+    console.log('[Registro] Llamando al service con:', { nombre, correo });
+
     this.userService.registerPublic({ nombre, correo, password }).subscribe({
-      next: () => {
+      next: (res) => {
+        console.log('[Registro] Respuesta del backend:', res);
         this.enviando = false;
         Swal.fire({
           icon: 'success',
@@ -65,6 +80,7 @@ export class RegisterComponent {
         }).then(() => this.router.navigate(['/auth/login']));
       },
       error: (e: HttpErrorResponse) => {
+        console.error('[Registro] Error del backend:', e);
         this.enviando = false;
         const msg = e.error?.msg ?? 'Ocurrió un error. Intenta de nuevo.';
         Swal.fire({ icon: 'error', title: 'Error', text: msg, confirmButtonColor: '#7a001f' });

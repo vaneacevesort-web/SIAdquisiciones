@@ -19,11 +19,6 @@ export class EstudioMercadoComponent implements OnInit {
   idSolicitud!: number;
   form!: FormGroup;
 
-  tipoSolicitudOptions = [
-    { value: 'BIEN', label: 'Bien - Adquisición de materiales y suministros' },
-    { value: 'SERVICIO', label: 'Servicio - Contratación de servicios generales' }
-  ];
-
   estadoEstudioOptions = [
     { value: 'CONCLUIDO', label: 'Concluido' },
     { value: 'PROCESO', label: 'Proceso' },
@@ -49,7 +44,6 @@ export class EstudioMercadoComponent implements OnInit {
     console.log('ID SOLICITUD =>', this.idSolicitud);
 
     this.form = this.fb.group({
-      tipoSolicitud: ['', Validators.required],
       descripcion: ['', Validators.required],
       valorEstudio: ['', Validators.required],
       estadoEstudio: ['', Validators.required],
@@ -81,7 +75,6 @@ export class EstudioMercadoComponent implements OnInit {
 
     const data = {
       id_solicitud: this.idSolicitud,
-      tipo_solicitud: formValue.tipoSolicitud,
       descripcion_bien_servicio: formValue.descripcion,
       valor_estudio_mercado: Number(formValue.valorEstudio),
       estado_estudio_mercado: formValue.estadoEstudio,

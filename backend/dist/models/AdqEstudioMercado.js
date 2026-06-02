@@ -26,10 +26,6 @@ AdqEstudioMercado.init({
         type: sequelize_1.DataTypes.STRING(20),
         allowNull: true,
     },
-    tipo_solicitud: {
-        type: sequelize_1.DataTypes.ENUM('BIEN', 'SERVICIO'),
-        allowNull: true,
-    },
     tipo_contratacion: {
         type: sequelize_1.DataTypes.ENUM('IRP', 'LPNP', 'CP'),
         allowNull: true,

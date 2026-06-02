@@ -99,7 +99,16 @@
 
   <hr class="my-4">
 
-  <div class="tab-section-title">Fechas y Horas del Procedimiento</div>
+  <div class="tab-section-title">
+    Fechas y Horas del Procedimiento
+    <span class="text-danger ms-1" title="Al menos una fecha u hora es obligatoria">*</span>
+  </div>
+  @if (!tieneFechaCapturada() && mensajeError) {
+    <div class="alert alert-warning py-2 small mb-3">
+      <i class="feather icon-alert-triangle me-1"></i>
+      Captura al menos una fecha u hora del procedimiento.
+    </div>
+  }
 
   <div class="row g-3 mb-3">
 
@@ -144,4 +153,37 @@
       <input type="date" class="form-control" formControlName="fecha_dictaminacion">
     </div>
     <div class="col-md-3">
-      <label cl
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" formControlName="hora_dictaminacion">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Fecha de Sesión del Subcomité Revisor</label>
+      <input type="date" class="form-control" formControlName="fecha_sesion_subcomite">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" formControlName="hora_sesion_subcomite">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label">Fecha de Fallo</label>
+      <input type="date" class="form-control" formControlName="fecha_fallo">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Hora</label>
+      <input type="time" class="form-control" formControlName="hora_fallo">
+    </div>
+
+  </div>
+
+  @if (!readonly) {
+    <div class="acciones mt-4 d-flex gap-2">
+      <button type="button" class="btn btn-primary px-4" (click)="guardar()" [disabled]="guardando">
+        <i class="feather icon-save me-1"></i> {{ guardando ? 'Guardando...' : 'Guardar' }}
+      </button>
+      <button type="button" class="btn btn-outline-secondary" (click)="limpiar()">Limpiar</button>
+    </div>
+  }
+
+</form>

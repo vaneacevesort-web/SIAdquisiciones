@@ -282,7 +282,7 @@ const getEstudioMercadoById = (req, res) => __awaiter(void 0, void 0, void 0, fu
 exports.getEstudioMercadoById = getEstudioMercadoById;
 const createEstudioMercado = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const { id_solicitud, estado_estudio_mercado, tipo_solicitud, tipo_contratacion, descripcion_bien_servicio, valor_estudio_mercado, monto_sabys, contratacion_plurianual, monto_2026, monto_2027, monto_2028, monto_2029, } = req.body;
+    const { id_solicitud, estado_estudio_mercado, tipo_contratacion, descripcion_bien_servicio, valor_estudio_mercado, monto_sabys, contratacion_plurianual, monto_2026, monto_2027, monto_2028, monto_2029, } = req.body;
     if (!id_solicitud) {
         return res.status(400).json({ ok: false, msg: 'Falta id_solicitud' });
     }
@@ -306,7 +306,6 @@ const createEstudioMercado = (req, res) => __awaiter(void 0, void 0, void 0, fun
     // ── 3. Upsert en adq_estudio_mercado ─────────────────────────────────────
     const n = (v) => (v != null && v !== '' ? Number(v) : null);
     const estudioData = {
-        tipo_solicitud: tipo_solicitud || null,
         tipo_contratacion: tipo_contratacion || null,
         descripcion_bien_servicio: descripcion_bien_servicio || null,
         valor_estudio_mercado: n(valor_estudio_mercado),
@@ -480,10 +479,10 @@ const getProcedimientoById = (req, res) => __awaiter(void 0, void 0, void 0, fun
 });
 exports.getProcedimientoById = getProcedimientoById;
 const saveProcedimientoAdquisitivo = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v;
     try {
         const { id } = req.params;
-        const _v = req.body, { user_id } = _v, c = __rest(_v, ["user_id"]);
+        const _w = req.body, { user_id } = _w, c = __rest(_w, ["user_id"]);
         const idSolicitud = Number(id);
         // Mapeo: nombres del form → nombres reales de columna en la BD
         const camposGuardar = {
@@ -521,7 +520,11 @@ const saveProcedimientoAdquisitivo = (req, res) => __awaiter(void 0, void 0, voi
     }
     catch (error) {
         console.error('ERROR saveProcedimientoAdquisitivo =>', error);
-        return res.status(500).json({ ok: false, msg: 'Error al guardar procedimiento adquisitivo' });
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al guardar procedimiento adquisitivo',
+            detail: (_v = error === null || error === void 0 ? void 0 : error.message) !== null && _v !== void 0 ? _v : String(error),
+        });
     }
 });
 exports.saveProcedimientoAdquisitivo = saveProcedimientoAdquisitivo;
@@ -541,10 +544,10 @@ const getAdjudicacionById = (req, res) => __awaiter(void 0, void 0, void 0, func
 });
 exports.getAdjudicacionById = getAdjudicacionById;
 const saveAdjudicacion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
     try {
         const { id } = req.params;
-        const _t = req.body, { user_id } = _t, c = __rest(_t, ["user_id"]);
+        const _u = req.body, { user_id } = _u, c = __rest(_u, ["user_id"]);
         const idSolicitud = Number(id);
         const campos = {
             no_procedimiento: (_a = c.no_procedimiento) !== null && _a !== void 0 ? _a : null,
@@ -581,7 +584,11 @@ const saveAdjudicacion = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
     catch (error) {
         console.error('ERROR saveAdjudicacion =>', error);
-        return res.status(500).json({ ok: false, msg: 'Error al guardar adjudicación' });
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al guardar adjudicación',
+            detail: (_t = error === null || error === void 0 ? void 0 : error.message) !== null && _t !== void 0 ? _t : String(error),
+        });
     }
 });
 exports.saveAdjudicacion = saveAdjudicacion;

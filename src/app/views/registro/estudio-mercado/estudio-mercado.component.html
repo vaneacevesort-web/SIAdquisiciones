@@ -9,18 +9,6 @@
       <div class="row mt-4">
 
         <div class="col-md-6 mb-3">
-          <label class="form-label">Tipo de Solicitud</label>
-          <select class="form-select" formControlName="tipoSolicitud">
-            <option value="">Selecciona la respuesta</option>
-            <option value="BIEN">Bien - Adquisición de materiales y suministros</option>
-            <option value="SERVICIO">Servicio - Contratación de servicios generales</option>
-          </select>
-          <small class="text-danger" *ngIf="hasError('tipoSolicitud','required')">
-            Selecciona una opción.
-          </small>
-        </div>
-
-        <div class="col-md-6 mb-3">
           <label class="form-label">Descripción del bien o servicio</label>
           <input type="text" class="form-control" placeholder="Escriba su respuesta" formControlName="descripcion">
           <small class="text-danger" *ngIf="hasError('descripcion','required')">

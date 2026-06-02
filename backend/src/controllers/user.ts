@@ -274,32 +274,36 @@ export const saveValidador = async (req: Request, res: Response): Promise<any> =
 
 export const registerPublic = async (req: Request, res: Response): Promise<any> => {
   const { nombre, correo, password } = req.body;
+  console.log('[registerPublic] body recibido:', { nombre, correo, passwordLen: password?.length });
 
   if (!nombre || !correo || !password) {
+    console.log('[registerPublic] Campos faltantes');
     return res.status(400).json({ msg: 'Nombre, correo y contraseña son requeridos' });
   }
 
-  const existingUser = await User.findOne({ where: { email: correo } });
-  if (existingUser) {
-    return res.status(400).json({ msg: 'El correo ya está registrado en el sistema' });
-  }
-
   try {
+    const existingUser = await User.findOne({ where: { email: correo } });
+    if (existingUser) {
+      console.log('[registerPublic] Correo ya registrado:', correo);
+      return res.status(400).json({ msg: 'El correo ya está registrado en el sistema' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    await User.create({
+    const newUser = await User.create({
       name: nombre,
       email: correo,
       password: hashedPassword,
       rol_users: {
-        role_id: 2, // Validador por defecto — el Administrador puede reasignar el rol
+        role_id: 2,
       },
     } as any, {
       include: [{ model: RolUsers, as: 'rol_users' }],
     });
+    console.log('[registerPublic] Usuario creado con id:', newUser.id);
 
     return res.json({ msg: 'Usuario registrado correctamente' });
   } catch (error) {
-    console.error(error);
+    console.error('[registerPublic] Error:', error);
     return res.status(500).json({ msg: 'Error al registrar el usuario' });
   }
 };

@@ -40,10 +40,6 @@
       <option value="5">Adjudicación</option>
     </select>
 
-    <div class="gl-results-count ms-auto">
-      <i class="feather icon-list me-1"></i>
-      <span>{{ temp.length }}</span> resultado(s)
-    </div>
 
   </div>
   <!-- ════════════════════════════════════════════════════════════════════ -->
@@ -64,6 +60,13 @@
         <p class="gl-empty-hint">Intenta ajustar los filtros o crea una nueva solicitud</p>
       </div>
     } @else {
+      <p class="gl-table-count">
+        @if (rows.length > 0) {
+          Mostrando {{ rows.length }} solicitud{{ rows.length === 1 ? '' : 'es' }}
+        } @else {
+          Sin solicitudes para mostrar
+        }
+      </p>
       <div class="table-responsive">
         <table class="gl-table">
           <thead>

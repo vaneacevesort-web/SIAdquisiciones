@@ -1,4 +1,7 @@
 // ── Paleta institucional ──────────────────────────────────────────────────
+$green:       #16a34a;
+$green-bg:    #f0fdf4;
+$green-bdr:   #bbf7d0;
 $vino:        #9b003f;
 $vino-dark:   #7a0032;
 $vino-light:  #f9eef3;
@@ -9,6 +12,97 @@ $border:      #e2e8f0;
 $bg-page:     #f8fafc;
 
 // ── Wrapper ───────────────────────────────────────────────────────────────
+// ── Panel de éxito ────────────────────────────────────────────────────────
+.ta-success-panel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  background: $green-bg;
+  border: 1.5px solid $green-bdr;
+  border-radius: 10px;
+}
+
+.ta-success-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid $green-bdr;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i { font-size: 1.2rem; color: $green; }
+}
+
+.ta-success-body {
+  flex: 1;
+  min-width: 180px;
+}
+
+.ta-success-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #166534;
+  margin: 0 0 0.1rem;
+}
+
+.ta-success-subtitle {
+  font-size: 0.78rem;
+  color: #166534;
+  opacity: 0.8;
+  margin: 0;
+}
+
+.ta-success-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+%btn-success-base {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.38rem 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.ta-btn-success-sec {
+  @extend %btn-success-base;
+  border: 1.5px solid #d1d5db;
+  background: #fff;
+  color: $text-muted;
+  &:hover { border-color: #94a3b8; color: $text-head; }
+}
+
+.ta-btn-success-pri {
+  @extend %btn-success-base;
+  border: none;
+  background: $vino;
+  color: #fff;
+  &:hover { background: $vino-dark; }
+}
+
+.ta-btn-success-ghost {
+  @extend %btn-success-base;
+  border: 1.5px solid $green-bdr;
+  background: transparent;
+  color: #166534;
+  &:hover { background: #dcfce7; }
+}
+
+// ── Wrapper del formulario ─────────────────────────────────────────────────
 .ta-wrapper {
   display: flex;
   flex-direction: column;

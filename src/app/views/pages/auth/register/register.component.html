@@ -99,7 +99,7 @@
 
             <!-- Aviso de privacidad -->
             <div class="form-check privacy-check mb-3">
-              <input class="form-check-input" type="checkbox" id="privacidad" #privacidadCheck>
+              <input class="form-check-input" type="checkbox" id="privacidad" formControlName="privacidad">
               <label class="form-check-label" for="privacidad">
                 He leído y acepto el
                 <a href="#" class="link-privacidad" (click)="$event.preventDefault()">aviso de privacidad</a>
@@ -109,7 +109,7 @@
             <!-- Botón principal -->
             <div class="d-grid mb-1">
               <button type="submit" class="btn btn-vino"
-                [disabled]="enviando || !privacidadCheck.checked">
+                [disabled]="enviando || form.invalid">
                 @if (enviando) {
                   <span class="spinner-border spinner-border-sm me-2"></span>
                   Registrando...

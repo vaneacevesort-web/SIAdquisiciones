@@ -26,7 +26,6 @@ export class TabEstudioMercadoComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      tipoSolicitud:          ['', Validators.required],
       tipoContratacion:       ['', Validators.required],
       descripcion:            ['', Validators.required],
       valorEstudio:           ['', Validators.required],
@@ -56,7 +55,6 @@ export class TabEstudioMercadoComponent implements OnInit, OnChanges {
         const e = resp?.data?.estudio;
         if (e) {
           this.form.patchValue({
-            tipoSolicitud:          e.tipo_solicitud          ?? '',
             tipoContratacion:       e.tipo_contratacion       ?? '',
             descripcion:            e.descripcion_bien_servicio ?? '',
             valorEstudio:           e.valor_estudio_mercado   ?? '',
@@ -110,7 +108,6 @@ export class TabEstudioMercadoComponent implements OnInit, OnChanges {
 
     const data = {
       id_solicitud:              this.idSolicitud,
-      tipo_solicitud:            v.tipoSolicitud,
       tipo_contratacion:         v.tipoContratacion,
       descripcion_bien_servicio: v.descripcion,
       valor_estudio_mercado:     Number(v.valorEstudio),

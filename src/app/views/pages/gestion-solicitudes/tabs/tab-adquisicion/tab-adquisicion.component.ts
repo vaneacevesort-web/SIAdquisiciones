@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RegistroService } from '../../../../../service/registro.service';
+import { UserService }     from '../../../../../service/user.service';
 
 @Component({
   selector: 'app-tab-adquisicion',
@@ -49,6 +50,7 @@ export class TabAdquisicionComponent implements OnInit, OnChanges {
 
   private fb              = inject(FormBuilder);
   private registroService = inject(RegistroService);
+  private userService     = inject(UserService);
 
   ngOnInit(): void {
     this.inicializarForm();
@@ -174,15 +176,19 @@ export class TabAdquisicionComponent implements OnInit, OnChanges {
         : v.dictamen_procedencia,
     };
 
+    payload.user_id = this.userService.currentUserValue?.id ?? null;
+
     this.registroService.saveProcedimientoAdquisitivo(this.idSolicitud, payload).subscribe({
       next: () => {
         this.guardando    = false;
         this.mensajeExito = 'Adquisición guardada correctamente.';
         this.saved.emit();
       },
-      error: err => {
+      error: (err) => {
         console.error('ERROR guardar procedimiento =>', err);
-        this.mensajeError = 'Ocurrió un error al guardar. Intente de nuevo.';
+        const msg    = err?.error?.msg    ?? 'Ocurrió un error al guardar. Intente de nuevo.';
+        const detail = err?.error?.detail ?? '';
+        this.mensajeError = detail ? `${msg} — ${detail}` : msg;
         this.guardando = false;
       },
     });

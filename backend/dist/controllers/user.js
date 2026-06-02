@@ -254,29 +254,33 @@ const saveValidador = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.saveValidador = saveValidador;
 const registerPublic = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { nombre, correo, password } = req.body;
+    console.log('[registerPublic] body recibido:', { nombre, correo, passwordLen: password === null || password === void 0 ? void 0 : password.length });
     if (!nombre || !correo || !password) {
+        console.log('[registerPublic] Campos faltantes');
         return res.status(400).json({ msg: 'Nombre, correo y contraseña son requeridos' });
     }
-    const existingUser = yield user_1.default.findOne({ where: { email: correo } });
-    if (existingUser) {
-        return res.status(400).json({ msg: 'El correo ya está registrado en el sistema' });
-    }
     try {
+        const existingUser = yield user_1.default.findOne({ where: { email: correo } });
+        if (existingUser) {
+            console.log('[registerPublic] Correo ya registrado:', correo);
+            return res.status(400).json({ msg: 'El correo ya está registrado en el sistema' });
+        }
         const hashedPassword = yield bcrypt_1.default.hash(password, 10);
-        yield user_1.default.create({
+        const newUser = yield user_1.default.create({
             name: nombre,
             email: correo,
             password: hashedPassword,
             rol_users: {
-                role_id: 2, // Validador por defecto — el Administrador puede reasignar el rol
+                role_id: 2,
             },
         }, {
             include: [{ model: role_users_1.default, as: 'rol_users' }],
         });
+        console.log('[registerPublic] Usuario creado con id:', newUser.id);
         return res.json({ msg: 'Usuario registrado correctamente' });
     }
     catch (error) {
-        console.error(error);
+        console.error('[registerPublic] Error:', error);
         return res.status(500).json({ msg: 'Error al registrar el usuario' });
     }
 });
