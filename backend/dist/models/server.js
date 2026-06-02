@@ -21,6 +21,7 @@ const user_2 = __importDefault(require("../routes/user"));
 const solicitud_2 = __importDefault(require("../routes/solicitud"));
 const documentos_1 = __importDefault(require("../routes/documentos"));
 const catalogos_1 = __importDefault(require("../routes/catalogos"));
+const cargaMasiva_1 = __importDefault(require("../routes/cargaMasiva"));
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
@@ -40,6 +41,7 @@ class Server {
         this.app.use(solicitud_2.default);
         this.app.use(documentos_1.default);
         this.app.use('/api/catalogos', catalogos_1.default);
+        this.app.use(cargaMasiva_1.default);
     }
     midlewares() {
         //Parseo BOdy

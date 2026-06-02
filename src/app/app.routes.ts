@@ -64,6 +64,13 @@ export const routes: Routes = [
           .then(m => m.gestionSolicitudesRoutes)
       },
 
+      {
+        path: 'carga-masiva',
+        loadComponent: () =>
+          import('./views/pages/carga-masiva/carga-masiva.component')
+            .then(m => m.CargaMasivaComponent)
+      },
+
     ]
   },
   {

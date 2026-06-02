@@ -1,0 +1,478 @@
+<div class="page-header mb-4">
+  <h4 class="page-title">Carga Masiva de Solicitudes</h4>
+  <p class="text-muted mb-0">
+    Importa múltiples solicitudes desde un archivo Excel (.xlsx) con la plantilla estándar.
+  </p>
+</div>
+
+<!-- ── PASO 1: Seleccionar archivo ────────────────────────────────────── -->
+<div class="card mb-4">
+  <div class="card-body">
+
+    <div class="d-flex align-items-center mb-3">
+      <span class="step-badge me-2">1</span>
+      <h6 class="mb-0 fw-semibold">Seleccionar archivo</h6>
+    </div>
+
+    <input #fileInput type="file" accept=".xlsx" class="d-none"
+      (change)="onArchivoSeleccionado($event)">
+
+    @if (!archivo) {
+      <div class="upload-zone" (click)="abrirSelector()">
+        <i class="feather icon-upload-cloud upload-icon"></i>
+        <p class="mb-1 fw-semibold">Haz clic para seleccionar un archivo</p>
+        <p class="text-muted small mb-0">Solo archivos .xlsx — máximo 10 MB</p>
+      </div>
+    } @else {
+      <div class="archivo-seleccionado d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <i class="feather icon-file-text text-success fs-5"></i>
+          <div>
+            <div class="fw-semibold">{{ nombreArchivo }}</div>
+            <div class="text-muted small">{{ tamanoArchivo }}</div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" (click)="abrirSelector()"
+          [disabled]="estado === 'validando' || estado === 'importando'">
+          Cambiar archivo
+        </button>
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- ── PASO 2: Validar ────────────────────────────────────────────────── -->
+<div class="card mb-4">
+  <div class="card-body">
+
+    <div class="d-flex align-items-center mb-3">
+      <span class="step-badge me-2">2</span>
+      <h6 class="mb-0 fw-semibold">Validar archivo</h6>
+    </div>
+
+    @if (mensajeError && estado !== 'importado') {
+      <div class="alert alert-danger py-2 mb-3">
+        <i class="feather icon-alert-circle me-1"></i>{{ mensajeError }}
+      </div>
+    }
+
+    <button class="btn btn-primary"
+      [disabled]="!archivo || estado === 'validando' || estado === 'importando' || estado === 'importado'"
+      (click)="validar()">
+      @if (estado === 'validando') {
+        <span class="spinner-border spinner-border-sm me-2"></span>Validando...
+      } @else {
+        <i class="feather icon-check-circle me-1"></i>Validar archivo
+      }
+    </button>
+
+  </div>
+</div>
+
+<!-- ── PASO 3: Resultado de validación ───────────────────────────────── -->
+@if (estado === 'resultado' || estado === 'importando' || estado === 'importado') {
+  <div class="card mb-4">
+    <div class="card-body">
+
+      <div class="d-flex align-items-center mb-3">
+        <span class="step-badge me-2">3</span>
+        <h6 class="mb-0 fw-semibold">Resultado de validación</h6>
+      </div>
+
+      <!-- KPIs resumen -->
+      @if (validacion) {
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-3">
+            <div class="kpi-card kpi-total">
+              <div class="kpi-value">{{ validacion.total }}</div>
+              <div class="kpi-label">Registros</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="kpi-card kpi-ok">
+              <div class="kpi-value">{{ validacion.validos }}</div>
+              <div class="kpi-label">Válidos</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="kpi-card kpi-warn">
+              <div class="kpi-value">{{ validacion.advertencias_count }}</div>
+              <div class="kpi-label">Con advertencias</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="kpi-card kpi-error">
+              <div class="kpi-value">{{ validacion.errores_count }}</div>
+              <div class="kpi-label">Con errores</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner errores críticos -->
+        @if (hayErroresCriticos) {
+          <div class="alert alert-warning d-flex align-items-start gap-2 mb-3">
+            <i class="feather icon-alert-triangle mt-1 flex-shrink-0"></i>
+            <div>
+              <strong>{{ validacion.errores_count }} registro(s) con errores serán omitidos.</strong>
+              Los {{ validacion.validos }} válidos se importarán normalmente.
+              Puedes descargar el listado de errores para corregirlos después.
+            </div>
+          </div>
+        } @else if (validacion.advertencias_count > 0) {
+          <div class="alert alert-warning d-flex align-items-start gap-2 mb-3">
+            <i class="feather icon-alert-triangle mt-1 flex-shrink-0"></i>
+            <div>
+              <strong>{{ validacion.advertencias_count }} registro(s) tienen advertencias</strong>
+              — algunos campos de catálogo quedaron vacíos. Puedes importar de todas formas.
+            </div>
+          </div>
+        } @else {
+          <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+            <i class="feather icon-check-circle"></i>
+            <strong>Archivo válido</strong> — todos los registros están listos para importarse.
+          </div>
+        }
+      }
+
+      <!-- Tabla detalle por fila -->
+      @if ((validacion?.filas?.length ?? 0) > 0) {
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small">
+              Mostrando {{ filasFiltradas.length }} de {{ validacion?.filas?.length ?? 0 }} registros
+            </span>
+            @if (filasConProblemas.length > 0) {
+              <button class="btn btn-sm btn-outline-secondary" (click)="descargarErrores()">
+                <i class="feather icon-download me-1"></i>Descargar errores (CSV)
+              </button>
+            }
+          </div>
+          <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" id="switchProblemas"
+              [(ngModel)]="mostrarSoloProblemas">
+            <label class="form-check-label small" for="switchProblemas">
+              Solo mostrar problemas
+            </label>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm tabla-resultado">
+            <thead>
+              <tr>
+                <th style="width:60px">Fila</th>
+                <th style="width:140px">Folio</th>
+                <th style="width:110px">Estado</th>
+                <th>Detalles</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of filasFiltradas; track f.fila) {
+                <tr [class.fila-error]="f.estado === 'error'"
+                    [class.fila-warn]="f.estado === 'advertencia'">
+                  <td class="text-muted">{{ f.fila }}</td>
+                  <td class="fw-semibold">{{ f.folio || '—' }}</td>
+                  <td>
+                    @if (f.estado === 'ok') {
+                      <span class="badge bg-success">OK</span>
+                    } @else if (f.estado === 'advertencia') {
+                      <span class="badge bg-warning text-dark">Advertencia</span>
+                    } @else {
+                      <span class="badge bg-danger">Error</span>
+                    }
+                  </td>
+                  <td>
+                    @for (e of f.errores; track e) {
+                      <div class="msg-error"><i class="feather icon-x-circle me-1"></i>{{ e }}</div>
+                    }
+                    @for (a of f.advertencias; track a) {
+                      <div class="msg-warn"><i class="feather icon-alert-triangle me-1"></i>{{ a }}</div>
+                    }
+                    @if (f.errores.length === 0 && f.advertencias.length === 0) {
+                      <span class="text-muted small">Sin observaciones</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+    </div>
+  </div>
+}
+
+<!-- ── PASO 4: Importar ────────────────────────────────────────────────── -->
+@if (estado === 'resultado' || estado === 'importando') {
+  <div class="card mb-4">
+    <div class="card-body">
+
+      <div class="d-flex align-items-center mb-3">
+        <span class="step-badge me-2">4</span>
+        <h6 class="mb-0 fw-semibold">Importar datos</h6>
+      </div>
+
+      @if (!puedeImportar) {
+        <p class="text-muted small mb-2">No hay registros válidos para importar.</p>
+      }
+
+      @if (hayErroresCriticos && puedeImportar) {
+        <p class="text-muted small mb-2">
+          <i class="feather icon-info me-1"></i>
+          {{ validacion?.errores_count }} registro(s) con error serán omitidos.
+          Se importarán únicamente los {{ validacion?.validos }} válidos.
+        </p>
+      }
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-success"
+          [disabled]="!puedeImportar || estado === 'importando'"
+          (click)="importar()">
+          @if (estado === 'importando') {
+            <span class="spinner-border spinner-border-sm me-2"></span>Importando...
+          } @else {
+            <i class="feather icon-upload me-1"></i>
+            Importar {{ validacion?.validos ?? 0 }} registro(s) válido(s)
+          }
+        </button>
+
+        <button class="btn btn-outline-secondary"
+          [disabled]="estado === 'importando'"
+          (click)="reiniciar()">
+          <i class="feather icon-refresh-cw me-1"></i>Nuevo archivo
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ── Resultado final ────────────────────────────────────────────────── -->
+@if (estado === 'importado' && importacion) {
+  <div class="card border-success mb-4">
+    <div class="card-body">
+
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="feather icon-check-circle text-success fs-4"></i>
+        <h6 class="mb-0 fw-semibold text-success">Importación completada</h6>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-md-3">
+          <div class="kpi-card kpi-ok">
+            <div class="kpi-value">{{ importacion.importados }}</div>
+            <div class="kpi-label">Importados</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="kpi-card kpi-error">
+            <div class="kpi-value">{{ importacion.omitidos }}</div>
+            <div class="kpi-label">Omitidos</div>
+          </div>
+        </div>
+      </div>
+
+      @if (mensajeError) {
+        <div class="alert alert-danger py-2 mb-3">
+          <i class="feather icon-alert-circle me-1"></i>{{ mensajeError }}
+        </div>
+      }
+
+      <div class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-outline-primary" (click)="reiniciar()">
+          <i class="feather icon-upload me-1"></i>Cargar otro archivo
+        </button>
+        @if (filasConProblemas.length > 0) {
+          <button class="btn btn-outline-secondary" (click)="descargarErrores()">
+            <i class="feather icon-download me-1"></i>Descargar errores omitidos (CSV)
+          </button>
+        }
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ── Referencia de hojas ─────────────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header">
+    <h6 class="mb-0">
+      <i class="feather icon-info me-1"></i>Formato del archivo Excel institucional
+    </h6>
+  </div>
+  <div class="card-body">
+
+    <p class="text-muted small mb-3">
+      El sistema lee directamente el archivo institucional multi-hoja.
+      La hoja <strong>General</strong> es la fuente principal — se importa <strong>una solicitud por cada fila</strong> de esa hoja.
+      Las demás hojas complementan la información por folio. Si un folio no aparece en una hoja secundaria,
+      se usan los datos que General ya contiene para esa etapa.
+      El folio es la llave de relación entre hojas.
+    </p>
+
+    <div class="table-responsive mb-3">
+      <table class="table table-sm table-bordered mb-0" style="font-size:0.8rem">
+        <thead class="table-light">
+          <tr>
+            <th>Hoja</th>
+            <th>Rol</th>
+            <th>Cabeceras en fila</th>
+            <th>Datos desde fila</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="table-primary">
+            <td><strong>General</strong></td>
+            <td><strong>Fuente maestra</strong> — define todos los folios a importar</td>
+            <td>3</td><td>4</td>
+          </tr>
+          <tr>
+            <td>Estudio de Mercado</td>
+            <td>Complementa datos de EM por folio</td>
+            <td>2</td><td>3</td>
+          </tr>
+          <tr>
+            <td>Afectacion presupuestal</td>
+            <td>Complementa AP + Bienes y Servicios</td>
+            <td>2</td><td>3</td>
+          </tr>
+          <tr>
+            <td>Adquisiciones o Contratacion</td>
+            <td>Complementa Procedimiento Adquisitivo</td>
+            <td>2</td><td>3</td>
+          </tr>
+          <tr>
+            <td>Adjudicacion</td>
+            <td>Complementa datos de Adjudicación</td>
+            <td>2</td><td>3</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Hoja EM -->
+      <div class="col-md-6">
+        <p class="fw-semibold text-muted small text-uppercase mb-2">
+          <i class="feather icon-file-text me-1"></i>Hoja: Estudio de Mercado
+        </p>
+        <p class="text-muted small mb-2">Genera <code>adq_solicitudes</code> + <code>adq_estudio_mercado</code></p>
+        <table class="table table-sm table-borderless mb-0">
+          <tbody>
+            <tr><td><code>Folio Interno de Solicitud</code></td><td class="text-muted small">Llave principal — obligatorio</td></tr>
+            <tr><td><code>Fecha Ingreso de Solicitud</code></td><td class="text-muted small">Fecha — obligatorio</td></tr>
+            <tr><td><code>Origen de Recurso</code></td><td class="text-muted small">Estatal / Federal / Fideicomiso / Concurrente — obligatorio</td></tr>
+            <tr><td><code>Tipo de Solicitud:</code></td><td class="text-muted small">Contiene "Servicio" o "Bien" — obligatorio</td></tr>
+            <tr><td><code>Dependencia</code></td><td class="text-muted small">Nombre exacto del catálogo</td></tr>
+            <tr><td><code>Centro de Costo</code></td><td class="text-muted small">Formato: Nombre (CÓDIGO)</td></tr>
+            <tr><td><code>Capitulo</code></td><td class="text-muted small">Prefijo numérico: "3000 Servicios generales"</td></tr>
+            <tr><td><code>Concepto del Gasto</code></td><td class="text-muted small">Subcapítulo — prefijo: "3400 – ..."</td></tr>
+            <tr><td><code>Giro o Partida</code></td><td class="text-muted small">Partida genérica — prefijo: "3451 ..."</td></tr>
+            <tr><td><code>Tipo Contracion</code></td><td class="text-muted small">IRP / LPNP / CP</td></tr>
+            <tr><td><code>Valor del Estudio de Mercado</code></td><td class="text-muted small">Decimal (admite formato "1,234,097.32")</td></tr>
+            <tr><td><code>Estado</code></td><td class="text-muted small">Adjudicado→CONCLUIDO / En proceso→PROCESO / Rechazado</td></tr>
+            <tr><td><code>Monto SABYS</code></td><td class="text-muted small">Decimal</td></tr>
+            <tr><td><code>Descripción del bien o servicio…</code></td><td class="text-muted small">Texto libre</td></tr>
+            <tr><td><code>Contratacion Plurianual</code></td><td class="text-muted small">SI / NO</td></tr>
+            <tr><td><code>Monto 2026 … Monto 2029</code></td><td class="text-muted small">Decimal — solo si plurianual es SI</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Hoja AP -->
+      <div class="col-md-6">
+        <p class="fw-semibold text-muted small text-uppercase mb-2">
+          <i class="feather icon-file-text me-1"></i>Hoja: Afectacion presupuestal
+        </p>
+        <p class="text-muted small mb-2">Genera <code>adq_afectacion_presupuestal</code> + <code>adq_bienes_servicios</code></p>
+        <table class="table table-sm table-borderless mb-0">
+          <tbody>
+            <tr><td><code>Folio Interno(Seguimiento)</code></td><td class="text-muted small">Llave de relación</td></tr>
+            <tr><td><code>Fecha de Liberación de Estudio de Mercado</code></td><td class="text-muted small">Fecha</td></tr>
+            <tr><td><code>Nombre de Testigo Social (N/A,Nombre)</code></td><td class="text-muted small">N/A → null</td></tr>
+            <tr><td><code>Tipo de gasto:</code></td><td class="text-muted small">"GC-Gasto Corriente" / "PAD-..." / "MIXTO" — obligatorio si existe la fila</td></tr>
+            <tr><td><code>Fuente de financiamiento:</code></td><td class="text-muted small">Formato: "15000000 - Nombre"</td></tr>
+            <tr><td><code>Importe de Suficiencia Presupuestal</code></td><td class="text-muted small">Decimal</td></tr>
+            <tr><td><code>Oficio de Suficiencia</code></td><td class="text-muted small">URL del oficio</td></tr>
+            <tr><td><code>Clave de Verificación</code></td><td class="text-muted small">Texto</td></tr>
+            <tr><td><code>Descripción de la Clave de Verificación</code></td><td class="text-muted small">Texto</td></tr>
+            <tr><td><code>Unidad de Medida</code></td><td class="text-muted small">Texto</td></tr>
+            <tr><td><code>¿Es contrato abierto?</code></td><td class="text-muted small">Sí / No</td></tr>
+            <tr><td><code>¿Es consolidado?</code></td><td class="text-muted small">Sí / No</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Hoja Adquisiciones -->
+      <div class="col-md-6">
+        <p class="fw-semibold text-muted small text-uppercase mb-2">
+          <i class="feather icon-file-text me-1"></i>Hoja: Adquisiciones o Contratacion
+        </p>
+        <p class="text-muted small mb-2">Genera <code>adq_procedimiento_adquisitivo</code> (parte 1)</p>
+        <table class="table table-sm table-borderless mb-0">
+          <tbody>
+            <tr><td><code>Folio Interno (Seguimiento)</code></td><td class="text-muted small">Llave de relación</td></tr>
+            <tr><td><code>Modalidad del Procedimiento Adquisitivo</code></td><td class="text-muted small">Texto libre</td></tr>
+            <tr><td><code>Dictamen de Procedencia(Pdf)</code></td><td class="text-muted small">URL → activa el dictamen; N/A → falso</td></tr>
+            <tr><td><code>Responsable del Procedimiento</code></td><td class="text-muted small">Texto</td></tr>
+            <tr><td><code>No. de procedimiento</code></td><td class="text-muted small">Texto</td></tr>
+            <tr><td><code>Convocatoria y/o Invitacion (URL)</code></td><td class="text-muted small">URL</td></tr>
+            <tr><td><code>Medio de Publicación:</code></td><td class="text-muted small">Texto</td></tr>
+            <tr><td><code>Fecha de Junta de Aclaración:</code></td><td class="text-muted small">Fecha / N/A</td></tr>
+            <tr><td><code>Hora de Junta de Aclaración:</code></td><td class="text-muted small">Hora Excel o HH:MM / N/A</td></tr>
+            <tr><td colspan="2" class="text-muted small">… misma estructura para Presentación, Comité, Contra Oferta, Dictaminación, Subcomité, Fallo</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Hoja Adjudicacion -->
+      <div class="col-md-6">
+        <p class="fw-semibold text-muted small text-uppercase mb-2">
+          <i class="feather icon-file-text me-1"></i>Hoja: Adjudicacion
+        </p>
+        <p class="text-muted small mb-2">Completa <code>adq_procedimiento_adquisitivo</code> (parte 2)</p>
+        <table class="table table-sm table-borderless mb-0">
+          <tbody>
+            <tr><td><code>Folio Interno (Seguimiento)</code></td><td class="text-muted small">Llave de relación</td></tr>
+            <tr><td><code>Nombre o Razón Social</code></td><td class="text-muted small">Proveedor</td></tr>
+            <tr><td><code>RFC</code></td><td class="text-muted small">RFC del proveedor</td></tr>
+            <tr><td><code>Monto Total Adjudicación con IVA</code></td><td class="text-muted small">Decimal</td></tr>
+            <tr><td><code>Numero de Contrato:</code></td><td class="text-muted small">Texto</td></tr>
+            <tr><td><code>Inicio de Vigencia:</code></td><td class="text-muted small">Fecha</td></tr>
+            <tr><td><code>Termino de Vigencia:</code></td><td class="text-muted small">Fecha</td></tr>
+            <tr><td><code>REMANENTE(Suf.Presupuestal</code></td><td class="text-muted small">Decimal</td></tr>
+            <tr><td><code>Nombre del Responsable del  Procedimiento</code></td><td class="text-muted small">Texto</td></tr>
+            <tr><td><code>Comentarios</code></td><td class="text-muted small">Texto libre</td></tr>
+            <tr><td><code>Estatus</code></td><td class="text-muted small">Adjudicado / En proceso / etc.</td></tr>
+            <tr><td><code>Reprogramacion</code></td><td class="text-muted small">Cualquier valor → true; vacío → null</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Hojas ignoradas -->
+      <div class="col-12">
+        <p class="fw-semibold text-muted small text-uppercase mb-1">Hojas ignoradas automáticamente</p>
+        <p class="text-muted small mb-0">
+          <code>G_Adjudicados</code> — resumen &nbsp;|&nbsp;
+          <code>Resumen_EM</code> — resumen
+        </p>
+      </div>
+
+      <!-- Inferencia de estatus -->
+      <div class="col-12">
+        <p class="fw-semibold text-muted small text-uppercase mb-1">Inferencia de estatus por registro</p>
+        <div class="d-flex flex-wrap gap-2">
+          <span class="badge bg-secondary">Sin datos adicionales → Estatus 1</span>
+          <span class="badge bg-info text-dark">Tiene EM → Estatus 2</span>
+          <span class="badge bg-warning text-dark">Tiene AP → Estatus 3</span>
+          <span class="badge bg-primary">Tiene Adquisición → Estatus 4</span>
+          <span class="badge bg-success">Tiene Adjudicación → Estatus 5</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

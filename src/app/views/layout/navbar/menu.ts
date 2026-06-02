@@ -45,4 +45,12 @@ export const MENU: MenuItem[] = [
     link: '/reportes',
   },
 
+  // Solo el Administrador puede hacer carga masiva
+  {
+    label: 'Carga Masiva',
+    icon: 'upload',
+    roles: ['Administrador'],
+    link: '/carga-masiva',
+  },
+
 ];

@@ -7,6 +7,7 @@ import routesUser from '../routes/user'
 import routesSolicitud from '../routes/solicitud'
 import routesDocumentos from '../routes/documentos'
 import routesCatalogos from '../routes/catalogos'
+import routesCargaMasiva from '../routes/cargaMasiva'
 
 class Server {
 
@@ -34,6 +35,7 @@ class Server {
         this.app.use(routesSolicitud);
         this.app.use(routesDocumentos);
         this.app.use('/api/catalogos', routesCatalogos);
+        this.app.use(routesCargaMasiva);
     }
 
 
