@@ -49,7 +49,7 @@ AdqAfectacionPresupuestal.init(
       allowNull: true,
     },
     oficio_suficiencia_path: {
-      type: DataTypes.STRING(500),
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     importe_suficiencia: {

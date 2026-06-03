@@ -38,7 +38,8 @@ export class FormNuevaSolicitudComponent implements OnInit {
     { id: 1, nombre: 'Estatal' },
     { id: 2, nombre: 'Federal' },
     { id: 3, nombre: 'Fideicomiso' },
-    { id: 4, nombre: 'Concurrente o Propio' },
+    { id: 4, nombre: 'Concurrente' },
+    { id: 5, nombre: 'Propio' },
   ];
 
   readonly tiposSolicitud = [

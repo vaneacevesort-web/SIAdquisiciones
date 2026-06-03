@@ -6,7 +6,7 @@ import AdqCatSubcapitulos from '../models/AdqCatSubcapitulos';
 import AdqCatPartidasGenericas from '../models/AdqCatPartidasGenericas';
 import AdqCatPartidasEspecificas from '../models/AdqCatPartidasEspecificas';
 import { Request, Response } from 'express';
-import { fn, col } from 'sequelize';
+import { fn, col, Op, literal } from 'sequelize';
 import Solicitudes from '../models/solicitud';
 import User from '../models/user';
 import RolUsers from '../models/role_users';
@@ -18,6 +18,9 @@ import AdqBienesServicios from '../models/AdqBienesServicios';
 import AdqAfectacionFuentes from '../models/AdqAfectacionFuentes';
 import AdqProcedimientoAdquisitivo from '../models/AdqProcedimientoAdquisitivo';
 import AdqEstudioMercado from '../models/AdqEstudioMercado';
+import ExcelJS from 'exceljs';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -147,7 +150,8 @@ function getOrigenRecursoNombre(id: number): string {
     case 1: return 'Estatal';
     case 2: return 'Federal';
     case 3: return 'Fideicomiso';
-    case 4: return 'Concurrente o Propio';
+    case 4: return 'Concurrente';
+    case 5: return 'Propio';
     default: return '';
   }
 }
@@ -664,31 +668,540 @@ export const saveAdjudicacion = async (req: Request, res: Response): Promise<any
 
 export const getKpis = async (_req: Request, res: Response): Promise<any> => {
   try {
-    const filas = await AdqSolicitudes.findAll({
+    // ── Conteo por etapa (estatus_id) ─────────────────────────────────────
+    const estatusFilas = await AdqSolicitudes.findAll({
       attributes: ['estatus_id', [fn('COUNT', col('id_solicitud')), 'total']],
       group: ['estatus_id'],
       raw: true,
     });
-
     const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    filas.forEach((f: any) => { counts[Number(f.estatus_id)] = Number(f.total); });
-
+    estatusFilas.forEach((f: any) => { counts[Number(f.estatus_id)] = Number(f.total); });
     const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
+    // ── Conteo por origen de recurso ──────────────────────────────────────
+    const origenFilas = await AdqSolicitudes.findAll({
+      attributes: ['id_origen_recurso', [fn('COUNT', col('id_solicitud')), 'total']],
+      group: ['id_origen_recurso'],
+      raw: true,
+    });
+    const origenes: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    origenFilas.forEach((f: any) => { origenes[Number(f.id_origen_recurso)] = Number(f.total); });
+
+    // ── Contratos y monto adjudicado ──────────────────────────────────────
+    const totalContratos = await AdqProcedimientoAdquisitivo.count({
+      where: { no_contrato: { [Op.not]: null } },
+    });
+    const [montoRow]: any = await AdqProcedimientoAdquisitivo.findAll({
+      attributes: [[fn('COALESCE', fn('SUM', col('monto_total_adjudicado_iva')), 0), 'monto']],
+      raw: true,
+    });
+    const montoTotal = Number(montoRow?.monto ?? 0);
 
     return res.json({
       ok: true,
       data: {
+        // por etapa
         total,
         registradas:  counts[1],
         estudio:      counts[2],
         afectacion:   counts[3],
         contratacion: counts[4],
         adjudicacion: counts[5],
+        // por origen
+        estatal:     origenes[1],
+        federal:     origenes[2],
+        fideicomiso: origenes[3],
+        concurrente: origenes[4],
+        propio:      origenes[5],
+        // financiero
+        total_contratos: totalContratos,
+        monto_total:     montoTotal,
       },
     });
   } catch (error) {
     console.error('ERROR getKpis =>', error);
     return res.status(500).json({ ok: false, msg: 'Error al obtener KPIs' });
+  }
+};
+
+export const getTopDependencias = async (_req: Request, res: Response): Promise<any> => {
+  try {
+    const seq = AdqSolicitudes.sequelize!;
+
+    // Top 5 dependencias por número de solicitudes
+    const [solRows]: any = await seq.query(`
+      SELECT d.nombre, COUNT(s.id_solicitud) AS total
+      FROM adq_solicitudes s
+      JOIN adq_dependencias d ON d.id_dependencia = s.id_dependencia
+      WHERE s.id_dependencia IS NOT NULL
+      GROUP BY d.id_dependencia, d.nombre
+      ORDER BY total DESC
+      LIMIT 5
+    `);
+
+    // Top 5 dependencias por monto adjudicado
+    const [montoRows]: any = await seq.query(`
+      SELECT d.nombre,
+             COALESCE(SUM(pa.monto_total_adjudicado_iva), 0) AS monto,
+             COUNT(pa.id_proc)                                AS contratos
+      FROM adq_solicitudes s
+      JOIN adq_dependencias d               ON d.id_dependencia = s.id_dependencia
+      JOIN adq_procedimiento_adquisitivo pa ON pa.id_solicitud  = s.id_solicitud
+      WHERE s.id_dependencia IS NOT NULL
+        AND pa.monto_total_adjudicado_iva IS NOT NULL
+      GROUP BY d.id_dependencia, d.nombre
+      ORDER BY monto DESC
+      LIMIT 5
+    `);
+
+    return res.json({
+      ok: true,
+      data: {
+        porSolicitudes: solRows.map((r: any) => ({
+          nombre: r.nombre,
+          total:  Number(r.total),
+        })),
+        porMonto: montoRows.map((r: any) => ({
+          nombre:    r.nombre,
+          monto:     Number(r.monto),
+          contratos: Number(r.contratos),
+        })),
+      },
+    });
+  } catch (error) {
+    console.error('ERROR getTopDependencias =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al obtener top dependencias' });
+  }
+};
+
+export const getEvolucionMensual = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const anio = Number(req.query.anio) || new Date().getFullYear();
+    const seq  = AdqSolicitudes.sequelize!;
+
+    const [solRows]: any = await seq.query(`
+      SELECT MONTH(fecha_ingreso) AS mes, COUNT(*) AS total
+      FROM adq_solicitudes
+      WHERE YEAR(fecha_ingreso) = :anio
+      GROUP BY MONTH(fecha_ingreso)
+      ORDER BY mes
+    `, { replacements: { anio } });
+
+    const [adjRows]: any = await seq.query(`
+      SELECT MONTH(s.fecha_ingreso) AS mes,
+             COUNT(pa.id_proc)                              AS contratos,
+             COALESCE(SUM(pa.monto_total_adjudicado_iva),0) AS monto
+      FROM adq_solicitudes s
+      JOIN adq_procedimiento_adquisitivo pa ON pa.id_solicitud = s.id_solicitud
+      WHERE YEAR(s.fecha_ingreso) = :anio
+        AND pa.monto_total_adjudicado_iva IS NOT NULL
+      GROUP BY MONTH(s.fecha_ingreso)
+      ORDER BY mes
+    `, { replacements: { anio } });
+
+    const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+    // Construir arrays de 12 posiciones (índice 0 = enero)
+    const solicitudesPorMes = Array(12).fill(0);
+    const contratosPorMes   = Array(12).fill(0);
+    const montoPorMes       = Array(12).fill(0);
+
+    solRows.forEach((r: any)  => { solicitudesPorMes[Number(r.mes) - 1] = Number(r.total);     });
+    adjRows.forEach((r: any)  => {
+      contratosPorMes[Number(r.mes) - 1] = Number(r.contratos);
+      montoPorMes[Number(r.mes) - 1]     = Number(r.monto);
+    });
+
+    return res.json({
+      ok: true,
+      data: {
+        anio,
+        categorias:   MESES,
+        solicitudes:  solicitudesPorMes,
+        contratos:    contratosPorMes,
+        montos:       montoPorMes,
+      },
+    });
+  } catch (error) {
+    console.error('ERROR getEvolucionMensual =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al obtener evolución mensual' });
+  }
+};
+
+// ─── Helpers para exportación Excel ─────────────────────────────────────────
+
+function getEstatusLabelExcel(estatus: number): string {
+  switch (Number(estatus)) {
+    case 1: return 'Registrada';
+    case 2: return 'Estudio de Mercado';
+    case 3: return 'Afectación Presupuestal';
+    case 4: return 'Adquisición';
+    case 5: return 'Adjudicación';
+    default: return 'Desconocido';
+  }
+}
+
+function calcularDiasExcel(fechaIngreso: string | null | undefined): number | null {
+  if (!fechaIngreso) return null;
+  const ingreso = new Date(fechaIngreso + 'T00:00:00');
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  return Math.floor((hoy.getTime() - ingreso.getTime()) / 86_400_000);
+}
+
+function calcularSemaforoExcel(solicitud: any): { label: string; estado: string; dias: number | null } {
+  const dias = calcularDiasExcel(solicitud?.fecha_ingreso);
+  if (!solicitud) return { label: 'En tiempo', estado: 'en-tiempo', dias: null };
+  if (solicitud.estado_estudio_mercado === 'RECHAZADO') return { label: 'Rechazado', estado: 'rechazado', dias };
+  if (Number(solicitud.estatus_id) === 5) return { label: 'Concluido', estado: 'concluido', dias };
+  if (dias !== null && dias > 15) return { label: 'Atrasado', estado: 'atrasado', dias };
+  return { label: 'En tiempo', estado: 'en-tiempo', dias };
+}
+
+function formatFechaExcel(fecha: string): string {
+  if (!fecha) return '—';
+  const d = new Date(fecha);
+  if (isNaN(d.getTime())) return fecha;
+  return d.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function applyBorder(cell: ExcelJS.Cell, color = 'CCCCCC'): void {
+  const thin: ExcelJS.Border = { style: 'thin', color: { argb: color } };
+  cell.border = { top: thin, bottom: thin, left: thin, right: thin };
+}
+
+export const exportarExcelGestion = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { busqueda, estatus } = req.query;
+
+    // Obtener y enriquecer datos (igual que getRegistros)
+    const listSolicitudes: any[] = await AdqSolicitudes.findAll({
+      order: [['id_solicitud', 'ASC']]
+    });
+
+    let data: any[] = await Promise.all(
+      listSolicitudes.map(async (solicitud: any) => {
+        const item = solicitud.toJSON();
+        const [dependencia, centroCosto, opd] = await Promise.all([
+          item.id_dependencia  ? AdqDependencias.findByPk(item.id_dependencia)  : null,
+          item.id_centro_costo ? AdqCentrosCosto.findByPk(item.id_centro_costo) : null,
+          item.id_opd          ? AdqOrganismosOPDS.findByPk(item.id_opd)         : null,
+        ]);
+        return {
+          ...item,
+          origen_recurso_nombre: getOrigenRecursoNombre(item.id_origen_recurso),
+          dependencia_nombre:    (dependencia as any)?.getDataValue('nombre') || '',
+          opd_nombre:            opd
+            ? `${(opd as any).getDataValue('codigo')} - ${(opd as any).getDataValue('nombre')}`
+            : '',
+        };
+      })
+    );
+
+    // Aplicar filtros si los hay
+    if (busqueda) {
+      const texto = (busqueda as string).toLowerCase();
+      data = data.filter((row: any) =>
+        Object.values(row).some(v => v && v.toString().toLowerCase().includes(texto))
+      );
+    }
+    if (estatus) {
+      data = data.filter((row: any) => Number(row.estatus_id) === Number(estatus));
+    }
+
+    // ── Construir Excel ────────────────────────────────────────────────────
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'SIAdquisiciones';
+    workbook.created = new Date();
+
+    const ws = workbook.addWorksheet('Gestión de Solicitudes', {
+      pageSetup: {
+        paperSize:   9,
+        orientation: 'landscape',
+        fitToPage:   true,
+        fitToWidth:  1,
+        fitToHeight: 0,
+      },
+    });
+
+    const GUINDA   = '6B0F2A';
+    const GUINDA_L = 'F7E6EA';
+    const WHITE    = 'FFFFFF';
+    const GRAY     = 'F4F4F4';
+    const TEXT     = '2C2C2C';
+
+    // Anchos de columna
+    ws.getColumn(1).width = 5;
+    ws.getColumn(2).width = 22;
+    ws.getColumn(3).width = 16;
+    ws.getColumn(4).width = 14;
+    ws.getColumn(5).width = 38;
+    ws.getColumn(6).width = 20;
+    ws.getColumn(7).width = 24;
+    ws.getColumn(8).width = 22;
+    ws.getColumn(9).width = 16;
+
+    // ── Fila 1: Logo + nombre institución ─────────────────────────────────
+    ws.getRow(1).height = 40;
+    ws.mergeCells('A1:A4');
+    ws.mergeCells('B1:I1');
+
+    const logoPath = path.join(__dirname, '../../src/assets/acusederegistro.png');
+    if (fs.existsSync(logoPath)) {
+      const imageId = workbook.addImage({ filename: logoPath, extension: 'png' });
+      ws.addImage(imageId, {
+        tl:  { col: 0, row: 0 } as any,
+        ext: { width: 80, height: 80 },
+      } as any);
+    }
+
+    const b1 = ws.getCell('B1');
+    b1.value     = 'SISTEMA DE INFORMACIÓN DE ADQUISICIONES';
+    b1.font      = { name: 'Calibri', size: 13, bold: true, color: { argb: GUINDA } };
+    b1.alignment = { vertical: 'middle', horizontal: 'center' };
+    b1.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: WHITE } };
+
+    // ── Fila 2: Título principal ───────────────────────────────────────────
+    ws.getRow(2).height = 30;
+    ws.mergeCells('B2:I2');
+    const b2 = ws.getCell('B2');
+    b2.value     = 'Gestión de Solicitudes';
+    b2.font      = { name: 'Calibri', size: 16, bold: true, color: { argb: WHITE } };
+    b2.alignment = { vertical: 'middle', horizontal: 'center' };
+    b2.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: GUINDA } };
+
+    // ── Fila 3: Subtítulo ──────────────────────────────────────────────────
+    ws.getRow(3).height = 20;
+    ws.mergeCells('B3:I3');
+    const b3 = ws.getCell('B3');
+    b3.value     = 'Vista centralizada de todas las etapas del proceso adquisitivo';
+    b3.font      = { name: 'Calibri', size: 11, italic: true, color: { argb: GUINDA } };
+    b3.alignment = { vertical: 'middle', horizontal: 'center' };
+    b3.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: GUINDA_L } };
+
+    // ── Fila 4: Fecha de generación + filtros ──────────────────────────────
+    ws.getRow(4).height = 18;
+    ws.mergeCells('B4:I4');
+    const now      = new Date();
+    const fechaStr = now.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
+    const horaStr  = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    let filtrosInfo = '';
+    if (busqueda) filtrosInfo += `  |  Búsqueda: "${busqueda}"`;
+    if (estatus)  filtrosInfo += `  |  Estatus: ${getEstatusLabelExcel(Number(estatus))}`;
+    const b4 = ws.getCell('B4');
+    b4.value     = `Generado: ${fechaStr} a las ${horaStr}${filtrosInfo}`;
+    b4.font      = { name: 'Calibri', size: 9, color: { argb: '666666' } };
+    b4.alignment = { vertical: 'middle', horizontal: 'right' };
+    b4.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: GRAY } };
+
+    ws.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: WHITE } };
+
+    // ── Fila 5: Espaciador ────────────────────────────────────────────────
+    ws.getRow(5).height = 6;
+    ws.mergeCells('A5:I5');
+
+    // ── Fila 6: Encabezados de tabla ──────────────────────────────────────
+    ws.getRow(6).height = 22;
+    const headers = [
+      '#', 'Folio', 'Fecha Ingreso', 'Semáforo',
+      'Dependencia / OPD', 'Origen del Recurso',
+      'Estatus', 'Etapa Actual', 'Días Transcurridos',
+    ];
+    headers.forEach((h, i) => {
+      const c = ws.getCell(6, i + 1);
+      c.value     = h;
+      c.font      = { name: 'Calibri', size: 11, bold: true, color: { argb: WHITE } };
+      c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: GUINDA } };
+      c.alignment = { vertical: 'middle', horizontal: 'center', wrapText: false };
+      applyBorder(c, '8B2040');
+    });
+
+    // ── Filas de datos ────────────────────────────────────────────────────
+    const semColors: Record<string, string> = {
+      'en-tiempo': '1B5E20',
+      'atrasado':  'B71C1C',
+      'rechazado': '424242',
+      'concluido': '0D47A1',
+    };
+
+    data.forEach((row: any, idx: number) => {
+      const rowNum = idx + 7;
+      const rowBg  = idx % 2 === 1 ? GUINDA_L : WHITE;
+      ws.getRow(rowNum).height = 18;
+
+      const sem      = calcularSemaforoExcel(row);
+      const diasText = sem.dias !== null ? `${sem.dias} d` : '—';
+      const etapa    = getEstatusLabelExcel(Number(row.estatus_id));
+
+      const values: (string | number)[] = [
+        idx + 1,
+        row.folio || '—',
+        formatFechaExcel(row.fecha_ingreso),
+        sem.label,
+        row.dependencia_nombre || row.opd_nombre || '—',
+        row.origen_recurso_nombre || '—',
+        etapa,
+        etapa,
+        diasText,
+      ];
+
+      values.forEach((val, colIdx) => {
+        const c = ws.getCell(rowNum, colIdx + 1);
+        c.value     = val;
+        c.font      = { name: 'Calibri', size: 10, color: { argb: TEXT } };
+        c.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+        c.alignment = {
+          vertical:   'middle',
+          horizontal: colIdx === 0 || colIdx === 8 ? 'center' : 'left',
+          wrapText:   colIdx === 4,
+        };
+        applyBorder(c);
+      });
+
+      // Color semáforo según estado
+      const semCell = ws.getCell(rowNum, 4);
+      semCell.font = {
+        name: 'Calibri',
+        size: 10,
+        bold: true,
+        color: { argb: semColors[sem.estado] ?? TEXT },
+      };
+    });
+
+    // ── Fila de pie ───────────────────────────────────────────────────────
+    const footerRow = data.length + 7;
+    ws.getRow(footerRow).height = 14;
+    ws.mergeCells(`A${footerRow}:I${footerRow}`);
+    const fc = ws.getCell(`A${footerRow}`);
+    fc.value     = `Total de registros: ${data.length}`;
+    fc.font      = { name: 'Calibri', size: 9, bold: true, color: { argb: GUINDA } };
+    fc.alignment = { horizontal: 'right', vertical: 'middle' };
+    fc.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: GUINDA_L } };
+
+    // ── Enviar respuesta ──────────────────────────────────────────────────
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="solicitudes_SIAdquisiciones.xlsx"');
+    await workbook.xlsx.write(res);
+    return res.end();
+
+  } catch (error: any) {
+    console.error('Error al exportar Excel:', error);
+    return res.status(500).json({ msg: 'Error al generar el Excel', error: error.message });
+  }
+};
+
+export const getSemaforo = async (_req: Request, res: Response): Promise<any> => {
+  try {
+    const seq   = AdqSolicitudes.sequelize!;
+    const ahora = new Date();
+
+    // Semáforo: solicitudes activas agrupadas por días desde ingreso
+    const [semaforoRows]: any = await seq.query(`
+      SELECT
+        SUM(CASE WHEN DATEDIFF(NOW(), fecha_ingreso) > 60 THEN 1 ELSE 0 END) AS urgente,
+        SUM(CASE WHEN DATEDIFF(NOW(), fecha_ingreso) BETWEEN 30 AND 60 THEN 1 ELSE 0 END) AS atencion,
+        SUM(CASE WHEN DATEDIFF(NOW(), fecha_ingreso) < 30 THEN 1 ELSE 0 END) AS normal,
+        COUNT(*) AS total_activas
+      FROM adq_solicitudes
+      WHERE estatus_id < 5
+    `);
+
+    // Monto total comprometido (todas las adjudicaciones)
+    const [montoRow]: any = await seq.query(`
+      SELECT COALESCE(SUM(monto_total_adjudicado_iva), 0) AS monto
+      FROM adq_procedimiento_adquisitivo
+    `);
+
+    // Solicitudes nuevas este mes y el anterior
+    const primerDiaMes = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2,'0')}-01`;
+    const primerDiaMesAnt = ahora.getMonth() === 0
+      ? `${ahora.getFullYear() - 1}-12-01`
+      : `${ahora.getFullYear()}-${String(ahora.getMonth()).padStart(2,'0')}-01`;
+    const ultimoDiaMesAnt = new Date(ahora.getFullYear(), ahora.getMonth(), 0)
+      .toISOString().split('T')[0];
+
+    const [esteMesRow]: any = await seq.query(`
+      SELECT COUNT(*) AS total FROM adq_solicitudes
+      WHERE fecha_ingreso >= :inicio
+    `, { replacements: { inicio: primerDiaMes } });
+
+    const [mesAntRow]: any = await seq.query(`
+      SELECT COUNT(*) AS total FROM adq_solicitudes
+      WHERE fecha_ingreso BETWEEN :inicio AND :fin
+    `, { replacements: { inicio: primerDiaMesAnt, fin: ultimoDiaMesAnt } });
+
+    const esteMes   = Number(esteMesRow[0]?.total   ?? 0);
+    const mesAnt    = Number(mesAntRow[0]?.total     ?? 0);
+    const pctCambio = mesAnt === 0 ? null : Math.round(((esteMes - mesAnt) / mesAnt) * 100);
+
+    const s = semaforoRows[0] ?? {};
+
+    return res.json({
+      ok: true,
+      data: {
+        total_activas: Number(s.total_activas ?? 0),
+        monto:         Number(montoRow[0]?.monto ?? 0),
+        semaforo: {
+          normal:   Number(s.normal   ?? 0),
+          atencion: Number(s.atencion ?? 0),
+          urgente:  Number(s.urgente  ?? 0),
+        },
+        comparativa: {
+          este_mes:   esteMes,
+          mes_anterior: mesAnt,
+          pct_cambio:   pctCambio,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('ERROR getSemaforo =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al obtener semáforo ejecutivo' });
+  }
+};
+
+export const getActividadCalendario = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const anio = Number(req.query.anio)  || new Date().getFullYear();
+    const mes  = Number(req.query.mes)   || new Date().getMonth() + 1;
+
+    const inicio = `${anio}-${String(mes).padStart(2, '0')}-01`;
+    const fin    = new Date(anio, mes, 0).toISOString().split('T')[0];
+    const seq    = AdqSolicitudes.sequelize!;
+
+    const [solRows]: any = await seq.query(`
+      SELECT DATE(fecha_ingreso) AS fecha, COUNT(*) AS total
+      FROM adq_solicitudes
+      WHERE DATE(fecha_ingreso) BETWEEN :inicio AND :fin
+      GROUP BY DATE(fecha_ingreso)
+    `, { replacements: { inicio, fin } });
+
+    const [contratoRows]: any = await seq.query(`
+      SELECT DATE(pa.created_at) AS fecha, COUNT(*) AS total
+      FROM adq_procedimiento_adquisitivo pa
+      WHERE pa.no_contrato IS NOT NULL
+        AND DATE(pa.created_at) BETWEEN :inicio AND :fin
+      GROUP BY DATE(pa.created_at)
+    `, { replacements: { inicio, fin } });
+
+    const [adjRows]: any = await seq.query(`
+      SELECT DATE(s.fecha_ingreso) AS fecha, COUNT(*) AS total
+      FROM adq_solicitudes s
+      WHERE s.estatus_id = 5
+        AND DATE(s.fecha_ingreso) BETWEEN :inicio AND :fin
+      GROUP BY DATE(s.fecha_ingreso)
+    `, { replacements: { inicio, fin } });
+
+    return res.json({
+      ok: true,
+      data: {
+        solicitudes:  solRows.map((r: any)       => ({ fecha: r.fecha, total: Number(r.total) })),
+        contratos:    contratoRows.map((r: any)   => ({ fecha: r.fecha, total: Number(r.total) })),
+        adjudicaciones: adjRows.map((r: any)      => ({ fecha: r.fecha, total: Number(r.total) })),
+      },
+    });
+  } catch (error) {
+    console.error('ERROR getActividadCalendario =>', error);
+    return res.status(500).json({ ok: false, msg: 'Error al obtener actividad del calendario' });
   }
 };
 

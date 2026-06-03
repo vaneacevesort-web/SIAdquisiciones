@@ -39,7 +39,7 @@ AdqBienesServicios.init(
       unique: true,
     },
     clave_verificacion: {
-      type: DataTypes.STRING(120),
+      type: DataTypes.TEXT,
       allowNull: true,
     },
     descripcion_clave_verificacion: {

@@ -123,6 +123,16 @@ export class GestionListaComponent implements OnInit {
     this.rows = [...this.temp];
   }
 
+  // ── Contador descriptivo ────────────────────────────────────────────────
+
+  get textoContador(): string {
+    const n = this.rows.length;
+    if (n === 0) return 'Sin solicitudes para mostrar';
+    const base = `Mostrando ${n} solicitud${n === 1 ? '' : 'es'}`;
+    if (this.filtroEstatus) return `${base} en ${this.getEstatusLabel(Number(this.filtroEstatus))}`;
+    return base;
+  }
+
   // ── Helpers de presentación ─────────────────────────────────────────────
 
   getOrigenClass(id: number): string {
@@ -131,6 +141,7 @@ export class GestionListaComponent implements OnInit {
       case 2: return 'federal';
       case 3: return 'fideicomiso';
       case 4: return 'concurrente';
+      case 5: return 'propio';
       default: return 'default';
     }
   }

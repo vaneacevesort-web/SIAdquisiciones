@@ -20,6 +20,13 @@ export class ReportesComponent implements OnInit {
     afectacion:   0,
     contratacion: 0,
     adjudicacion: 0,
+    estatal:      0,
+    federal:      0,
+    fideicomiso:  0,
+    concurrente:  0,
+    propio:       0,
+    total_contratos: 0,
+    monto_total:  0,
   };
 
   private registroService = inject(RegistroService);
@@ -35,6 +42,13 @@ export class ReportesComponent implements OnInit {
             afectacion:   d.afectacion   ?? 0,
             contratacion: d.contratacion ?? 0,
             adjudicacion: d.adjudicacion ?? 0,
+            estatal:      d.estatal      ?? 0,
+            federal:      d.federal      ?? 0,
+            fideicomiso:  d.fideicomiso  ?? 0,
+            concurrente:  d.concurrente  ?? 0,
+            propio:       d.propio       ?? 0,
+            total_contratos: d.total_contratos ?? 0,
+            monto_total:  d.monto_total  ?? 0,
           };
         }
         this.cargando = false;
@@ -46,5 +60,12 @@ export class ReportesComponent implements OnInit {
   pct(n: number, total: number): string {
     if (!total) return '—';
     return Math.round((n / total) * 100) + '%';
+  }
+
+  pesos(n: number): string {
+    if (!n) return '$0';
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency', currency: 'MXN', maximumFractionDigits: 0,
+    }).format(n);
   }
 }

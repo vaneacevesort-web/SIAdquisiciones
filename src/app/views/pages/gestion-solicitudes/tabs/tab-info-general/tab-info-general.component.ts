@@ -19,7 +19,8 @@ export class TabInfoGeneralComponent {
       case 1: return 'Estatal';
       case 2: return 'Federal';
       case 3: return 'Fideicomiso';
-      case 4: return 'Concurrente o Propio';
+      case 4: return 'Concurrente';
+      case 5: return 'Propio';
       default: return '—';
     }
   }

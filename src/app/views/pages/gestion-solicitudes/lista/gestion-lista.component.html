@@ -60,13 +60,7 @@
         <p class="gl-empty-hint">Intenta ajustar los filtros o crea una nueva solicitud</p>
       </div>
     } @else {
-      <p class="gl-table-count">
-        @if (rows.length > 0) {
-          Mostrando {{ rows.length }} solicitud{{ rows.length === 1 ? '' : 'es' }}
-        } @else {
-          Sin solicitudes para mostrar
-        }
-      </p>
+      <p class="gl-table-count">{{ textoContador }}</p>
       <div class="table-responsive">
         <table class="gl-table">
           <thead>

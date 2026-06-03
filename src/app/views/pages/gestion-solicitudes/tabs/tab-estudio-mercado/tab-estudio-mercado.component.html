@@ -66,9 +66,11 @@
       <select class="form-select" formControlName="estadoEstudio"
         [class.is-invalid]="hasError('estadoEstudio','required')">
         <option value="">Selecciona una opción</option>
+        <option value="ADJUDICADO">Adjudicado</option>
         <option value="CONCLUIDO">Concluido</option>
+        <option value="DESIERTA">Desierta</option>
         <option value="PROCESO">En Proceso</option>
-        <option value="RECHAZADO">Rechazado</option>
+        <option value="RECHAZADA">Rechazada</option>
       </select>
       @if (hasError('estadoEstudio','required')) {
         <div class="invalid-feedback">Campo obligatorio</div>

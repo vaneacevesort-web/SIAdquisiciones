@@ -30,6 +30,7 @@ async function main() {
       ['3140', '3141', 'Servicio Telefónico Convencional'],
       ['3150', '3151', 'Servicio de Telefonía Celular'],
       ['3160', '3161', 'Servicio de Radiolocalización y Telecomunicación'],
+      ['3160', '3162', 'Servicios de conducción de señales analógicas y digitales'],
       ['3170', '3171', 'Servicios de Acceso a Internet'],
       ['3170', '3172', 'Servicios Electrónicos y Colaboración en la Nube'],
       ['3180', '3181', 'Servicio Postal y Telegráfico'],
@@ -90,6 +91,7 @@ async function main() {
       ['3590', '3591', 'Servicios de Fumigación'],
 
       ['3610', '3611', 'Gastos de Publicidad y Propaganda'],
+      ['3610', '3612', 'Publicaciones Oficiales'],
       ['3620', '3621', 'Gastos de Publicidad en Materia Comercial'],
       ['3630', '3631', 'Servicios de Creatividad, Preproducción y Producción de Publicidad, Excepto Internet'],
       ['3640', '3641', 'Servicios de Revelado de Fotografías'],

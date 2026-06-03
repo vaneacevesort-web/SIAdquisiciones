@@ -81,7 +81,7 @@ AdqProcedimientoAdquisitivo.init(
     hora_fallo:                   { type: DataTypes.TIME, allowNull: true },
     monto_total_adjudicado_iva: { type: DataTypes.DECIMAL(18, 2), allowNull: true },
     proveedor_razon_social:     { type: DataTypes.STRING(255), allowNull: true },
-    proveedor_rfc:              { type: DataTypes.STRING(20), allowNull: true },
+    proveedor_rfc:              { type: DataTypes.STRING(255), allowNull: true },
     no_contrato:                { type: DataTypes.STRING(80), allowNull: true },
     vigencia_inicio:            { type: DataTypes.DATEONLY, allowNull: true },
     vigencia_termino:           { type: DataTypes.DATEONLY, allowNull: true },

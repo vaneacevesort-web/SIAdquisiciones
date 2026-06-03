@@ -21,6 +21,8 @@
     </div>
   } @else {
 
+    <!-- ── Por etapa del proceso ───────────────────────────────────── -->
+    <p class="rep-section-title"><i class="feather icon-activity me-1"></i>Por etapa del proceso</p>
     <div class="kpi-grid mb-4">
 
       <div class="kpi-card kpi-card--blue">
@@ -65,6 +67,81 @@
           <span class="kpi-card__number">{{ kpis.adjudicacion }}</span>
           <span class="kpi-card__label">Adjudicación</span>
           <span class="kpi-card__pct">{{ pct(kpis.adjudicacion, kpis.solicitudes) }} del total</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Por origen del recurso ───────────────────────────────────── -->
+    <p class="rep-section-title"><i class="feather icon-pie-chart me-1"></i>Por origen del recurso</p>
+    <div class="kpi-grid mb-4">
+
+      <div class="kpi-card kpi-card--indigo">
+        <div class="kpi-card__icon"><i class="feather icon-flag"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number">{{ kpis.estatal }}</span>
+          <span class="kpi-card__label">Estatales</span>
+          <span class="kpi-card__pct">{{ pct(kpis.estatal, kpis.solicitudes) }} del total</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--orange">
+        <div class="kpi-card__icon"><i class="feather icon-globe"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number">{{ kpis.federal }}</span>
+          <span class="kpi-card__label">Federales</span>
+          <span class="kpi-card__pct">{{ pct(kpis.federal, kpis.solicitudes) }} del total</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--purple">
+        <div class="kpi-card__icon"><i class="feather icon-briefcase"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number">{{ kpis.fideicomiso }}</span>
+          <span class="kpi-card__label">Fideicomiso</span>
+          <span class="kpi-card__pct">{{ pct(kpis.fideicomiso, kpis.solicitudes) }} del total</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--cyan">
+        <div class="kpi-card__icon"><i class="feather icon-git-merge"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number">{{ kpis.concurrente }}</span>
+          <span class="kpi-card__label">Concurrentes</span>
+          <span class="kpi-card__pct">{{ pct(kpis.concurrente, kpis.solicitudes) }} del total</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--slate">
+        <div class="kpi-card__icon"><i class="feather icon-home"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number">{{ kpis.propio }}</span>
+          <span class="kpi-card__label">Propias</span>
+          <span class="kpi-card__pct">{{ pct(kpis.propio, kpis.solicitudes) }} del total</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Contratos y adjudicaciones ──────────────────────────────── -->
+    <p class="rep-section-title"><i class="feather icon-file-text me-1"></i>Contratos y adjudicaciones</p>
+    <div class="kpi-grid kpi-grid--2 mb-4">
+
+      <div class="kpi-card kpi-card--green">
+        <div class="kpi-card__icon"><i class="feather icon-clipboard"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number">{{ kpis.total_contratos }}</span>
+          <span class="kpi-card__label">Total Contratos</span>
+          <span class="kpi-card__pct">{{ pct(kpis.total_contratos, kpis.adjudicacion) }} de adjudicadas</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--gold">
+        <div class="kpi-card__icon"><i class="feather icon-trending-up"></i></div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__number kpi-card__number--sm">{{ pesos(kpis.monto_total) }}</span>
+          <span class="kpi-card__label">Monto Total Adjudicado</span>
+          <span class="kpi-card__pct">IVA incluido</span>
         </div>
       </div>
 

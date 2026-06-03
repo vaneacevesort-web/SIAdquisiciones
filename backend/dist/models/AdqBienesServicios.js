@@ -19,7 +19,7 @@ AdqBienesServicios.init({
         unique: true,
     },
     clave_verificacion: {
-        type: sequelize_1.DataTypes.STRING(120),
+        type: sequelize_1.DataTypes.TEXT,
         allowNull: true,
     },
     descripcion_clave_verificacion: {

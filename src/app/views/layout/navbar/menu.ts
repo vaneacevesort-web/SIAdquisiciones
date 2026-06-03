@@ -2,6 +2,13 @@ import { MenuItem } from './menu.model';
 
 export const MENU: MenuItem[] = [
 
+  // Dashboard ejecutivo — visible para todos
+  {
+    label: 'Inicio',
+    icon: 'home',
+    link: '/dashboard',
+  },
+
   // Sin restricción de rol → visible para todos los usuarios autenticados
   {
     label: 'Solicitudes',
@@ -38,9 +45,9 @@ export const MENU: MenuItem[] = [
     ]
   },
 
-  // Sin restricción de rol → todos pueden consultar reportes
+  // Sin restricción de rol → todos pueden consultar informes detallados
   {
-    label: 'Reportes',
+    label: 'Informes',
     icon: 'bar-chart-2',
     link: '/reportes',
   },

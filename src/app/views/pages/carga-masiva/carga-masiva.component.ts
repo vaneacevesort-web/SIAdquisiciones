@@ -105,7 +105,9 @@ export class CargaMasivaComponent {
       },
       error: (err) => {
         const e = err as any;
-        this.mensajeError = e?.error?.msg ?? 'Error al importar los datos. Intente de nuevo.';
+        const msg    = e?.error?.msg    ?? 'Error al importar los datos. Intente de nuevo.';
+        const detail = e?.error?.detail ?? '';
+        this.mensajeError = detail ? `${msg}\n\nDetalle: ${detail}` : msg;
         this.estado = 'resultado';
       },
     });

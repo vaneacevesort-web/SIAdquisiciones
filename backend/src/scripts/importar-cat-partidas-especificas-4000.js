@@ -56,6 +56,7 @@ async function main() {
       ['4420', '4421', 'Becas'],
       ['4420', '4422', 'Capacitación'],
       ['4430', '4431', 'Ayudas a Instituciones Educativas'],
+      ['4430', '4432', 'Premios, recompensas y pensión recreativa estudiantil'],
       ['4440', '4441', 'Ayudas a Actividades Científicas o Académicas'],
       ['4450', '4451', 'Ayudas a Instituciones sin Fines de Lucro'],
       ['4460', '4461', 'Ayudas a Cooperativas'],

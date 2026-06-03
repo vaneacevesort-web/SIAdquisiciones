@@ -31,7 +31,7 @@ AdqAfectacionPresupuestal.init({
         allowNull: true,
     },
     oficio_suficiencia_path: {
-        type: sequelize_1.DataTypes.STRING(500),
+        type: sequelize_1.DataTypes.TEXT,
         allowNull: true,
     },
     importe_suficiencia: {

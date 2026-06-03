@@ -105,6 +105,23 @@ export class RegistroService {
   saveAdjudicacion(id: number, data: any): Observable<any> {
     return this.http.post<any>(`${this.myAppUrl}${this.myAPIUrl}/adjudicacion/${id}`, data);
   }
+
+  getTopDependencias(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/top-dependencias`);
+  }
+
+  getEvolucionMensual(anio?: number): Observable<any> {
+    const params = anio ? `?anio=${anio}` : '';
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/evolucion-mensual${params}`);
+  }
+
+  getActividadCalendario(anio: number, mes: number): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/actividad-calendario?anio=${anio}&mes=${mes}`);
+  }
+
+  getSemaforo(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/semaforo`);
+  }
 }
 
 

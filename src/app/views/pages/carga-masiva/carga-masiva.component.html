@@ -53,7 +53,7 @@
 
     @if (mensajeError && estado !== 'importado') {
       <div class="alert alert-danger py-2 mb-3">
-        <i class="feather icon-alert-circle me-1"></i>{{ mensajeError }}
+        <i class="feather icon-alert-circle me-1"></i><span style="white-space:pre-line">{{ mensajeError }}</span>
       </div>
     }
 
@@ -276,7 +276,7 @@
 
       @if (mensajeError) {
         <div class="alert alert-danger py-2 mb-3">
-          <i class="feather icon-alert-circle me-1"></i>{{ mensajeError }}
+          <i class="feather icon-alert-circle me-1"></i><span style="white-space:pre-line">{{ mensajeError }}</span>
         </div>
       }
 
@@ -364,7 +364,7 @@
           <tbody>
             <tr><td><code>Folio Interno de Solicitud</code></td><td class="text-muted small">Llave principal — obligatorio</td></tr>
             <tr><td><code>Fecha Ingreso de Solicitud</code></td><td class="text-muted small">Fecha — obligatorio</td></tr>
-            <tr><td><code>Origen de Recurso</code></td><td class="text-muted small">Estatal / Federal / Fideicomiso / Concurrente — obligatorio</td></tr>
+            <tr><td><code>Origen de Recurso</code></td><td class="text-muted small">Estatal / Federal / Fideicomiso / Concurrente / Propio — obligatorio</td></tr>
             <tr><td><code>Tipo de Solicitud:</code></td><td class="text-muted small">Contiene "Servicio" o "Bien" — obligatorio</td></tr>
             <tr><td><code>Dependencia</code></td><td class="text-muted small">Nombre exacto del catálogo</td></tr>
             <tr><td><code>Centro de Costo</code></td><td class="text-muted small">Formato: Nombre (CÓDIGO)</td></tr>

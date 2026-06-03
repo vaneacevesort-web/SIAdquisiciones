@@ -1,535 +1,206 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { NgbCalendar, NgbDatepickerModule, NgbDateStruct, NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
-import { ApexOptions, NgApexchartsModule } from "ng-apexcharts";
-import { FeatherIconDirective } from '../../../core/feather-icon/feather-icon.directive';
-import { ThemeCssVariableService, ThemeCssVariablesType } from '../../../core/services/theme-css-variable.service';
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { NgApexchartsModule, ApexOptions } from 'ng-apexcharts';
+import { RegistroService } from '../../../service/registro.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
-    selector: 'app-dashboard',
-    imports: [
-        NgbDropdownModule,
-        FormsModule,
-        NgbDatepickerModule,
-        NgApexchartsModule,
-        FeatherIconDirective
-    ],
-    templateUrl: './dashboard.component.html',
-    styleUrl: './dashboard.component.scss'
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterModule, NgApexchartsModule],
+  templateUrl: './dashboard.component.html',
+  styleUrl: './dashboard.component.scss',
 })
 export class DashboardComponent implements OnInit {
 
-  /**
-   * NgbDatepicker
-   */
-  currentDate: NgbDateStruct = inject(NgbCalendar).getToday();
+  cargando     = true;
+  cargandoDeps = true;
+  cargandoCal  = true;
+  ahora        = new Date();
 
-  /**
-   * Apex chart
-   */
-  public customersChartOptions: ApexOptions | any;
-  public ordersChartOptions: ApexOptions | any;
-  public growthChartOptions: ApexOptions | any;
-  public revenueChartOptions: ApexOptions | any;
-  public monthlySalesChartOptions: ApexOptions | any;
-  public cloudStorageChartOptions: ApexOptions | any;
+  // ── KPIs ──────────────────────────────────────────────────────────────
+  kpis = {
+    total: 0, estatal: 0, federal: 0, fideicomiso: 0, concurrente: 0, propio: 0,
+    contratos: 0, monto: 0,
+    registradas: 0, estudio: 0, afectacion: 0, contratacion: 0, adjudicacion: 0,
+  };
 
-  themeCssVariables = inject(ThemeCssVariableService).getThemeCssVariables();
+  // ── Gráficas ──────────────────────────────────────────────────────────
+  chartEtapas: ApexOptions | null = null;
+  chartOrigen: ApexOptions | null = null;
 
-  constructor() {}
+  // ── Top dependencias ──────────────────────────────────────────────────
+  topSolicitudes: { nombre: string; total: number }[] = [];
+  topMonto:       { nombre: string; monto: number }[] = [];
+
+  // ── Calendario ────────────────────────────────────────────────────────
+  calAnio  = this.ahora.getFullYear();
+  calMes   = this.ahora.getMonth() + 1;
+  calDias: { fecha: Date | null; solicitudes: number; contratos: number; adjudicaciones: number }[] = [];
+  calSeleccionado: Date | null = null;
+
+  readonly DIAS_SEM   = ['L','M','X','J','V','S','D'];
+  readonly MESES_NOM  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                         'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  private svc = inject(RegistroService);
 
   ngOnInit(): void {
-    this.customersChartOptions = this.getCustomersChartOptions(this.themeCssVariables);
-    this.ordersChartOptions = this.getOrdersChartOptions(this.themeCssVariables);
-    this.growthChartOptions = this.getGrowthChartOptions(this.themeCssVariables);
-    this.revenueChartOptions = this.getRevenueChartOptions(this.themeCssVariables);
-    this.monthlySalesChartOptions = this.getMonthlySalesChartOptions(this.themeCssVariables);
-    this.cloudStorageChartOptions = this.getCloudStorageChartOptions(this.themeCssVariables);
+    // KPIs + gráficas
+    this.svc.getKpis().subscribe({
+      next: (r: any) => {
+        if (r?.data) {
+          const d = r.data;
+          this.kpis = {
+            total: d.total ?? 0, estatal: d.estatal ?? 0, federal: d.federal ?? 0,
+            fideicomiso: d.fideicomiso ?? 0, concurrente: d.concurrente ?? 0, propio: d.propio ?? 0,
+            contratos: d.total_contratos ?? 0, monto: d.monto_total ?? 0,
+            registradas: d.registradas ?? 0, estudio: d.estudio ?? 0,
+            afectacion: d.afectacion ?? 0, contratacion: d.contratacion ?? 0,
+            adjudicacion: d.adjudicacion ?? 0,
+          };
+          this.buildCharts();
+        }
+        this.cargando = false;
+      },
+      error: () => { this.cargando = false; },
+    });
+
+    // Top dependencias
+    this.svc.getTopDependencias().subscribe({
+      next: (r: any) => {
+        if (r?.data) {
+          this.topSolicitudes = r.data.porSolicitudes ?? [];
+          this.topMonto       = r.data.porMonto       ?? [];
+        }
+        this.cargandoDeps = false;
+      },
+      error: () => { this.cargandoDeps = false; },
+    });
+
+    // Calendario
+    this.cargarCal();
   }
 
-
-
-  /**
-   * Customerse chart options
-   */
-  getCustomersChartOptions(themeVariables: ThemeCssVariablesType) {
-    return {
-      series: [{
-        name: '',
-        data: [3844, 3855, 3841, 3867, 3822, 3843, 3821, 3841, 3856, 3827, 3843]
-      }],
-      chart: {
-        type: "line",
-        height: 60,
-        sparkline: {
-          enabled: !0
-        }
-      },
-      colors: [themeVariables.primary],
-      xaxis: {
-        type: 'datetime',
-        categories: ["Jan 01 2024", "Jan 02 2024", "Jan 03 2024", "Jan 04 2024", "Jan 05 2024", "Jan 06 2024", "Jan 07 2024", "Jan 08 2024", "Jan 09 2024", "Jan 10 2024", "Jan 11 2024",],
-      },
-      stroke: {
-        width: 2,
-        curve: "smooth"
-      },
-      markers: {
-        size: 0
-      },
-    }
-  };
-
-
-
-  /**
-   * Orders chart options
-   */
-  getOrdersChartOptions(themeVariables: ThemeCssVariablesType) {
-    return {
-      series: [{
-        name: '',
-        data: [36, 77, 52, 90, 74, 35, 55, 23, 47, 10, 63]
-      }],
-      chart: {
-        type: "bar",
-        height: 60,
-        sparkline: {
-          enabled: !0
-        }
-      },
-      colors: [themeVariables.primary],
-      plotOptions: {
-        bar: {
-          borderRadius: 2,
-          columnWidth: "60%"
-        }
-      },
-      xaxis: {
-        type: 'datetime',
-        categories: ["Jan 01 2024", "Jan 02 2024", "Jan 03 2024", "Jan 04 2024", "Jan 05 2024", "Jan 06 2024", "Jan 07 2024", "Jan 08 2024", "Jan 09 2024", "Jan 10 2024", "Jan 11 2024",],
-      }
-    }
-  };
-
-
-
-  /**
-   * Growth chart options
-   */
-  getGrowthChartOptions(themeVariables: ThemeCssVariablesType) {
-    return {
-      series: [{
-        name: '',
-        data: [41, 45, 44, 46, 52, 54, 43, 74, 82, 82, 89]
-      }],
-      chart: {
-        type: "line",
-        height: 60,
-        sparkline: {
-          enabled: !0
-        }
-      },
-      colors: [themeVariables.primary],
-      xaxis: {
-        type: 'datetime',
-        categories: ["Jan 01 2024", "Jan 02 2024", "Jan 03 2024", "Jan 04 2024", "Jan 05 2024", "Jan 06 2024", "Jan 07 2024", "Jan 08 2024", "Jan 09 2024", "Jan 10 2024", "Jan 11 2024",],
-      },
-      stroke: {
-        width: 2,
-        curve: "smooth"
-      },
-      markers: {
-        size: 0
-      },
-    }
-  };
-
-
-
-  /**
-   * Revenue chart options
-   */
-  getRevenueChartOptions(themeVariables: ThemeCssVariablesType) {
-    return {
-      series: [{
-        name: "Revenue",
-        data: [
-          49.3,
-          48.7,
-          50.6,
-          53.3,
-          54.7,
-          53.8,
-          54.6,
-          56.7,
-          56.9,
-          56.1,
-          56.5,
-          60.3,
-          58.7,
-          61.4,
-          61.1,
-          58.5,
-          54.7,
-          52.0,
-          51.0,
-          47.4,
-          48.5,
-          48.9,
-          53.5,
-          50.2,
-          46.2,
-          48.6,
-          51.7,
-          51.3,
-          50.2,
-          54.6,
-          52.4,
-          53.0,
-          57.0,
-          52.9,
-          48.7,
-          52.6,
-          53.5,
-          58.5,
-          55.1,
-          58.0,
-          61.3,
-          57.7,
-          60.2,
-          61.0,
-          57.7,
-          56.8,
-          58.9,
-          62.4,
-          58.7,
-          58.4,
-          56.7,
-          52.7,
-          52.3,
-          50.5,
-          55.4,
-          50.4,
-          52.4,
-          48.7,
-          47.4,
-          43.3,
-          38.9,
-          34.7,
-          31.0,
-          32.6,
-          36.8,
-          35.8,
-          32.7,
-          33.2,
-          30.8,
-          28.6,
-          28.4,
-          27.7,
-          27.7,
-          25.9,
-          24.3,
-          21.9,
-          22.0,
-          23.5,
-          27.3,
-          30.2,
-          27.2,
-          29.9,
-          25.1,
-          23.0,
-          23.7,
-          23.4,
-          27.9,
-          23.2,
-          23.9,
-          19.2,
-          15.1,
-          15.0,
-          11.0,
-          9.20,
-          7.47,
-          11.6,
-          15.7,
-          13.9,
-          12.5,
-          13.5,
-          15.0,
-          13.9,
-          13.2,
-          18.1,
-          20.6,
-          21.0,
-          25.3,
-          25.3,
-          20.9,
-          18.7,
-          15.3,
-          14.5,
-          17.9,
-          15.9,
-          16.3,
-          14.1,
-          12.1,
-          14.8,
-          17.2,
-          17.7,
-          14.0,
-          18.6,
-          18.4,
-          22.6,
-          25.0,
-          28.1,
-          28.0,
-          24.1,
-          24.2,
-          28.2,
-          26.2,
-          29.3,
-          26.0,
-          23.9,
-          28.8,
-          25.1,
-          21.7,
-          23.0,
-          20.7,
-          29.7,
-          30.2,
-          32.5,
-          31.4,
-          33.6,
-          30.0,
-          34.2,
-          36.9,
-          35.5,
-          34.7,
-          36.9
-        ]
-      }],
-      chart: {
-        type: "line",
-        height: '400',
-        parentHeightOffset: 0,
-        foreColor: themeVariables.secondary,
-        toolbar: {
-          show: false
-        },
-        zoom: {
-          enabled: false
-        }
-      },
-      colors: [themeVariables.primary, themeVariables.danger, themeVariables.warning],
-      grid: {
-        padding: {
-          bottom: -4,
-        },
-        borderColor: themeVariables.gridBorder,
-        xaxis: {
-          lines: {
-            show: true
-          }
-        }
-      },
-      xaxis: {
-        type: "datetime",
-        categories: [
-          "Jan 01 2024", "Jan 02 2024", "jan 03 2024", "Jan 04 2024", "Jan 05 2024", "Jan 06 2024", "Jan 07 2024", "Jan 08 2024", "Jan 09 2024", "Jan 10 2024", "Jan 11 2024", "Jan 12 2024", "Jan 13 2024", "Jan 14 2024", "Jan 15 2024", "Jan 16 2024", "Jan 17 2024", "Jan 18 2024", "Jan 19 2024", "Jan 20 2024","Jan 21 2024", "Jan 22 2024", "Jan 23 2024", "Jan 24 2024", "Jan 25 2024", "Jan 26 2024", "Jan 27 2024", "Jan 28 2024", "Jan 29 2024", "Jan 30 2024", "Jan 31 2024",
-          "Feb 01 2024", "Feb 02 2024", "Feb 03 2024", "Feb 04 2024", "Feb 05 2024", "Feb 06 2024", "Feb 07 2024", "Feb 08 2024", "Feb 09 2024", "Feb 10 2024", "Feb 11 2024", "Feb 12 2024", "Feb 13 2024", "Feb 14 2024", "Feb 15 2024", "Feb 16 2024", "Feb 17 2024", "Feb 18 2024", "Feb 19 2024", "Feb 20 2024","Feb 21 2024", "Feb 22 2024", "Feb 23 2024", "Feb 24 2024", "Feb 25 2024", "Feb 26 2024", "Feb 27 2024", "Feb 28 2024",
-          "Mar 01 2024", "Mar 02 2024", "Mar 03 2024", "Mar 04 2024", "Mar 05 2024", "Mar 06 2024", "Mar 07 2024", "Mar 08 2024", "Mar 09 2024", "Mar 10 2024", "Mar 11 2024", "Mar 12 2024", "Mar 13 2024", "Mar 14 2024", "Mar 15 2024", "Mar 16 2024", "Mar 17 2024", "Mar 18 2024", "Mar 19 2024", "Mar 20 2024","Mar 21 2024", "Mar 22 2024", "Mar 23 2024", "Mar 24 2024", "Mar 25 2024", "Mar 26 2024", "Mar 27 2024", "Mar 28 2024", "Mar 29 2024", "Mar 30 2024", "Mar 31 2024",
-          "Apr 01 2024", "Apr 02 2024", "Apr 03 2024", "Apr 04 2024", "Apr 05 2024", "Apr 06 2024", "Apr 07 2024", "Apr 08 2024", "Apr 09 2024", "Apr 10 2024", "Apr 11 2024", "Apr 12 2024", "Apr 13 2024", "Apr 14 2024", "Apr 15 2024", "Apr 16 2024", "Apr 17 2024", "Apr 18 2024", "Apr 19 2024", "Apr 20 2024","Apr 21 2024", "Apr 22 2024", "Apr 23 2024", "Apr 24 2024", "Apr 25 2024", "Apr 26 2024", "Apr 27 2024", "Apr 28 2024", "Apr 29 2024", "Apr 30 2024",
-          "May 01 2024", "May 02 2024", "May 03 2024", "May 04 2024", "May 05 2024", "May 06 2024", "May 07 2024", "May 08 2024", "May 09 2024", "May 10 2024", "May 11 2024", "May 12 2024", "May 13 2024", "May 14 2024", "May 15 2024", "May 16 2024", "May 17 2024", "May 18 2024", "May 19 2024", "May 20 2024","May 21 2024", "May 22 2024", "May 23 2024", "May 24 2024", "May 25 2024", "May 26 2024", "May 27 2024", "May 28 2024", "May 29 2024", "May 30 2024",
-        ],
-        lines: {
-          show: true
-        },
-        axisBorder: {
-          color: themeVariables.gridBorder,
-        },
-        axisTicks: {
-          color: themeVariables.gridBorder,
-        },
-        crosshairs: {
-          stroke: {
-            color: themeVariables.secondary,
-          },
-        },
-      },
-      yaxis: {
-        title: {
-          text: 'Revenue ( $1000 x )',
-          style:{
-            size: 9,
-            color: themeVariables.secondary
-          }
-        },
-        tickAmount: 4,
-        tooltip: {
-          enabled: true
-        },
-        crosshairs: {
-          stroke: {
-            color: themeVariables.secondary,
-          },
-        },
-        labels: {
-          offsetX: 0,
-        },
-      },
-      markers: {
-        size: 0,
-      },
-      stroke: {
-        width: 2,
-        curve: "straight",
-      },
-    }
-  };
-
-
-
-  /**
-   * Monthly sales chart options
-   */
-  getMonthlySalesChartOptions(themeVariables: ThemeCssVariablesType) {
-    return {
-      series: [{
-        name: 'Sales',
-        data: [152,109,93,113,126,161,188,143,102,113,116,124]
-      }],
-      chart: {
-        type: 'bar',
-        height: '330',
-        parentHeightOffset: 0,
-        foreColor: themeVariables.secondary,
-        toolbar: {
-          show: false
-        },
-        zoom: {
-          enabled: false
-        }
-      },
-      colors: [themeVariables.primary],  
-      fill: {
-        opacity: .9
-      } , 
-      grid: {
-        padding: {
-          bottom: -4
-        },
-        borderColor: themeVariables.gridBorder,
-        xaxis: {
-          lines: {
-            show: true
-          }
-        }
-      },
-      xaxis: {
-        type: 'datetime',
-        categories: ['01/01/2024','02/01/2024','03/01/2024','04/01/2024','05/01/2024','06/01/2024','07/01/2024', '08/01/2024','09/01/2024','10/01/2024', '11/01/2024', '12/01/2024'],
-        axisBorder: {
-          color: themeVariables.gridBorder,
-        },
-        axisTicks: {
-          color: themeVariables.gridBorder,
-        },
-      },
-      yaxis: {
-        title: {
-          text: 'Number of Sales',
-          style:{
-            size: 9,
-            color: themeVariables.secondary
-          }
-        },
-        labels: {
-          offsetX: 0,
-        },
-      },
-      legend: {
-        show: true,
-        position: "top",
-        horizontalAlign: 'center',
-        fontFamily: themeVariables.fontFamily,
-        itemMargin: {
-          horizontal: 8,
-          vertical: 0
-        },
-      },
-      stroke: {
-        width: 0
-      },
-      dataLabels: {
-        enabled: true,
-        style: {
-          fontSize: '10px',
-          fontFamily: themeVariables.fontFamily,
-        },
-        offsetY: -27
-      },
-      plotOptions: {
-        bar: {
-          columnWidth: "50%",
-          borderRadius: 4,
-          dataLabels: {
-            position: 'top',
-            orientation: 'vertical',
-          }
-        },
-      }
-    }
+  // ── Helpers KPI ───────────────────────────────────────────────────────
+  pct(n: number): string {
+    if (!this.kpis.total) return '0%';
+    return Math.round((n / this.kpis.total) * 100) + '%';
   }
 
+  pesos(n: number): string {
+    if (!n) return '$0';
+    if (n >= 1_000_000_000) return '$' + (n / 1_000_000_000).toFixed(1) + ' MMM';
+    if (n >= 1_000_000)     return '$' + (n / 1_000_000).toFixed(1) + ' M';
+    return '$' + Math.round(n).toLocaleString('es-MX');
+  }
 
+  barWidth(n: number, list: {total:number}[]): string {
+    const max = list[0]?.total ?? 1;
+    return Math.min(Math.round((n / max) * 100), 100) + '%';
+  }
 
-  /**
-   * Cloud storage chart options
-   */
-  getCloudStorageChartOptions(themeVariables: ThemeCssVariablesType) {
-    return {
-      series: [67],
-      chart: {
-        height: 260,
-        type: "radialBar"
-      },
-      colors: [themeVariables.primary],
-      plotOptions: {
-        radialBar: {
-          hollow: {
-            margin: 15,
-            size: "70%"
-          },
-          track: {
-            show: true,
-            background: themeVariables.gridBorder,
-            strokeWidth: '100%',
-            opacity: 1,
-            margin: 5, 
-          },
-          dataLabels: {
-            showOn: "always",
-            name: {
-              offsetY: -11,
-              show: true,
-              color: themeVariables.secondary,
-              fontSize: "13px"
-            },
-            value: {
-              color: themeVariables.secondary,
-              fontSize: "30px",
-              show: true
-            }
-          }
-        }
-      },
-      fill: {
-        opacity: 1
-      },
-      stroke: {
-        lineCap: "round",
-      },
-      labels: ["Storage Used"]
+  barWidthMonto(n: number): string {
+    const max = this.topMonto[0]?.monto ?? 1;
+    return Math.min(Math.round((n / max) * 100), 100) + '%';
+  }
+
+  // ── Gráficas ──────────────────────────────────────────────────────────
+  private buildCharts(): void {
+    const k = this.kpis;
+    this.chartEtapas = {
+      series: [k.registradas, k.estudio, k.afectacion, k.contratacion, k.adjudicacion],
+      labels: ['Registrada','Estudio de Mercado','Afectación Presupuestal','Adquisición','Adjudicación'],
+      chart:  { type: 'donut', height: 260, toolbar: { show: false } },
+      colors: ['#64748b','#d97706','#1e40af','#0d9488','#15803d'],
+      plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', color: '#64748b', formatter: () => k.total.toString() } } } } },
+      dataLabels: { enabled: false },
+      legend: { position: 'bottom', fontSize: '11px', fontFamily: 'inherit', labels: { colors: '#64748b' } },
+      stroke: { width: 2 },
+      tooltip: { y: { formatter: (v: number) => v + ' solicitudes' } },
+    };
+
+    this.chartOrigen = {
+      series: [{ name: 'Solicitudes', data: [k.estatal, k.federal, k.fideicomiso, k.concurrente, k.propio] }],
+      chart:  { type: 'bar', height: 260, toolbar: { show: false } },
+      colors: ['#7a001f'],
+      plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '55%' } },
+      dataLabels: { enabled: true, style: { fontSize: '11px', colors: ['#fff'] } },
+      xaxis: { categories: ['Estatal','Federal','Fideicomiso','Concurrente','Propio'], labels: { style: { fontSize: '11px', colors: '#64748b' } }, axisBorder: { show: false } },
+      yaxis: { labels: { style: { fontSize: '11px', colors: '#64748b' } } },
+      grid:  { borderColor: '#f1f5f9', xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+      tooltip: { y: { formatter: (v: number) => v + ' solicitudes' } },
+    };
+  }
+
+  // ── Calendario ────────────────────────────────────────────────────────
+  get calTitulo(): string { return `${this.MESES_NOM[this.calMes - 1]} ${this.calAnio}`; }
+
+  calNavegar(d: number): void {
+    this.calMes += d;
+    if (this.calMes > 12) { this.calMes = 1;  this.calAnio++; }
+    if (this.calMes < 1)  { this.calMes = 12; this.calAnio--; }
+    this.calSeleccionado = null;
+    this.cargarCal();
+  }
+
+  seleccionarDia(dia: { fecha: Date | null }): void {
+    if (!dia.fecha) return;
+    const iso = this.isoDate(dia.fecha);
+    this.calSeleccionado = this.calSeleccionado && this.isoDate(this.calSeleccionado) === iso ? null : dia.fecha;
+  }
+
+  get calEventosDia() {
+    if (!this.calSeleccionado) return null;
+    return this.calDias.find(d => d.fecha && this.isoDate(d.fecha) === this.isoDate(this.calSeleccionado!)) ?? null;
+  }
+
+  tieneEventos(d: { solicitudes: number; contratos: number; adjudicaciones: number }) {
+    return d.solicitudes > 0 || d.contratos > 0 || d.adjudicaciones > 0;
+  }
+
+  esHoy(f: Date | null) {
+    if (!f) return false;
+    const h = new Date();
+    return f.getFullYear() === h.getFullYear() && f.getMonth() === h.getMonth() && f.getDate() === h.getDate();
+  }
+
+  esSelec(f: Date | null) {
+    if (!f || !this.calSeleccionado) return false;
+    return this.isoDate(f) === this.isoDate(this.calSeleccionado);
+  }
+
+  private isoDate(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  private cargarCal(): void {
+    this.cargandoCal = true;
+    this.svc.getActividadCalendario(this.calAnio, this.calMes).subscribe({
+      next: (r: any) => { this.buildCal(r?.data ?? {}); this.cargandoCal = false; },
+      error: () => { this.buildCal({}); this.cargandoCal = false; },
+    });
+  }
+
+  private buildCal(data: any): void {
+    const toMap = (arr: any[] = []) => new Map<string, number>(arr.map(r => [r.fecha.split('T')[0], Number(r.total)]));
+    const sol = toMap(data.solicitudes);
+    const con = toMap(data.contratos);
+    const adj = toMap(data.adjudicaciones);
+
+    const primer  = new Date(this.calAnio, this.calMes - 1, 1);
+    const dow     = (primer.getDay() + 6) % 7;
+    const enMes   = new Date(this.calAnio, this.calMes, 0).getDate();
+    const celdas: typeof this.calDias = [];
+
+    for (let i = 0; i < dow; i++) celdas.push({ fecha: null, solicitudes: 0, contratos: 0, adjudicaciones: 0 });
+    for (let d = 1; d <= enMes; d++) {
+      const f = new Date(this.calAnio, this.calMes - 1, d);
+      const iso = this.isoDate(f);
+      celdas.push({ fecha: f, solicitudes: sol.get(iso) ?? 0, contratos: con.get(iso) ?? 0, adjudicaciones: adj.get(iso) ?? 0 });
     }
-  };
-  
+    while (celdas.length % 7 !== 0) celdas.push({ fecha: null, solicitudes: 0, contratos: 0, adjudicaciones: 0 });
+    this.calDias = celdas;
+  }
 }

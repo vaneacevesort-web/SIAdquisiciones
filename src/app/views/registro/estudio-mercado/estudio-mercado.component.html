@@ -28,9 +28,9 @@
           <label class="form-label">Estado del Estudio de Mercado</label>
           <select class="form-select" formControlName="estadoEstudio">
             <option value="">Selecciona la respuesta</option>
-            <option value="CONCLUIDO">Concluido</option>
-            <option value="PROCESO">En Proceso</option>
-            <option value="RECHAZADO">Rechazado</option>
+            @for (op of estadoEstudioOptions; track op.value) {
+              <option [value]="op.value">{{ op.label }}</option>
+            }
           </select>
           <small class="text-danger" *ngIf="hasError('estadoEstudio','required')">
             Selecciona una opción.

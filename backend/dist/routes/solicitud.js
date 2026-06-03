@@ -13,6 +13,10 @@ router.get("/api/solicitud/getestatus/:id", solicitud_1.getestatus);
 router.get("/api/solicitud/estudio-mercado/:id", solicitud_1.getEstudioMercadoById);
 router.post("/api/solicitud/estudio-mercado", solicitud_1.createEstudioMercado);
 router.get("/api/solicitud/kpis", solicitud_1.getKpis);
+router.get("/api/solicitud/top-dependencias", solicitud_1.getTopDependencias);
+router.get("/api/solicitud/evolucion-mensual", solicitud_1.getEvolucionMensual);
+router.get("/api/solicitud/actividad-calendario", solicitud_1.getActividadCalendario);
+router.get("/api/solicitud/semaforo", solicitud_1.getSemaforo);
 router.get("/api/solicitud/cola/:estatus", solicitud_1.getSolicitudesCola);
 router.get("/api/solicitud/afectacion-presupuestal", solicitud_1.getSolicitudesAfectacion);
 router.get("/api/solicitud/afectacion-presupuestal/:id", solicitud_1.getAfectacionById);
@@ -21,4 +25,4 @@ router.get("/api/solicitud/adquisicion/:id", solicitud_1.getProcedimientoById);
 router.post("/api/solicitud/adquisicion/:id", solicitud_1.saveProcedimientoAdquisitivo);
 router.get("/api/solicitud/adjudicacion/:id", solicitud_1.getAdjudicacionById);
 router.post("/api/solicitud/adjudicacion/:id", solicitud_1.saveAdjudicacion);
-exports.default = router;
+router.get("/api/solicitud

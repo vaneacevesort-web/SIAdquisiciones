@@ -37,6 +37,7 @@ async function main() {
 
       ['2210', '2211', 'Productos Alimenticios para Personas'],
       ['2220', '2221', 'Equipamiento y Enseres para Animales'],
+      ['2220', '2222', 'Productos alimenticios para animales'],
       ['2230', '2231', 'Utensilios para el Servicio de Alimentación'],
 
       ['2310', '2311', 'Materias Primas y Materiales de Producción'],
@@ -57,7 +58,9 @@ async function main() {
       ['2460', '2461', 'Material Eléctrico y Electrónico'],
       ['2470', '2471', 'Artículos Metálicos para la Construcción'],
       ['2480', '2481', 'Materiales Complementarios'],
+      ['2480', '2482', 'Material de señalización'],
       ['2490', '2491', 'Otros Materiales y Artículos de Construcción y Reparación'],
+      ['2490', '2492', 'Estructuras y manufacturas para construcción'],
 
       ['2510', '2511', 'Sustancias Químicas'],
       ['2520', '2521', 'Plaguicidas, Abonos y Fertilizantes'],
@@ -90,7 +93,8 @@ async function main() {
       ['2960', '2961', 'Refacciones y Accesorios Menores de Equipo de Transporte'],
       ['2970', '2971', 'Artículos para la Extinción de Incendios'],
       ['2980', '2981', 'Refacciones y Accesorios Menores de Maquinaria y Otros Equipos'],
-      ['2990', '2991', 'Refacciones y Accesorios Menores Otros Bienes Muebles']
+      ['2990', '2991', 'Refacciones y Accesorios Menores Otros Bienes Muebles'],
+      ['2990', '2992', 'Otros enseres'],
     ];
 
     let procesados = 0;

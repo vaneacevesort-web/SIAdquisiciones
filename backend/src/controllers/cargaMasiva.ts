@@ -86,11 +86,22 @@ function pn(val: any): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** "Federal" → 2, "Estatal" → 1, "Fideicomiso" → 3, "Concurrente" → 4 */
+/** Quita acentos para comparaciones robustas de nombres en catálogos */
+const normalizar = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+/** Estatal→1  Federal→2  Fideicomiso→3  Concurrente→4  Propio→5
+ *  "Concurrente o Propio" (archivos viejos) → 4 por retrocompatibilidad */
 function parseOrigen(val: any): number | null {
   if (!val) return null;
   const s = String(val).toUpperCase().trim();
-  const m: Record<string, number> = { ESTATAL: 1, FEDERAL: 2, FIDEICOMISO: 3, 'CONCURRENTE O PROPIO': 4, CONCURRENTE: 4 };
+  const m: Record<string, number> = {
+    ESTATAL: 1,
+    FEDERAL: 2,
+    FIDEICOMISO: 3,
+    CONCURRENTE: 4,
+    'CONCURRENTE O PROPIO': 4,
+    PROPIO: 5,
+  };
   return m[s] ?? null;
 }
 
@@ -167,43 +178,100 @@ function parseTipoGasto(val: any): 'PAD' | 'GC' | 'MIXTO' | null {
   return null;
 }
 
-/** "15000000 - Recursos federales" → "15000000" */
+/**
+ * Extrae el código de fuente de financiamiento.
+ * Limpia artefactos de formato que puede traer el Excel:
+ *   ["15000000 - Recursos federales"]  → "15000000"
+ *   "15000000 - Recursos federales"    → "15000000"
+ *    15000000 - Recursos federales     → "15000000"
+ *    15000000                          → "15000000"
+ */
 function parseFuenteCodigo(val: any): string | null {
-  const s = ns(val);
+  let s = ns(val);
   if (!s) return null;
+
+  // 1. Quitar corchetes externos: ["..."] → "..."
+  s = s.replace(/^\s*\[/, '').replace(/\]\s*$/, '').trim();
+  // 2. Quitar comillas dobles o simples externas
+  s = s.replace(/^["']+|["']+$/g, '').trim();
+  // 3. Si el resultado es vacío o N/A, devolver null
+  if (!s || s.toUpperCase() === 'N/A') return null;
+  // 4. Si hay varios valores separados por coma, tomar solo el primero
+  s = s.split(',')[0].replace(/^["']+|["']+$/g, '').trim();
+
+  // 5. Extraer código antes del separador " - " o " – "
   const m = s.match(/^(\S+)\s*[-–]/);
   return m ? m[1].trim() : s;
 }
 
-/** "3000 Servicios generales" → "3000", "3400 – Servicios..." → "3400" */
+/**
+ * Extrae solo la parte numérica inicial del valor presupuestal.
+ * Maneja todos los formatos que produce el Excel:
+ *   "3990-Otros Servicios Generales"   → "3990"
+ *   "3990 - Otros Servicios Generales" → "3990"
+ *   "3990 — Otros Servicios Generales" → "3990"
+ *   "3990 Otros Servicios Generales"   → "3990"
+ *   "3990"                             → "3990"
+ */
 function parseClavePrefijo(val: any): string | null {
   const s = ns(val);
   if (!s) return null;
   const m = s.match(/^(\d+)/);
-  return m ? m[1] : null;
+  return m ? m[1].trim() : null;
 }
 
-/** "Coordinación Administrativa (21800005000000S)" → "21800005000000S" */
-function parseCCCodigo(val: any): string | null {
-  const s = ns(val);
-  if (!s) return null;
-  const m = s.match(/\(([^)]+)\)/);
-  return m ? m[1].trim() : s;
+/** Código institucional: solo alfanumérico, contiene al menos un dígito, ≥ 8 chars */
+function esCodigo(s: string): boolean {
+  return /^[A-Z0-9]{8,}$/i.test(s) && /\d/.test(s);
 }
 
 /**
- * Mapeo de "Estado" / "Estatus del Estudio de Mercado" → ENUM BD.
- * "Adjudicado"/"Concluido" → CONCLUIDO
- * "En proceso"/"Proceso" → PROCESO
- * "Rechazado" → RECHAZADO
- * Otro → CONCLUIDO (con advertencia)
+ * Descompone el campo Centro de Costo en código (si existe) y nombre.
+ * "Coordinación Administrativa (21800005000000S)" → { codigo: "21800005000000S", nombre: "Coordinación Administrativa" }
+ * "Sistema para el DIF 200C01000000000"           → { codigo: "200C01000000000", nombre: "Sistema para el DIF" }
+ * "Coordinación Administrativa"                    → { codigo: null,             nombre: "Coordinación Administrativa" }
+ * "Coordinación Administrativa (--)"               → { codigo: null,             nombre: "Coordinación Administrativa" }
  */
-function parseEstadoEM(val: any, advertencias: string[]): 'CONCLUIDO' | 'PROCESO' | 'RECHAZADO' {
+function parseCCCampo(val: any): { codigo: string | null; nombre: string | null } {
+  const s = ns(val);
+  if (!s) return { codigo: null, nombre: null };
+
+  const conParen = s.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  if (conParen) {
+    const candidato = conParen[2].trim();
+    return {
+      codigo: esCodigo(candidato) ? candidato : null,
+      nombre: conParen[1].trim() || null,
+    };
+  }
+
+  const palabras = s.trim().split(/\s+/);
+  const ultima = palabras[palabras.length - 1];
+  if (esCodigo(ultima)) {
+    if (palabras.length === 1) return { codigo: ultima, nombre: null };
+    return { codigo: ultima, nombre: palabras.slice(0, -1).join(' ') };
+  }
+
+  return { codigo: null, nombre: s.trim() };
+}
+
+/**
+ * Mapeo de "Estado" / "Estatus del Estudio de Mercado" → valor VARCHAR de BD.
+ * Adjudicado               → ADJUDICADO
+ * Concluido                → CONCLUIDO
+ * Desierta                 → DESIERTA
+ * En Proceso / Proceso     → PROCESO
+ * Rechazada / Rechazado    → RECHAZADA
+ * Otro                     → CONCLUIDO (con advertencia)
+ */
+function parseEstadoEM(val: any, advertencias: string[]): string {
   if (!val) return 'CONCLUIDO';
   const s = String(val).toUpperCase().trim();
-  if (s === 'ADJUDICADO' || s === 'CONCLUIDO') return 'CONCLUIDO';
+  if (s === 'ADJUDICADO')              return 'ADJUDICADO';
+  if (s === 'CONCLUIDO')               return 'CONCLUIDO';
+  if (s === 'DESIERTA')                return 'DESIERTA';
   if (s === 'EN PROCESO' || s === 'PROCESO') return 'PROCESO';
-  if (s === 'RECHAZADO') return 'RECHAZADO';
+  if (s === 'RECHAZADA' || s === 'RECHAZADO') return 'RECHAZADA';
   advertencias.push(`Estado '${val}' no reconocido → se usará CONCLUIDO por defecto`);
   return 'CONCLUIDO';
 }
@@ -273,15 +341,20 @@ function porFolio(rows: any[], key: string): Map<string, any> {
 // ── Catálogos ────────────────────────────────────────────────────────────────
 
 interface Catalogos {
-  depMap:    Map<string, number>;
-  opdMap:    Map<string, number>;
-  orgDescMap: Map<string, number>;
-  ccMap:     Map<string, number>;
+  depMap:       Map<string, number>;
+  opdMap:       Map<string, number>;
+  opdCodigoMap: Map<string, number>;
+  orgDescMap:   Map<string, number>;
+  ccMap:      Map<string, number>;
+  ccNombreMap: Map<string, number>;
   capMap:    Map<string, number>;
   subMap:    Map<string, number>;
-  pgMap:     Map<string, number>;
+  pgMap:    Map<string, number>;
+  // pgSubMap: clave partida genérica → { id_partida_generica, id_subcapitulo padre }
+  // Permite inferir el subcapítulo desde una partida genérica cuando el Excel trae 3990 en "Concepto del Gasto"
+  pgSubMap: Map<string, { id_partida_generica: number; id_subcapitulo: number }>;
   // peMap: clave → { id de la partida específica, id de su partida genérica padre }
-  peMap:     Map<string, { id: number; id_partida_generica: number }>;
+  peMap:    Map<string, { id: number; id_partida_generica: number }>;
   fuenteMap: Map<string, number>;
   foliosDB:  Set<string>;
 }
@@ -301,17 +374,45 @@ async function cargarCatalogos(): Promise<Catalogos> {
   ]);
 
   return {
-    depMap:     new Map(deps.map((d: any)     => [d.nombre.toUpperCase(), d.id_dependencia])),
-    opdMap:     new Map(opds.map((d: any)      => [d.nombre.toUpperCase(), d.id_organismo_opds])),
-    orgDescMap: new Map(orgDescs.map((d: any)  => [d.nombre.toUpperCase(), d.id_organo_desconcentrado])),
+    depMap:     new Map(deps.map((d: any)     => [normalizar(d.nombre.toUpperCase()), d.id_dependencia])),
+    opdMap:       new Map(opds.map((d: any) => [normalizar(d.nombre.toUpperCase()), d.id_organismo_opds])),
+    opdCodigoMap: new Map(opds.map((d: any) => [String(d.codigo).trim().toUpperCase(), d.id_organismo_opds])),
+    orgDescMap:   new Map(orgDescs.map((d: any) => [normalizar(d.nombre.toUpperCase()), d.id_organo_desconcentrado])),
     ccMap:      new Map(ccs.map((d: any)       => [String(d.codigo).toUpperCase(), d.id_centro_costo])),
-    capMap:     new Map(caps.map((d: any)      => [String(d.clave).toUpperCase(), d.id_capitulo])),
-    subMap:     new Map(subs.map((d: any)      => [String(d.clave).toUpperCase(), d.id_subcapitulo])),
-    pgMap:      new Map(pgs.map((d: any)       => [String(d.clave).toUpperCase(), d.id_partida_generica])),
-    peMap:      new Map(pes.map((d: any)       => [
-      String(d.clave).toUpperCase(),
-      { id: d.id_partida_especifica, id_partida_generica: d.id_partida_generica },
-    ])),
+    ccNombreMap: new Map(ccs.map((d: any)      => [normalizar(String(d.nombre).toUpperCase()), d.id_centro_costo])),
+    capMap:     new Map(
+      caps.map((d: any) => [parseClavePrefijo(d.clave) ?? String(d.clave).trim().toUpperCase(), d.id_capitulo])
+          .filter(([k]) => k)
+    ),
+    subMap:     (() => {
+      const m = new Map<string, number>();
+      for (const d of subs as any[]) {
+        // Aplicar parseClavePrefijo para manejar claves con descripción ("3990 - Otros...")
+        const clave  = parseClavePrefijo(d.clave)  ?? String(d.clave  ?? '').trim().toUpperCase();
+        const codigo = parseClavePrefijo(d.codigo) ?? String(d.codigo ?? '').trim().toUpperCase();
+        const claveUp  = clave.toUpperCase();
+        const codigoUp = codigo.toUpperCase();
+        if (claveUp  && claveUp  !== 'NULL') m.set(claveUp,  d.id_subcapitulo);
+        if (codigoUp && codigoUp !== 'NULL' && codigoUp !== claveUp) m.set(codigoUp, d.id_subcapitulo);
+      }
+      return m;
+    })(),
+    pgMap:    new Map(
+      pgs.map((d: any) => [parseClavePrefijo(d.clave) ?? String(d.clave).trim().toUpperCase(), d.id_partida_generica])
+         .filter(([k]) => k)
+    ),
+    pgSubMap: new Map(
+      pgs.map((d: any) => [
+        parseClavePrefijo(d.clave) ?? String(d.clave).trim().toUpperCase(),
+        { id_partida_generica: d.id_partida_generica, id_subcapitulo: d.id_subcapitulo },
+      ]).filter(([k]) => k)
+    ),
+    peMap:      new Map(
+      pes.map((d: any) => [
+        parseClavePrefijo(d.clave) ?? String(d.clave).trim().toUpperCase(),
+        { id: d.id_partida_especifica, id_partida_generica: d.id_partida_generica },
+      ]).filter(([k]) => k)
+    ),
     fuenteMap:  new Map(fuentes.map((d: any)   => [String(d.codigo).toUpperCase(), d.id_fuente_financiamiento])),
     foliosDB:   new Set(solsFolios.map((s: any) => s.folio)),
   };
@@ -388,18 +489,62 @@ function procesarRegistro(
   const id_origen_recurso = parseOrigen(generalRow['Origen de Recurso']);
   if (!id_origen_recurso) errores.push(`Origen de recurso '${generalRow['Origen de Recurso']}' no reconocido`);
 
-  const depNombre = ns(generalRow['Dependencia'])?.toUpperCase();
-  let id_dependencia: number | null = null;
-  if (depNombre) {
-    id_dependencia = cats.depMap.get(depNombre) ?? null;
-    if (!id_dependencia) advertencias.push(`Dependencia '${generalRow['Dependencia']}' no encontrada en catálogo`);
+  // ── Unidad solicitante: buscar en dependencias, OPDs y órganos desconcentrados ──
+  // parseCCCampo limpia el código institucional al final si la columna viene como
+  // "Nombre OPD 200C01000000000" — igual que el campo Centro de Costo.
+  const { nombre: unidadBase } = parseCCCampo(generalRow['Dependencia']);
+  const unidadKey = unidadBase ? normalizar(unidadBase.toUpperCase()) : null;
+  let id_dependencia:           number | null = null;
+  let id_opd:                   number | null = null;
+  let id_organo_desconcentrado: number | null = null;
+  let esOrganismo = false;
+
+  if (unidadKey) {
+    if (cats.depMap.has(unidadKey)) {
+      id_dependencia = cats.depMap.get(unidadKey)!;
+    } else if (cats.opdMap.has(unidadKey)) {
+      id_opd = cats.opdMap.get(unidadKey)!;
+      esOrganismo = true;
+    } else if (cats.orgDescMap.has(unidadKey)) {
+      id_organo_desconcentrado = cats.orgDescMap.get(unidadKey)!;
+      esOrganismo = true;
+    } else {
+      advertencias.push(`Unidad solicitante '${generalRow['Dependencia']}' no encontrada en dependencias, OPDs ni órganos desconcentrados`);
+    }
   }
 
-  const ccCodigo = parseCCCodigo(generalRow['Centro de Costo'])?.toUpperCase();
+  // Centro de costo: solo para dependencias. OPDs y órganos desconcentrados no usan CC.
+  // Además, si el campo CC contiene el código o nombre de un OPD, identificar como OPD.
   let id_centro_costo: number | null = null;
-  if (ccCodigo) {
-    id_centro_costo = cats.ccMap.get(ccCodigo) ?? null;
-    if (!id_centro_costo) advertencias.push(`Centro de Costo '${generalRow['Centro de Costo']}' (código: ${ccCodigo}) no encontrado`);
+  if (!esOrganismo) {
+    const { codigo: ccCodigo, nombre: ccNombre } = parseCCCampo(generalRow['Centro de Costo']);
+
+    const ccCodigoUp  = ccCodigo ? ccCodigo.toUpperCase() : null;
+    const ccNombreKey = ccNombre ? normalizar(ccNombre.toUpperCase()) : null;
+
+    // El campo CC puede contener un OPD capturado por error como centro de costo
+    if (ccCodigoUp && cats.opdCodigoMap.has(ccCodigoUp)) {
+      id_opd         = cats.opdCodigoMap.get(ccCodigoUp)!;
+      id_dependencia = null;
+      esOrganismo    = true;
+    } else if (ccNombreKey && cats.opdMap.has(ccNombreKey)) {
+      id_opd         = cats.opdMap.get(ccNombreKey)!;
+      id_dependencia = null;
+      esOrganismo    = true;
+    } else {
+      let ccEncontrado = false;
+      if (ccCodigoUp) {
+        id_centro_costo = cats.ccMap.get(ccCodigoUp) ?? null;
+        if (id_centro_costo) ccEncontrado = true;
+      }
+      if (!ccEncontrado && ccNombreKey) {
+        id_centro_costo = cats.ccNombreMap.get(ccNombreKey) ?? null;
+        if (id_centro_costo) ccEncontrado = true;
+      }
+      if (!ccEncontrado && (ccCodigo || ccNombre)) {
+        advertencias.push(`Centro de Costo '${generalRow['Centro de Costo']}' no encontrado`);
+      }
+    }
   }
 
   const capClave = parseClavePrefijo(generalRow['Capitulo'])?.toUpperCase();
@@ -413,14 +558,43 @@ function procesarRegistro(
   let id_subcapitulo: number | null = null;
   if (subClave) {
     id_subcapitulo = cats.subMap.get(subClave) ?? null;
-    if (!id_subcapitulo) advertencias.push(`Subcapítulo '${generalRow['Concepto del Gasto']}' (clave: ${subClave}) no encontrado`);
+
+    if (!id_subcapitulo) {
+      // El Excel puede traer una partida genérica (ej. 3990) en lugar del subcapítulo (3900).
+      // Inferir el subcapítulo padre desde la partida genérica.
+      const pgEntry = cats.pgSubMap.get(subClave);
+      if (pgEntry) {
+        id_subcapitulo = pgEntry.id_subcapitulo;
+      }
+    }
+
+    if (!id_subcapitulo) {
+      advertencias.push(`Subcapítulo '${generalRow['Concepto del Gasto']}' (clave: ${subClave}) no encontrado`);
+    }
   }
 
-  const pgClave = parseClavePrefijo(generalRow['Giro o Partida'])?.toUpperCase();
-  let id_partida_generica: number | null = null;
-  if (pgClave) {
-    id_partida_generica = cats.pgMap.get(pgClave) ?? null;
-    if (!id_partida_generica) advertencias.push(`Partida '${generalRow['Giro o Partida']}' (clave: ${pgClave}) no encontrada en catálogo de partidas genéricas`);
+  const partidaClave = parseClavePrefijo(generalRow['Giro o Partida'])?.toUpperCase();
+  let id_partida_generica:   number | null = null;
+  let id_partida_especifica: number | null = null;
+
+  if (partidaClave) {
+    if (!partidaClave.endsWith('0')) {
+      // Clave no terminada en 0 (ej. 3451, 2341, 5631) → partida específica
+      // Se busca en adq_cat_partidas_especificas y de ahí se obtiene su genérica padre
+      const pe = cats.peMap.get(partidaClave);
+      if (pe) {
+        id_partida_especifica = pe.id;
+        id_partida_generica   = pe.id_partida_generica;
+      } else {
+        advertencias.push(`Partida específica '${generalRow['Giro o Partida']}' (clave: ${partidaClave}) no encontrada`);
+      }
+    } else {
+      // Clave terminada en 0 (ej. 3450) → partida genérica directa
+      id_partida_generica = cats.pgMap.get(partidaClave) ?? null;
+      if (!id_partida_generica) {
+        advertencias.push(`Partida genérica '${generalRow['Giro o Partida']}' (clave: ${partidaClave}) no encontrada`);
+      }
+    }
   }
 
   const estadoRaw = generalRow['Estado '] ?? generalRow['Estado'] ?? null;
@@ -557,9 +731,9 @@ function procesarRegistro(
     datos: errores.length === 0 ? {
       solicitud: {
         folio, fecha_ingreso, id_origen_recurso, tipo_solicitud, estatus_id,
-        id_dependencia, id_opd: null, id_organo_desconcentrado: null,
-        id_centro_costo, id_capitulo, id_subcapitulo, id_partida_generica,
-        id_partida_especifica: null, estado_estudio_mercado,
+        id_dependencia, id_opd, id_organo_desconcentrado,
+        id_centro_costo, id_capitulo, id_subcapitulo,
+        id_partida_generica, id_partida_especifica, estado_estudio_mercado,
       },
       em:  tieneEM ? emDatos : null,
       ap:  apDatos,
@@ -774,7 +948,24 @@ export const importarExcel = async (req: Request, res: Response): Promise<void> 
     const resultado = await insertarDesdeCache(token);
     res.json({ ok: true, ...resultado });
   } catch (err: any) {
-    console.error('ERROR importarExcel =>', err);
-    res.status(500).json({ ok: false, msg: err.message ?? 'Error al importar los datos' });
+    console.error('═══ ERROR importarExcel ═══');
+    console.error('message:       ', err?.message);
+    console.error('name:          ', err?.name);
+    console.error('sqlMessage:    ', err?.parent?.sqlMessage);
+    console.error('code:          ', err?.parent?.code);
+    console.error('errno:         ', err?.parent?.errno);
+    console.error('sql:           ', err?.sql ?? err?.parent?.sql);
+    console.error('stack:         ', err?.stack);
+    console.error('═══════════════════════════');
+    const detail = [
+      err?.parent?.sqlMessage,
+      err?.parent?.code,
+      err?.sql ?? err?.parent?.sql,
+    ].filter(Boolean).join(' | ');
+    res.status(500).json({
+      ok: false,
+      msg: err?.message ?? 'Error al importar los datos',
+      detail: detail || undefined,
+    });
   }
 };

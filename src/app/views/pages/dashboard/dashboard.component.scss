@@ -1,0 +1,318 @@
+$vino:      #7a001f;
+$vino-pale: #fdf2f5;
+$green:     #15803d;
+$green-bg:  #f0fdf4;
+$amber:     #b45309;
+$amber-bg:  #fffbeb;
+$red:       #b91c1c;
+$red-bg:    #fef2f2;
+$text-h:    #0f172a;
+$text-m:    #64748b;
+$text-s:    #94a3b8;
+$border:    #e2e8f0;
+$bg:        #f8fafc;
+$card:      #ffffff;
+$radius:    14px;
+$shadow:    0 1px 4px rgba(0,0,0,.06);
+
+// ── Wrapper ───────────────────────────────────────────────────────────────
+.exec-wrapper {
+  background:  $bg;
+  min-height:  100%;
+  padding:     2rem 2.25rem;
+  max-width:   900px;
+  margin:      0 auto;
+
+  @media (max-width: 600px) { padding: 1.25rem; }
+}
+
+// ── Cabecera ──────────────────────────────────────────────────────────────
+.exec-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             1rem;
+  margin-bottom:   2.25rem;
+  flex-wrap:       wrap;
+
+  &__brand { display: flex; align-items: center; gap: .85rem; }
+  &__logo  { height: 46px; width: auto; flex-shrink: 0; }
+
+  &__title {
+    font-size:      1.1rem;
+    font-weight:    800;
+    color:          $text-h;
+    margin:         0 0 .1rem;
+    letter-spacing: -.02em;
+  }
+
+  &__org { font-size: .72rem; color: $text-m; margin: 0; }
+
+  &__ts {
+    font-size:   .78rem;
+    color:       $text-s;
+    font-weight: 500;
+    white-space: nowrap;
+    text-transform: capitalize;
+  }
+}
+
+// ── Loading ───────────────────────────────────────────────────────────────
+.exec-loading {
+  display:     flex;
+  align-items: center;
+  padding:     5rem;
+  justify-content: center;
+  font-size:   .875rem;
+  color:       $text-m;
+}
+
+// ── Headline: 2 números grandes ───────────────────────────────────────────
+.exec-headline {
+  background:    $card;
+  border-radius: $radius;
+  box-shadow:    $shadow;
+  border:        1px solid $border;
+  display:       flex;
+  align-items:   center;
+  padding:       2rem 2.5rem;
+  gap:           2.5rem;
+  margin-bottom: 1rem;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+}
+
+.exec-num-card {
+  display:        flex;
+  flex-direction: column;
+  gap:            .3rem;
+
+  &__value {
+    font-size:      3rem;
+    font-weight:    900;
+    line-height:    1;
+    color:          $text-h;
+    letter-spacing: -.04em;
+  }
+
+  &__label {
+    font-size:  .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color:      $text-m;
+  }
+
+  &--monto &__value {
+    font-size: 2.2rem;
+    color:     $vino;
+  }
+}
+
+.exec-num-divider {
+  width:      1px;
+  height:     60px;
+  background: $border;
+  flex-shrink: 0;
+
+  @media (max-width: 600px) { display: none; }
+}
+
+// ── Semáforo ──────────────────────────────────────────────────────────────
+.exec-semaforo {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .75rem;
+  margin-bottom: 1rem;
+
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.exec-sem {
+  background:    $card;
+  border-radius: $radius;
+  border:        1px solid $border;
+  box-shadow:    $shadow;
+  padding:       1.4rem 1.5rem;
+  display:       flex;
+  align-items:   flex-start;
+  gap:           1rem;
+  transition:    box-shadow .2s;
+
+  &__indicator {
+    width:         12px;
+    height:        12px;
+    border-radius: 50%;
+    flex-shrink:   0;
+    margin-top:    .35rem;
+  }
+
+  &__body {
+    display:        flex;
+    flex-direction: column;
+    gap:            .2rem;
+  }
+
+  &__count {
+    font-size:   2rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -.03em;
+  }
+
+  &__label {
+    font-size:  .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  &__desc { font-size: .68rem; color: $text-s; }
+
+  // ── Variantes ──
+  &--green {
+    border-top: 3px solid $green;
+    .exec-sem__indicator { background: $green; }
+    .exec-sem__count     { color: $green; }
+    .exec-sem__label     { color: darken($green, 5%); }
+  }
+
+  &--amber {
+    border-top: 3px solid $amber;
+    .exec-sem__indicator { background: $amber; }
+    .exec-sem__count     { color: $amber; }
+    .exec-sem__label     { color: darken($amber, 5%); }
+  }
+
+  &--red {
+    border-top: 3px solid #e5e7eb;
+    .exec-sem__indicator { background: #d1d5db; }
+    .exec-sem__count     { color: $text-s; }
+    .exec-sem__label     { color: $text-m; }
+  }
+
+  // Rojo activo solo si hay urgentes > 0
+  &--red-alert {
+    border-top: 3px solid $red;
+    background: $red-bg;
+    border-color: #fecaca;
+    border-top-color: $red;
+    box-shadow: 0 0 0 3px rgba(185,28,28,.08);
+    .exec-sem__indicator { background: $red; }
+    .exec-sem__count     { color: $red; }
+    .exec-sem__label     { color: darken($red, 5%); }
+    .exec-sem__desc      { color: lighten($red, 15%); }
+  }
+}
+
+// ── Comparativa mensual ───────────────────────────────────────────────────
+.exec-comparativa {
+  background:    $card;
+  border-radius: $radius;
+  border:        1px solid $border;
+  box-shadow:    $shadow;
+  padding:       1.4rem 1.75rem;
+  margin-bottom: 1rem;
+}
+
+.exec-comp {
+  &__title {
+    font-size:      .68rem;
+    font-weight:    700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color:          $text-m;
+    margin:         0 0 1rem;
+  }
+
+  &__row {
+    display:     grid;
+    grid-template-columns: 90px 1fr 80px;
+    align-items: center;
+    gap:         .85rem;
+    margin-bottom: .65rem;
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  &__mes {
+    font-size:  .75rem;
+    color:      $text-m;
+    font-weight: 500;
+  }
+
+  &__bar-wrap {
+    height:        8px;
+    background:    #f1f5f9;
+    border-radius: 99px;
+    overflow:      hidden;
+  }
+
+  &__bar {
+    height:        100%;
+    border-radius: 99px;
+    transition:    width .7s ease;
+    min-width:     3px;
+
+    &--actual   { background: $vino;  }
+    &--anterior { background: #cbd5e1; }
+  }
+
+  &__val {
+    font-size:   .82rem;
+    font-weight: 700;
+    color:       $text-h;
+    text-align:  right;
+    display:     flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap:         .35rem;
+  }
+
+  &__tag {
+    font-size:     .66rem;
+    font-weight:   700;
+    padding:       .1rem .35rem;
+    border-radius: 99px;
+
+    &--up   { background: $green-bg; color: $green; }
+    &--down { background: $red-bg;   color: $red;   }
+  }
+}
+
+// ── Footer de accesos ─────────────────────────────────────────────────────
+.exec-footer {
+  display:    flex;
+  gap:        1rem;
+  padding-top: .5rem;
+  flex-wrap:  wrap;
+}
+
+.exec-footer__link {
+  display:         flex;
+  align-items:     center;
+  gap:             .4rem;
+  font-size:       .78rem;
+  font-weight:     600;
+  color:           $text-m;
+  text-decoration: none;
+  padding:         .45rem .85rem;
+  border:          1px solid $border;
+  border-radius:   8px;
+  background:      $card;
+  transition:      color .15s, border-color .15s, background .15s;
+
+  i { font-size: .8rem; }
+
+  &:hover {
+    color:        $vino;
+    border-color: $vino;
+    background:   $vino-pale;
+    text-decoration: none;
+  }
+}

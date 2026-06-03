@@ -118,7 +118,7 @@ AdqSolicitudes.init(
     },
 
     estado_estudio_mercado: {
-      type: DataTypes.ENUM('CONCLUIDO', 'PROCESO', 'RECHAZADO'),
+      type: DataTypes.STRING(20),
       allowNull: true,
     },
 

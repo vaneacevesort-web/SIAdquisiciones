@@ -61,6 +61,20 @@ $radius:     10px;
 
 .rep-spinner { color: $vino; }
 
+// ─── Título de sección ────────────────────────────────────────────────────
+.rep-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: $text-muted;
+  margin: 0 0 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  i { font-size: 0.75rem; }
+}
+
 // ─── KPI Grid ─────────────────────────────────────────────────────────────
 .kpi-grid {
   display: grid;
@@ -70,6 +84,11 @@ $radius:     10px;
   @media (max-width: 1200px) { grid-template-columns: repeat(3, 1fr); }
   @media (max-width: 992px)  { grid-template-columns: repeat(2, 1fr); }
   @media (max-width: 576px)  { grid-template-columns: 1fr; }
+
+  &--2 {
+    grid-template-columns: repeat(2, 1fr);
+    @media (max-width: 576px) { grid-template-columns: 1fr; }
+  }
 }
 
 .kpi-card {
@@ -88,11 +107,19 @@ $radius:     10px;
     box-shadow: 0 5px 16px rgba(0,0,0,0.1);
   }
 
-  &--blue  { border-top-color: #2563eb; .kpi-card__icon { background: #eff6ff; color: #2563eb; } }
-  &--amber { border-top-color: #d97706; .kpi-card__icon { background: #fffbeb; color: #d97706; } }
-  &--rose  { border-top-color: $vino;   .kpi-card__icon { background: $vino-light; color: $vino; } }
-  &--teal  { border-top-color: #0891b2; .kpi-card__icon { background: #ecfeff; color: #0891b2; } }
-  &--green { border-top-color: #16a34a; .kpi-card__icon { background: #f0fdf4; color: #16a34a; } }
+  &--blue   { border-top-color: #2563eb; .kpi-card__icon { background: #eff6ff; color: #2563eb; } }
+  &--amber  { border-top-color: #d97706; .kpi-card__icon { background: #fffbeb; color: #d97706; } }
+  &--rose   { border-top-color: $vino;   .kpi-card__icon { background: $vino-light; color: $vino; } }
+  &--teal   { border-top-color: #0891b2; .kpi-card__icon { background: #ecfeff; color: #0891b2; } }
+  &--green  { border-top-color: #16a34a; .kpi-card__icon { background: #f0fdf4; color: #16a34a; } }
+  &--indigo { border-top-color: #4f46e5; .kpi-card__icon { background: #eef2ff; color: #4f46e5; } }
+  &--orange { border-top-color: #ea580c; .kpi-card__icon { background: #fff7ed; color: #ea580c; } }
+  &--purple { border-top-color: #7c3aed; .kpi-card__icon { background: #f5f3ff; color: #7c3aed; } }
+  &--cyan   { border-top-color: #0e7490; .kpi-card__icon { background: #ecfeff; color: #0e7490; } }
+  &--slate  { border-top-color: #475569; .kpi-card__icon { background: #f8fafc; color: #475569; } }
+  &--gold   { border-top-color: #b45309; .kpi-card__icon { background: #fffbeb; color: #b45309; } }
+
+  &__number--sm { font-size: 1.1rem; }
 
   &__icon {
     width: 38px;

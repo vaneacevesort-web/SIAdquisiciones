@@ -127,13 +127,23 @@ function pn(val) {
     const n = Number(cleaned);
     return Number.isFinite(n) ? n : null;
 }
-/** "Federal" → 2, "Estatal" → 1, "Fideicomiso" → 3, "Concurrente" → 4 */
+/** Quita acentos para comparaciones robustas de nombres en catálogos */
+const normalizar = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+/** Estatal→1  Federal→2  Fideicomiso→3  Concurrente→4  Propio→5
+ *  "Concurrente o Propio" (archivos viejos) → 4 por retrocompatibilidad */
 function parseOrigen(val) {
     var _a;
     if (!val)
         return null;
     const s = String(val).toUpperCase().trim();
-    const m = { ESTATAL: 1, FEDERAL: 2, FIDEICOMISO: 3, 'CONCURRENTE O PROPIO': 4, CONCURRENTE: 4 };
+    const m = {
+        ESTATAL: 1,
+        FEDERAL: 2,
+        FIDEICOMISO: 3,
+        CONCURRENTE: 4,
+        'CONCURRENTE O PROPIO': 4,
+        PROPIO: 5,
+    };
     return (_a = m[s]) !== null && _a !== void 0 ? _a : null;
 }
 /** "Servicio- Contratacion..." → "SERVICIO", "Bien - Adquisicion..." → "BIEN" */
@@ -205,47 +215,102 @@ function parseTipoGasto(val) {
         return 'MIXTO';
     return null;
 }
-/** "15000000 - Recursos federales" → "15000000" */
+/**
+ * Extrae el código de fuente de financiamiento.
+ * Limpia artefactos de formato que puede traer el Excel:
+ *   ["15000000 - Recursos federales"]  → "15000000"
+ *   "15000000 - Recursos federales"    → "15000000"
+ *    15000000 - Recursos federales     → "15000000"
+ *    15000000                          → "15000000"
+ */
 function parseFuenteCodigo(val) {
-    const s = ns(val);
+    let s = ns(val);
     if (!s)
         return null;
+    // 1. Quitar corchetes externos: ["..."] → "..."
+    s = s.replace(/^\s*\[/, '').replace(/\]\s*$/, '').trim();
+    // 2. Quitar comillas dobles o simples externas
+    s = s.replace(/^["']+|["']+$/g, '').trim();
+    // 3. Si el resultado es vacío o N/A, devolver null
+    if (!s || s.toUpperCase() === 'N/A')
+        return null;
+    // 4. Si hay varios valores separados por coma, tomar solo el primero
+    s = s.split(',')[0].replace(/^["']+|["']+$/g, '').trim();
+    // 5. Extraer código antes del separador " - " o " – "
     const m = s.match(/^(\S+)\s*[-–]/);
     return m ? m[1].trim() : s;
 }
-/** "3000 Servicios generales" → "3000", "3400 – Servicios..." → "3400" */
+/**
+ * Extrae solo la parte numérica inicial del valor presupuestal.
+ * Maneja todos los formatos que produce el Excel:
+ *   "3990-Otros Servicios Generales"   → "3990"
+ *   "3990 - Otros Servicios Generales" → "3990"
+ *   "3990 — Otros Servicios Generales" → "3990"
+ *   "3990 Otros Servicios Generales"   → "3990"
+ *   "3990"                             → "3990"
+ */
 function parseClavePrefijo(val) {
     const s = ns(val);
     if (!s)
         return null;
     const m = s.match(/^(\d+)/);
-    return m ? m[1] : null;
+    return m ? m[1].trim() : null;
 }
-/** "Coordinación Administrativa (21800005000000S)" → "21800005000000S" */
-function parseCCCodigo(val) {
-    const s = ns(val);
-    if (!s)
-        return null;
-    const m = s.match(/\(([^)]+)\)/);
-    return m ? m[1].trim() : s;
+/** Código institucional: solo alfanumérico, contiene al menos un dígito, ≥ 8 chars */
+function esCodigo(s) {
+    return /^[A-Z0-9]{8,}$/i.test(s) && /\d/.test(s);
 }
 /**
- * Mapeo de "Estado" / "Estatus del Estudio de Mercado" → ENUM BD.
- * "Adjudicado"/"Concluido" → CONCLUIDO
- * "En proceso"/"Proceso" → PROCESO
- * "Rechazado" → RECHAZADO
- * Otro → CONCLUIDO (con advertencia)
+ * Descompone el campo Centro de Costo en código (si existe) y nombre.
+ * "Coordinación Administrativa (21800005000000S)" → { codigo: "21800005000000S", nombre: "Coordinación Administrativa" }
+ * "Sistema para el DIF 200C01000000000"           → { codigo: "200C01000000000", nombre: "Sistema para el DIF" }
+ * "Coordinación Administrativa"                    → { codigo: null,             nombre: "Coordinación Administrativa" }
+ * "Coordinación Administrativa (--)"               → { codigo: null,             nombre: "Coordinación Administrativa" }
+ */
+function parseCCCampo(val) {
+    const s = ns(val);
+    if (!s)
+        return { codigo: null, nombre: null };
+    const conParen = s.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+    if (conParen) {
+        const candidato = conParen[2].trim();
+        return {
+            codigo: esCodigo(candidato) ? candidato : null,
+            nombre: conParen[1].trim() || null,
+        };
+    }
+    const palabras = s.trim().split(/\s+/);
+    const ultima = palabras[palabras.length - 1];
+    if (esCodigo(ultima)) {
+        if (palabras.length === 1)
+            return { codigo: ultima, nombre: null };
+        return { codigo: ultima, nombre: palabras.slice(0, -1).join(' ') };
+    }
+    return { codigo: null, nombre: s.trim() };
+}
+/**
+ * Mapeo de "Estado" / "Estatus del Estudio de Mercado" → valor VARCHAR de BD.
+ * Adjudicado               → ADJUDICADO
+ * Concluido                → CONCLUIDO
+ * Desierta                 → DESIERTA
+ * En Proceso / Proceso     → PROCESO
+ * Rechazada / Rechazado    → RECHAZADA
+ * Otro                     → CONCLUIDO (con advertencia)
  */
 function parseEstadoEM(val, advertencias) {
     if (!val)
         return 'CONCLUIDO';
     const s = String(val).toUpperCase().trim();
-    if (s === 'ADJUDICADO' || s === 'CONCLUIDO')
+    if (s === 'ADJUDICADO')
+        return 'ADJUDICADO';
+    if (s === 'CONCLUIDO')
         return 'CONCLUIDO';
+    if (s === 'DESIERTA')
+        return 'DESIERTA';
     if (s === 'EN PROCESO' || s === 'PROCESO')
         return 'PROCESO';
-    if (s === 'RECHAZADO')
-        return 'RECHAZADO';
+    if (s === 'RECHAZADA' || s === 'RECHAZADO')
+        return 'RECHAZADA';
     advertencias.push(`Estado '${val}' no reconocido → se usará CONCLUIDO por defecto`);
     return 'CONCLUIDO';
 }
@@ -325,17 +390,46 @@ function cargarCatalogos() {
             AdqSolicitudes_1.default.findAll({ attributes: ['folio'], raw: true }),
         ]);
         return {
-            depMap: new Map(deps.map((d) => [d.nombre.toUpperCase(), d.id_dependencia])),
-            opdMap: new Map(opds.map((d) => [d.nombre.toUpperCase(), d.id_organismo_opds])),
-            orgDescMap: new Map(orgDescs.map((d) => [d.nombre.toUpperCase(), d.id_organo_desconcentrado])),
+            depMap: new Map(deps.map((d) => [normalizar(d.nombre.toUpperCase()), d.id_dependencia])),
+            opdMap: new Map(opds.map((d) => [normalizar(d.nombre.toUpperCase()), d.id_organismo_opds])),
+            opdCodigoMap: new Map(opds.map((d) => [String(d.codigo).trim().toUpperCase(), d.id_organismo_opds])),
+            orgDescMap: new Map(orgDescs.map((d) => [normalizar(d.nombre.toUpperCase()), d.id_organo_desconcentrado])),
             ccMap: new Map(ccs.map((d) => [String(d.codigo).toUpperCase(), d.id_centro_costo])),
-            capMap: new Map(caps.map((d) => [String(d.clave).toUpperCase(), d.id_capitulo])),
-            subMap: new Map(subs.map((d) => [String(d.clave).toUpperCase(), d.id_subcapitulo])),
-            pgMap: new Map(pgs.map((d) => [String(d.clave).toUpperCase(), d.id_partida_generica])),
-            peMap: new Map(pes.map((d) => [
-                String(d.clave).toUpperCase(),
-                { id: d.id_partida_especifica, id_partida_generica: d.id_partida_generica },
-            ])),
+            ccNombreMap: new Map(ccs.map((d) => [normalizar(String(d.nombre).toUpperCase()), d.id_centro_costo])),
+            capMap: new Map(caps.map((d) => { var _a; return [(_a = parseClavePrefijo(d.clave)) !== null && _a !== void 0 ? _a : String(d.clave).trim().toUpperCase(), d.id_capitulo]; })
+                .filter(([k]) => k)),
+            subMap: (() => {
+                var _a, _b, _c, _d;
+                const m = new Map();
+                for (const d of subs) {
+                    // Aplicar parseClavePrefijo para manejar claves con descripción ("3990 - Otros...")
+                    const clave = (_a = parseClavePrefijo(d.clave)) !== null && _a !== void 0 ? _a : String((_b = d.clave) !== null && _b !== void 0 ? _b : '').trim().toUpperCase();
+                    const codigo = (_c = parseClavePrefijo(d.codigo)) !== null && _c !== void 0 ? _c : String((_d = d.codigo) !== null && _d !== void 0 ? _d : '').trim().toUpperCase();
+                    const claveUp = clave.toUpperCase();
+                    const codigoUp = codigo.toUpperCase();
+                    if (claveUp && claveUp !== 'NULL')
+                        m.set(claveUp, d.id_subcapitulo);
+                    if (codigoUp && codigoUp !== 'NULL' && codigoUp !== claveUp)
+                        m.set(codigoUp, d.id_subcapitulo);
+                }
+                return m;
+            })(),
+            pgMap: new Map(pgs.map((d) => { var _a; return [(_a = parseClavePrefijo(d.clave)) !== null && _a !== void 0 ? _a : String(d.clave).trim().toUpperCase(), d.id_partida_generica]; })
+                .filter(([k]) => k)),
+            pgSubMap: new Map(pgs.map((d) => {
+                var _a;
+                return [
+                    (_a = parseClavePrefijo(d.clave)) !== null && _a !== void 0 ? _a : String(d.clave).trim().toUpperCase(),
+                    { id_partida_generica: d.id_partida_generica, id_subcapitulo: d.id_subcapitulo },
+                ];
+            }).filter(([k]) => k)),
+            peMap: new Map(pes.map((d) => {
+                var _a;
+                return [
+                    (_a = parseClavePrefijo(d.clave)) !== null && _a !== void 0 ? _a : String(d.clave).trim().toUpperCase(),
+                    { id: d.id_partida_especifica, id_partida_generica: d.id_partida_generica },
+                ];
+            }).filter(([k]) => k)),
             fuenteMap: new Map(fuentes.map((d) => [String(d.codigo).toUpperCase(), d.id_fuente_financiamiento])),
             foliosDB: new Set(solsFolios.map((s) => s.folio)),
         };
@@ -357,7 +451,7 @@ apRow, // hoja Afectacion Presupuestal
 adqRow, // hoja Adquisiciones
 adjRow, // hoja Adjudicacion
 cats, foliosEnArchivo) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
     const errores = [];
     const advertencias = [];
     // ── Validaciones de unicidad ──────────────────────────────────────────────
@@ -388,45 +482,117 @@ cats, foliosEnArchivo) {
     const id_origen_recurso = parseOrigen(generalRow['Origen de Recurso']);
     if (!id_origen_recurso)
         errores.push(`Origen de recurso '${generalRow['Origen de Recurso']}' no reconocido`);
-    const depNombre = (_b = ns(generalRow['Dependencia'])) === null || _b === void 0 ? void 0 : _b.toUpperCase();
+    // ── Unidad solicitante: buscar en dependencias, OPDs y órganos desconcentrados ──
+    // parseCCCampo limpia el código institucional al final si la columna viene como
+    // "Nombre OPD 200C01000000000" — igual que el campo Centro de Costo.
+    const { nombre: unidadBase } = parseCCCampo(generalRow['Dependencia']);
+    const unidadKey = unidadBase ? normalizar(unidadBase.toUpperCase()) : null;
     let id_dependencia = null;
-    if (depNombre) {
-        id_dependencia = (_c = cats.depMap.get(depNombre)) !== null && _c !== void 0 ? _c : null;
-        if (!id_dependencia)
-            advertencias.push(`Dependencia '${generalRow['Dependencia']}' no encontrada en catálogo`);
+    let id_opd = null;
+    let id_organo_desconcentrado = null;
+    let esOrganismo = false;
+    if (unidadKey) {
+        if (cats.depMap.has(unidadKey)) {
+            id_dependencia = cats.depMap.get(unidadKey);
+        }
+        else if (cats.opdMap.has(unidadKey)) {
+            id_opd = cats.opdMap.get(unidadKey);
+            esOrganismo = true;
+        }
+        else if (cats.orgDescMap.has(unidadKey)) {
+            id_organo_desconcentrado = cats.orgDescMap.get(unidadKey);
+            esOrganismo = true;
+        }
+        else {
+            advertencias.push(`Unidad solicitante '${generalRow['Dependencia']}' no encontrada en dependencias, OPDs ni órganos desconcentrados`);
+        }
     }
-    const ccCodigo = (_d = parseCCCodigo(generalRow['Centro de Costo'])) === null || _d === void 0 ? void 0 : _d.toUpperCase();
+    // Centro de costo: solo para dependencias. OPDs y órganos desconcentrados no usan CC.
+    // Además, si el campo CC contiene el código o nombre de un OPD, identificar como OPD.
     let id_centro_costo = null;
-    if (ccCodigo) {
-        id_centro_costo = (_e = cats.ccMap.get(ccCodigo)) !== null && _e !== void 0 ? _e : null;
-        if (!id_centro_costo)
-            advertencias.push(`Centro de Costo '${generalRow['Centro de Costo']}' (código: ${ccCodigo}) no encontrado`);
+    if (!esOrganismo) {
+        const { codigo: ccCodigo, nombre: ccNombre } = parseCCCampo(generalRow['Centro de Costo']);
+        const ccCodigoUp = ccCodigo ? ccCodigo.toUpperCase() : null;
+        const ccNombreKey = ccNombre ? normalizar(ccNombre.toUpperCase()) : null;
+        // El campo CC puede contener un OPD capturado por error como centro de costo
+        if (ccCodigoUp && cats.opdCodigoMap.has(ccCodigoUp)) {
+            id_opd = cats.opdCodigoMap.get(ccCodigoUp);
+            id_dependencia = null;
+            esOrganismo = true;
+        }
+        else if (ccNombreKey && cats.opdMap.has(ccNombreKey)) {
+            id_opd = cats.opdMap.get(ccNombreKey);
+            id_dependencia = null;
+            esOrganismo = true;
+        }
+        else {
+            let ccEncontrado = false;
+            if (ccCodigoUp) {
+                id_centro_costo = (_b = cats.ccMap.get(ccCodigoUp)) !== null && _b !== void 0 ? _b : null;
+                if (id_centro_costo)
+                    ccEncontrado = true;
+            }
+            if (!ccEncontrado && ccNombreKey) {
+                id_centro_costo = (_c = cats.ccNombreMap.get(ccNombreKey)) !== null && _c !== void 0 ? _c : null;
+                if (id_centro_costo)
+                    ccEncontrado = true;
+            }
+            if (!ccEncontrado && (ccCodigo || ccNombre)) {
+                advertencias.push(`Centro de Costo '${generalRow['Centro de Costo']}' no encontrado`);
+            }
+        }
     }
-    const capClave = (_f = parseClavePrefijo(generalRow['Capitulo'])) === null || _f === void 0 ? void 0 : _f.toUpperCase();
+    const capClave = (_d = parseClavePrefijo(generalRow['Capitulo'])) === null || _d === void 0 ? void 0 : _d.toUpperCase();
     let id_capitulo = null;
     if (capClave) {
-        id_capitulo = (_g = cats.capMap.get(capClave)) !== null && _g !== void 0 ? _g : null;
+        id_capitulo = (_e = cats.capMap.get(capClave)) !== null && _e !== void 0 ? _e : null;
         if (!id_capitulo)
             advertencias.push(`Capítulo '${generalRow['Capitulo']}' (clave: ${capClave}) no encontrado`);
     }
-    const subClave = (_h = parseClavePrefijo(generalRow['Concepto del Gasto'])) === null || _h === void 0 ? void 0 : _h.toUpperCase();
+    const subClave = (_f = parseClavePrefijo(generalRow['Concepto del Gasto'])) === null || _f === void 0 ? void 0 : _f.toUpperCase();
     let id_subcapitulo = null;
     if (subClave) {
-        id_subcapitulo = (_j = cats.subMap.get(subClave)) !== null && _j !== void 0 ? _j : null;
-        if (!id_subcapitulo)
+        id_subcapitulo = (_g = cats.subMap.get(subClave)) !== null && _g !== void 0 ? _g : null;
+        if (!id_subcapitulo) {
+            // El Excel puede traer una partida genérica (ej. 3990) en lugar del subcapítulo (3900).
+            // Inferir el subcapítulo padre desde la partida genérica.
+            const pgEntry = cats.pgSubMap.get(subClave);
+            if (pgEntry) {
+                id_subcapitulo = pgEntry.id_subcapitulo;
+            }
+        }
+        if (!id_subcapitulo) {
             advertencias.push(`Subcapítulo '${generalRow['Concepto del Gasto']}' (clave: ${subClave}) no encontrado`);
+        }
     }
-    const pgClave = (_k = parseClavePrefijo(generalRow['Giro o Partida'])) === null || _k === void 0 ? void 0 : _k.toUpperCase();
+    const partidaClave = (_h = parseClavePrefijo(generalRow['Giro o Partida'])) === null || _h === void 0 ? void 0 : _h.toUpperCase();
     let id_partida_generica = null;
-    if (pgClave) {
-        id_partida_generica = (_l = cats.pgMap.get(pgClave)) !== null && _l !== void 0 ? _l : null;
-        if (!id_partida_generica)
-            advertencias.push(`Partida '${generalRow['Giro o Partida']}' (clave: ${pgClave}) no encontrada en catálogo de partidas genéricas`);
+    let id_partida_especifica = null;
+    if (partidaClave) {
+        if (!partidaClave.endsWith('0')) {
+            // Clave no terminada en 0 (ej. 3451, 2341, 5631) → partida específica
+            // Se busca en adq_cat_partidas_especificas y de ahí se obtiene su genérica padre
+            const pe = cats.peMap.get(partidaClave);
+            if (pe) {
+                id_partida_especifica = pe.id;
+                id_partida_generica = pe.id_partida_generica;
+            }
+            else {
+                advertencias.push(`Partida específica '${generalRow['Giro o Partida']}' (clave: ${partidaClave}) no encontrada`);
+            }
+        }
+        else {
+            // Clave terminada en 0 (ej. 3450) → partida genérica directa
+            id_partida_generica = (_j = cats.pgMap.get(partidaClave)) !== null && _j !== void 0 ? _j : null;
+            if (!id_partida_generica) {
+                advertencias.push(`Partida genérica '${generalRow['Giro o Partida']}' (clave: ${partidaClave}) no encontrada`);
+            }
+        }
     }
-    const estadoRaw = (_o = (_m = generalRow['Estado ']) !== null && _m !== void 0 ? _m : generalRow['Estado']) !== null && _o !== void 0 ? _o : null;
+    const estadoRaw = (_l = (_k = generalRow['Estado ']) !== null && _k !== void 0 ? _k : generalRow['Estado']) !== null && _l !== void 0 ? _l : null;
     const estado_estudio_mercado = parseEstadoEM(estadoRaw, advertencias);
     // ── adq_estudio_mercado — de emSource (hoja EM o General) ────────────────
-    const tipoContrRaw = (_p = ns(emSource['Tipo Contracion'])) === null || _p === void 0 ? void 0 : _p.toUpperCase();
+    const tipoContrRaw = (_m = ns(emSource['Tipo Contracion'])) === null || _m === void 0 ? void 0 : _m.toUpperCase();
     let tipo_contratacion = null;
     if (tipoContrRaw) {
         if (['IRP', 'LPNP', 'CP'].includes(tipoContrRaw)) {
@@ -459,10 +625,10 @@ cats, foliosEnArchivo) {
             errores.push(`Tipo de gasto '${apSource['Tipo de gasto:']}' inválido — use PAD, GC o MIXTO`);
         }
         else {
-            const fuenteCodigo = (_q = parseFuenteCodigo(apSource['Fuente de financiamiento:'])) === null || _q === void 0 ? void 0 : _q.toUpperCase();
+            const fuenteCodigo = (_o = parseFuenteCodigo(apSource['Fuente de financiamiento:'])) === null || _o === void 0 ? void 0 : _o.toUpperCase();
             let id_fuente_financiamiento = null;
             if (fuenteCodigo) {
-                id_fuente_financiamiento = (_r = cats.fuenteMap.get(fuenteCodigo)) !== null && _r !== void 0 ? _r : null;
+                id_fuente_financiamiento = (_p = cats.fuenteMap.get(fuenteCodigo)) !== null && _p !== void 0 ? _p : null;
                 if (!id_fuente_financiamiento)
                     advertencias.push(`Fuente de financiamiento '${apSource['Fuente de financiamiento:']}' (código: ${fuenteCodigo}) no encontrada`);
             }
@@ -502,7 +668,7 @@ cats, foliosEnArchivo) {
             modalidad: ns(adqSource === null || adqSource === void 0 ? void 0 : adqSource['Modalidad del Procedimiento Adquisitivo']),
             dictamen_procedencia: dictamen.activo,
             dictamen_procedencia_path: dictamen.path,
-            responsable: (_s = ns(adqSource === null || adqSource === void 0 ? void 0 : adqSource['Responsable del Procedimiento'])) !== null && _s !== void 0 ? _s : ns(adjSource === null || adjSource === void 0 ? void 0 : adjSource['Nombre del Responsable del  Procedimiento']),
+            responsable: (_q = ns(adqSource === null || adqSource === void 0 ? void 0 : adqSource['Responsable del Procedimiento'])) !== null && _q !== void 0 ? _q : ns(adjSource === null || adjSource === void 0 ? void 0 : adjSource['Nombre del Responsable del  Procedimiento']),
             no_procedimiento: ns(adqSource === null || adqSource === void 0 ? void 0 : adqSource['No. de procedimiento']),
             convocatoria_invitacion: ns(adqSource === null || adqSource === void 0 ? void 0 : adqSource['Convocatoria y/o Invitacion (URL)']),
             convocatoria_url: ns(adqSource === null || adqSource === void 0 ? void 0 : adqSource['Convocatoria y/o Invitacion (URL)']),
@@ -522,7 +688,7 @@ cats, foliosEnArchivo) {
             fecha_fallo: pd(adqSource === null || adqSource === void 0 ? void 0 : adqSource['Fecha de Fallo:']),
             hora_fallo: pt(adqSource === null || adqSource === void 0 ? void 0 : adqSource['Hora de Fallo:']),
             proveedor_razon_social: ns(adjSource === null || adjSource === void 0 ? void 0 : adjSource['Nombre o Razón Social']),
-            proveedor_rfc: (_t = ns(adjSource === null || adjSource === void 0 ? void 0 : adjSource['RFC'])) === null || _t === void 0 ? void 0 : _t.replace(/\s+/g, ''),
+            proveedor_rfc: (_r = ns(adjSource === null || adjSource === void 0 ? void 0 : adjSource['RFC'])) === null || _r === void 0 ? void 0 : _r.replace(/\s+/g, ''),
             monto_total_adjudicado_iva: pn(adjSource === null || adjSource === void 0 ? void 0 : adjSource['Monto Total Adjudicación con IVA']),
             no_contrato: ns(adjSource === null || adjSource === void 0 ? void 0 : adjSource['Numero de Contrato:']),
             vigencia_inicio: pd(adjSource === null || adjSource === void 0 ? void 0 : adjSource['Inicio de Vigencia:']),
@@ -545,9 +711,9 @@ cats, foliosEnArchivo) {
         datos: errores.length === 0 ? {
             solicitud: {
                 folio, fecha_ingreso, id_origen_recurso, tipo_solicitud, estatus_id,
-                id_dependencia, id_opd: null, id_organo_desconcentrado: null,
-                id_centro_costo, id_capitulo, id_subcapitulo, id_partida_generica,
-                id_partida_especifica: null, estado_estudio_mercado,
+                id_dependencia, id_opd, id_organo_desconcentrado,
+                id_centro_costo, id_capitulo, id_subcapitulo,
+                id_partida_generica, id_partida_especifica, estado_estudio_mercado,
             },
             em: tieneEM ? emDatos : null,
             ap: apDatos,
@@ -697,7 +863,7 @@ const validarExcel = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.validarExcel = validarExcel;
 const importarExcel = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
     try {
         limpiarExpirados();
         const token = (_a = req.body) === null || _a === void 0 ? void 0 : _a.token;
@@ -713,8 +879,25 @@ const importarExcel = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         res.json(Object.assign({ ok: true }, resultado));
     }
     catch (err) {
-        console.error('ERROR importarExcel =>', err);
-        res.status(500).json({ ok: false, msg: (_b = err.message) !== null && _b !== void 0 ? _b : 'Error al importar los datos' });
+        console.error('═══ ERROR importarExcel ═══');
+        console.error('message:       ', err === null || err === void 0 ? void 0 : err.message);
+        console.error('name:          ', err === null || err === void 0 ? void 0 : err.name);
+        console.error('sqlMessage:    ', (_b = err === null || err === void 0 ? void 0 : err.parent) === null || _b === void 0 ? void 0 : _b.sqlMessage);
+        console.error('code:          ', (_c = err === null || err === void 0 ? void 0 : err.parent) === null || _c === void 0 ? void 0 : _c.code);
+        console.error('errno:         ', (_d = err === null || err === void 0 ? void 0 : err.parent) === null || _d === void 0 ? void 0 : _d.errno);
+        console.error('sql:           ', (_e = err === null || err === void 0 ? void 0 : err.sql) !== null && _e !== void 0 ? _e : (_f = err === null || err === void 0 ? void 0 : err.parent) === null || _f === void 0 ? void 0 : _f.sql);
+        console.error('stack:         ', err === null || err === void 0 ? void 0 : err.stack);
+        console.error('═══════════════════════════');
+        const detail = [
+            (_g = err === null || err === void 0 ? void 0 : err.parent) === null || _g === void 0 ? void 0 : _g.sqlMessage,
+            (_h = err === null || err === void 0 ? void 0 : err.parent) === null || _h === void 0 ? void 0 : _h.code,
+            (_j = err === null || err === void 0 ? void 0 : err.sql) !== null && _j !== void 0 ? _j : (_k = err === null || err === void 0 ? void 0 : err.parent) === null || _k === void 0 ? void 0 : _k.sql,
+        ].filter(Boolean).join(' | ');
+        res.status(500).json({
+            ok: false,
+            msg: (_l = err === null || err === void 0 ? void 0 : err.message) !== null && _l !== void 0 ? _l : 'Error al importar los datos',
+            detail: detail || undefined,
+        });
     }
 });
 exports.importarExcel = importarExcel;
