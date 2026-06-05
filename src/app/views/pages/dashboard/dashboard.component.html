@@ -1,267 +1,255 @@
-<div class="db-wrap">
+<div class="xd-wrap">
 
-  <!-- Cabecera -->
-  <div class="db-header">
-    <div class="db-header__left">
-      <img src="/images/oficialia_mayor.png" class="db-header__logo" alt="">
-      <div>
-        <h1 class="db-header__title">Tablero de Adquisiciones</h1>
-        <p class="db-header__sub">Oficialía Mayor · Dirección General de Recursos Materiales</p>
-      </div>
+  <!-- ══ Encabezado ═════════════════════════════════════════════════════ -->
+  <header class="xd-head">
+    <div class="xd-head__icon"><i class="feather icon-bar-chart-2"></i></div>
+    <div class="xd-head__text">
+      <h1 class="xd-head__title">Tablero Ejecutivo de Adquisiciones</h1>
+      <p class="xd-head__sub">Seguimiento de solicitudes, contratos y montos adjudicados</p>
     </div>
-    <span class="db-header__date">{{ ahora | date:'d MMM yyyy' }}</span>
-  </div>
+    <span class="xd-head__date">{{ ahora | date:'d \'de\' MMMM yyyy':'':'es-MX' }}</span>
+  </header>
 
   @if (cargando) {
-    <div class="db-loading">
-      <div class="spinner-border spinner-border-sm" style="color:#7a001f"></div>
-      <span>Cargando...</span>
+    <div class="xd-loading">
+      <div class="spinner-border spinner-border-sm xd-spinner me-2"></div>
+      Cargando tablero...
     </div>
   } @else {
 
-    <!-- ════ Fila 1: Totales por origen ═══════════════════════════════ -->
-    <div class="db-row1">
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- Fila A: 4 KPI principales                                       -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <div class="xd-kpis">
 
-      <div class="db-kpi db-kpi--main">
-        <span class="db-kpi__val">{{ kpis.total }}</span>
-        <span class="db-kpi__lbl">Solicitudes Totales</span>
-      </div>
-
-      <div class="db-kpi">
-        <span class="db-kpi__val">{{ kpis.estatal }}</span>
-        <span class="db-kpi__lbl">Estatales</span>
-        <span class="db-kpi__pct">{{ pct(kpis.estatal) }}</span>
-      </div>
-
-      <div class="db-kpi">
-        <span class="db-kpi__val">{{ kpis.federal }}</span>
-        <span class="db-kpi__lbl">Federales</span>
-        <span class="db-kpi__pct">{{ pct(kpis.federal) }}</span>
-      </div>
-
-      <div class="db-kpi">
-        <span class="db-kpi__val">{{ kpis.fideicomiso }}</span>
-        <span class="db-kpi__lbl">Fideicomiso</span>
-        <span class="db-kpi__pct">{{ pct(kpis.fideicomiso) }}</span>
-      </div>
-
-      <div class="db-kpi">
-        <span class="db-kpi__val">{{ kpis.concurrente }}</span>
-        <span class="db-kpi__lbl">Concurrentes</span>
-        <span class="db-kpi__pct">{{ pct(kpis.concurrente) }}</span>
-      </div>
-
-      <div class="db-kpi">
-        <span class="db-kpi__val">{{ kpis.propio }}</span>
-        <span class="db-kpi__lbl">Propias</span>
-        <span class="db-kpi__pct">{{ pct(kpis.propio) }}</span>
-      </div>
-
-    </div>
-
-    <!-- ════ Fila 2: Contratos y Monto ════════════════════════════════ -->
-    <div class="db-row2">
-
-      <div class="db-metric">
-        <span class="db-metric__val">{{ kpis.contratos }}</span>
-        <span class="db-metric__lbl">Contratos Generados</span>
-        <div class="db-metric__bar">
-          <div class="db-metric__fill db-metric__fill--green"
-               [style.width]="pct(kpis.contratos)"></div>
+      <!-- Total solicitudes — métrica principal -->
+      <div class="xd-kpi">
+        <div class="xd-kpi__ico"><i class="feather icon-file-text"></i></div>
+        <div>
+          <div class="xd-kpi__val">{{ kpis.total }}</div>
+          <div class="xd-kpi__lbl">Solicitudes Totales</div>
         </div>
-        <span class="db-metric__note">{{ pct(kpis.contratos) }} de solicitudes formalizadas</span>
       </div>
 
-      <div class="db-metric db-metric--monto">
-        <span class="db-metric__val db-metric__val--lg">{{ pesos(kpis.monto) }}</span>
-        <span class="db-metric__lbl">Monto Total Adjudicado</span>
-        <span class="db-metric__note">MXN · IVA incluido · {{ kpis.adjudicacion }} adjudicaciones</span>
+      <!-- Contratos — indicador positivo -->
+      <div class="xd-kpi">
+        <div class="xd-kpi__ico"><i class="feather icon-clipboard"></i></div>
+        <div>
+          <div class="xd-kpi__val">{{ kpis.contratos }}</div>
+          <div class="xd-kpi__lbl">Contratos Generados</div>
+          <div class="xd-kpi__sub">{{ pct(kpis.contratos) }} del total</div>
+        </div>
+      </div>
+
+      <!-- Monto adjudicado — fuente xs para números largos -->
+      <div class="xd-kpi">
+        <div class="xd-kpi__ico"><i class="feather icon-trending-up"></i></div>
+        <div>
+          <div class="xd-kpi__val xd-kpi__val--xs">{{ pesos(kpis.monto) }}</div>
+          <div class="xd-kpi__lbl">Monto Total Adjudicado</div>
+          <div class="xd-kpi__sub">MXN · IVA incluido</div>
+        </div>
+      </div>
+
+      <!-- Dependencias — jerarquía reducida (dato contextual, no métrica clave) -->
+      <div class="xd-kpi xd-kpi--secondary">
+        <div class="xd-kpi__ico"><i class="feather icon-users"></i></div>
+        <div>
+          <div class="xd-kpi__val">{{ kpis.dependencias }}</div>
+          <div class="xd-kpi__lbl">Dependencias Participantes</div>
+        </div>
       </div>
 
     </div>
 
-    <!-- ════ Fila 3: Gráficas ══════════════════════════════════════════ -->
-    <div class="db-row3">
 
-      <div class="db-card">
-        <p class="db-card__title">Solicitudes por Etapa del Proceso</p>
-        @if (chartEtapas) {
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- Fila B: Contratos por origen  +  Solicitudes por origen        -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <div class="xd-row2">
+
+      <div class="xd-card">
+        <div class="xd-card__head">
+          <i class="feather icon-pie-chart me-1"></i>Contratos por Origen del Recurso
+        </div>
+        @if (chartContratosPorOrigen) {
           <apx-chart
-            [series]="chartEtapas.series!"
-            [labels]="chartEtapas.labels!"
-            [chart]="chartEtapas.chart!"
-            [colors]="chartEtapas.colors!"
-            [plotOptions]="chartEtapas.plotOptions!"
-            [dataLabels]="chartEtapas.dataLabels!"
-            [legend]="chartEtapas.legend!"
-            [stroke]="chartEtapas.stroke!"
-            [tooltip]="chartEtapas.tooltip!">
+            [series]="chartContratosPorOrigen.series!"
+            [labels]="chartContratosPorOrigen.labels!"
+            [chart]="chartContratosPorOrigen.chart!"
+            [colors]="chartContratosPorOrigen.colors!"
+            [plotOptions]="chartContratosPorOrigen.plotOptions!"
+            [dataLabels]="chartContratosPorOrigen.dataLabels!"
+            [legend]="chartContratosPorOrigen.legend!"
+            [stroke]="chartContratosPorOrigen.stroke!"
+            [tooltip]="chartContratosPorOrigen.tooltip!">
           </apx-chart>
         }
       </div>
 
-      <div class="db-card">
-        <p class="db-card__title">Distribución por Origen del Recurso</p>
-        @if (chartOrigen) {
-          <apx-chart
-            [series]="chartOrigen.series!"
-            [chart]="chartOrigen.chart!"
-            [colors]="chartOrigen.colors!"
-            [plotOptions]="chartOrigen.plotOptions!"
-            [dataLabels]="chartOrigen.dataLabels!"
-            [xaxis]="chartOrigen.xaxis!"
-            [yaxis]="chartOrigen.yaxis!"
-            [grid]="chartOrigen.grid!"
-            [tooltip]="chartOrigen.tooltip!">
-          </apx-chart>
-        }
-      </div>
-
-    </div>
-
-    <!-- ════ Fila 4: Top Dependencias ═════════════════════════════════ -->
-    <div class="db-row4">
-
-      <div class="db-card">
-        <p class="db-card__title">Top Dependencias · Solicitudes</p>
-        @if (cargandoDeps) {
-          <div class="db-spinner"><div class="spinner-border spinner-border-sm" style="color:#7a001f"></div></div>
-        } @else if (topSolicitudes.length === 0) {
-          <p class="db-empty">Sin datos</p>
-        } @else {
-          <div class="db-rank">
-            @for (d of topSolicitudes; track d.nombre; let i = $index) {
-              <div class="db-rank__row">
-                <span class="db-rank__pos">{{ i + 1 }}</span>
-                <div class="db-rank__body">
-                  <span class="db-rank__name" [title]="d.nombre">{{ d.nombre }}</span>
-                  <div class="db-rank__bar-wrap">
-                    <div class="db-rank__bar db-rank__bar--blue"
-                         [style.width]="barWidth(d.total, topSolicitudes)"></div>
-                  </div>
-                </div>
-                <span class="db-rank__num">{{ d.total }}</span>
-              </div>
-            }
-          </div>
-        }
-      </div>
-
-      <div class="db-card">
-        <p class="db-card__title">Top Dependencias · Monto Adjudicado</p>
-        @if (cargandoDeps) {
-          <div class="db-spinner"><div class="spinner-border spinner-border-sm" style="color:#7a001f"></div></div>
-        } @else if (topMonto.length === 0) {
-          <p class="db-empty">Sin datos</p>
-        } @else {
-          <div class="db-rank">
-            @for (d of topMonto; track d.nombre; let i = $index) {
-              <div class="db-rank__row">
-                <span class="db-rank__pos">{{ i + 1 }}</span>
-                <div class="db-rank__body">
-                  <span class="db-rank__name" [title]="d.nombre">{{ d.nombre }}</span>
-                  <div class="db-rank__bar-wrap">
-                    <div class="db-rank__bar db-rank__bar--vino"
-                         [style.width]="barWidthMonto(d.monto)"></div>
-                  </div>
-                </div>
-                <span class="db-rank__num db-rank__num--sm">{{ pesos(d.monto) }}</span>
-              </div>
-            }
-          </div>
-        }
-      </div>
-
-    </div>
-
-    <!-- ════ Fila 5: Calendario ═══════════════════════════════════════ -->
-    <div class="db-row5">
-
-      <!-- Calendario -->
-      <div class="db-card">
-        <div class="db-cal-head">
-          <p class="db-card__title" style="margin:0">Calendario de Seguimiento</p>
-          <div class="db-cal-nav">
-            <button class="db-cal-btn" (click)="calNavegar(-1)">‹</button>
-            <span class="db-cal-mes">{{ calTitulo }}</span>
-            <button class="db-cal-btn" (click)="calNavegar(1)">›</button>
-          </div>
+      <!-- Lista ejecutiva compacta — reemplaza la gráfica de barras -->
+      <div class="xd-card">
+        <div class="xd-card__head">
+          <i class="feather icon-list me-1"></i>Solicitudes por Origen del Recurso
         </div>
-
-        <div class="db-cal-dow">
-          @for (d of DIAS_SEM; track d) { <span>{{ d }}</span> }
-        </div>
-
-        @if (cargandoCal) {
-          <div class="db-spinner"><div class="spinner-border spinner-border-sm" style="color:#7a001f"></div></div>
-        } @else {
-          <div class="db-cal-grid">
-            @for (dia of calDias; track $index) {
-              <div class="db-cal-dia"
-                   [class.db-cal-dia--vacio]="!dia.fecha"
-                   [class.db-cal-dia--hoy]="esHoy(dia.fecha)"
-                   [class.db-cal-dia--sel]="esSelec(dia.fecha)"
-                   [class.db-cal-dia--activo]="dia.fecha && tieneEventos(dia)"
-                   (click)="seleccionarDia(dia)">
-                @if (dia.fecha) {
-                  <span>{{ dia.fecha.getDate() }}</span>
-                  <div class="db-cal-dots">
-                    @if (dia.solicitudes   > 0) { <i class="db-dot db-dot--blue"></i>  }
-                    @if (dia.contratos     > 0) { <i class="db-dot db-dot--green"></i> }
-                    @if (dia.adjudicaciones > 0) { <i class="db-dot db-dot--vino"></i>  }
-                  </div>
-                }
+        <div class="xd-origin-list">
+          @for (o of origenDetalle; track o.id) {
+            <div class="xd-origin-row">
+              <span class="xd-origin-dot"
+                    [style.background]="getOriginColor(o.id)"></span>
+              <span class="xd-origin-name">{{ o.nombre }}</span>
+              <div class="xd-origin-track">
+                <div class="xd-origin-fill"
+                     [style.width.%]="pctOrigenNum(o.solicitudes)">
+                </div>
               </div>
-            }
-          </div>
-
-          <div class="db-cal-legend">
-            <span><i class="db-dot db-dot--blue"></i> Solicitudes</span>
-            <span><i class="db-dot db-dot--green"></i> Contratos</span>
-            <span><i class="db-dot db-dot--vino"></i> Adjudicaciones</span>
-          </div>
-        }
-      </div>
-
-      <!-- Detalle del día -->
-      <div class="db-card db-card--detalle">
-        @if (!calSeleccionado) {
-          <div class="db-detalle-empty">
-            <i class="feather icon-calendar" style="font-size:2rem;color:#cbd5e1"></i>
-            <p>Selecciona un día para ver la actividad registrada</p>
-          </div>
-        } @else {
-          <p class="db-detalle-fecha">
-            {{ calSeleccionado | date:'EEEE d \'de\' MMMM':'':'es-MX' | titlecase }}
-          </p>
-          @let ev = calEventosDia;
-          @if (!ev || !tieneEventos(ev)) {
-            <p style="font-size:.78rem;color:#94a3b8">Sin actividad en este día.</p>
-          } @else {
-            <div class="db-detalle-items">
-              @if (ev.solicitudes > 0) {
-                <div class="db-detalle-item db-detalle-item--blue">
-                  <strong>{{ ev.solicitudes }}</strong>
-                  solicitud{{ ev.solicitudes !== 1 ? 'es' : '' }} registrada{{ ev.solicitudes !== 1 ? 's' : '' }}
-                </div>
-              }
-              @if (ev.contratos > 0) {
-                <div class="db-detalle-item db-detalle-item--green">
-                  <strong>{{ ev.contratos }}</strong>
-                  contrato{{ ev.contratos !== 1 ? 's' : '' }} generado{{ ev.contratos !== 1 ? 's' : '' }}
-                </div>
-              }
-              @if (ev.adjudicaciones > 0) {
-                <div class="db-detalle-item db-detalle-item--vino">
-                  <strong>{{ ev.adjudicaciones }}</strong>
-                  adjudicación{{ ev.adjudicaciones !== 1 ? 'es' : '' }}
-                </div>
-              }
+              <span class="xd-origin-count">{{ o.solicitudes }}</span>
+              <span class="xd-origin-pct">{{ pctOrigenNum(o.solicitudes) }}%</span>
             </div>
           }
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- Fila C: Top 5 dependencias por solicitudes  +  por monto       -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <div class="xd-row2">
+
+      <div class="xd-card">
+        <div class="xd-card__head">
+          <i class="feather icon-layers me-1"></i>Top 5 · Dependencias con más solicitudes
+        </div>
+        @if (chartTopSolicitudes) {
+          <apx-chart
+            [series]="chartTopSolicitudes.series!"
+            [chart]="chartTopSolicitudes.chart!"
+            [colors]="chartTopSolicitudes.colors!"
+            [plotOptions]="chartTopSolicitudes.plotOptions!"
+            [dataLabels]="chartTopSolicitudes.dataLabels!"
+            [xaxis]="chartTopSolicitudes.xaxis!"
+            [yaxis]="chartTopSolicitudes.yaxis!"
+            [grid]="chartTopSolicitudes.grid!"
+            [tooltip]="chartTopSolicitudes.tooltip!">
+          </apx-chart>
         }
       </div>
 
+      <div class="xd-card">
+        <div class="xd-card__head">
+          <i class="feather icon-award me-1"></i>Top 5 · Dependencias por monto adjudicado
+        </div>
+        @if (chartTopMonto) {
+          <apx-chart
+            [series]="chartTopMonto.series!"
+            [chart]="chartTopMonto.chart!"
+            [colors]="chartTopMonto.colors!"
+            [plotOptions]="chartTopMonto.plotOptions!"
+            [dataLabels]="chartTopMonto.dataLabels!"
+            [xaxis]="chartTopMonto.xaxis!"
+            [yaxis]="chartTopMonto.yaxis!"
+            [grid]="chartTopMonto.grid!"
+            [tooltip]="chartTopMonto.tooltip!">
+          </apx-chart>
+        }
+      </div>
+
+    </div>
+
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- Fila D: Monto por origen  +  Tendencia mensual                   -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <div class="xd-row2">
+
+      <div class="xd-card">
+        <div class="xd-card__head">
+          <i class="feather icon-dollar-sign me-1"></i>Monto Adjudicado por Origen del Recurso
+        </div>
+        @if (chartMontoOrigen) {
+          <apx-chart
+            [series]="chartMontoOrigen.series!"
+            [chart]="chartMontoOrigen.chart!"
+            [colors]="chartMontoOrigen.colors!"
+            [plotOptions]="chartMontoOrigen.plotOptions!"
+            [dataLabels]="chartMontoOrigen.dataLabels!"
+            [xaxis]="chartMontoOrigen.xaxis!"
+            [yaxis]="chartMontoOrigen.yaxis!"
+            [grid]="chartMontoOrigen.grid!"
+            [tooltip]="chartMontoOrigen.tooltip!">
+          </apx-chart>
+        } @else {
+          <p class="xd-empty">Sin adjudicaciones registradas</p>
+        }
+      </div>
+
+      <div class="xd-card">
+        <div class="xd-card__head">
+          <i class="feather icon-trending-up me-1"></i>Tendencia Mensual · {{ evolucionData?.anio ?? '' }}
+        </div>
+        @if (chartTendenciaMensual) {
+          <apx-chart
+            [series]="chartTendenciaMensual.series!"
+            [chart]="chartTendenciaMensual.chart!"
+            [colors]="chartTendenciaMensual.colors!"
+            [stroke]="chartTendenciaMensual.stroke!"
+            [plotOptions]="chartTendenciaMensual.plotOptions!"
+            [dataLabels]="chartTendenciaMensual.dataLabels!"
+            [xaxis]="chartTendenciaMensual.xaxis!"
+            [yaxis]="chartTendenciaMensual.yaxis!"
+            [grid]="chartTendenciaMensual.grid!"
+            [legend]="chartTendenciaMensual.legend!"
+            [markers]="chartTendenciaMensual.markers!"
+            [tooltip]="chartTendenciaMensual.tooltip!">
+          </apx-chart>
+        } @else {
+          <p class="xd-empty">Sin datos de tendencia disponibles</p>
+        }
+      </div>
+
+    </div>
+
+
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- Fila E: Tabla ejecutiva                                          -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <div class="xd-card xd-card--full">
+      <div class="xd-card__head">
+        <i class="feather icon-grid me-1"></i>Resumen Ejecutivo por Dependencia / OPD
+      </div>
+
+      @if (tablaResumen.length === 0) {
+        <p class="xd-empty">Sin datos disponibles</p>
+      } @else {
+        <div class="xd-table-wrap">
+          <table class="xd-table">
+            <thead>
+              <tr>
+                <th>Dependencia / OPD</th>
+                <th class="xd-th-num">Solicitudes</th>
+                <th class="xd-th-num">Contratos</th>
+                <th class="xd-th-num">Monto adjudicado</th>
+                <th>Origen principal</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of tablaResumen; track r.nombre; let i = $index) {
+                <tr [class.xd-tr-alt]="i % 2 !== 0">
+                  <td class="xd-td-name">{{ r.nombre }}</td>
+                  <td class="xd-td-num">{{ r.solicitudes }}</td>
+                  <td class="xd-td-num">{{ r.contratos }}</td>
+                  <td class="xd-td-num">{{ pesos(r.monto) }}</td>
+                  <td>
+                    <span class="xd-badge">{{ r.principal_origen }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     </div>
 
   }<!-- /else cargando -->

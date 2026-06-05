@@ -17,6 +17,8 @@ router.get("/api/solicitud/top-dependencias", solicitud_1.getTopDependencias);
 router.get("/api/solicitud/evolucion-mensual", solicitud_1.getEvolucionMensual);
 router.get("/api/solicitud/actividad-calendario", solicitud_1.getActividadCalendario);
 router.get("/api/solicitud/semaforo", solicitud_1.getSemaforo);
+router.get("/api/solicitud/origen-detalle", solicitud_1.getOrigenDetalle);
+router.get("/api/solicitud/dependencias-resumen", solicitud_1.getDependenciasResumen);
 router.get("/api/solicitud/cola/:estatus", solicitud_1.getSolicitudesCola);
 router.get("/api/solicitud/afectacion-presupuestal", solicitud_1.getSolicitudesAfectacion);
 router.get("/api/solicitud/afectacion-presupuestal/:id", solicitud_1.getAfectacionById);
@@ -25,4 +27,6 @@ router.get("/api/solicitud/adquisicion/:id", solicitud_1.getProcedimientoById);
 router.post("/api/solicitud/adquisicion/:id", solicitud_1.saveProcedimientoAdquisitivo);
 router.get("/api/solicitud/adjudicacion/:id", solicitud_1.getAdjudicacionById);
 router.post("/api/solicitud/adjudicacion/:id", solicitud_1.saveAdjudicacion);
-router.get("/api/solicitud
+router.get("/api/solicitud/exportar-excel", solicitud_1.exportarExcelGestion);
+router.get("/api/solicitud/informe-contratos", solicitud_1.getInformeContratos);
+exports.default = router;

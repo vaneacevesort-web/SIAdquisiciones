@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NgApexchartsModule, ApexOptions } from 'ng-apexcharts';
 import { RegistroService } from '../../../service/registro.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,76 +15,102 @@ import { forkJoin } from 'rxjs';
 })
 export class DashboardComponent implements OnInit {
 
-  cargando     = true;
-  cargandoDeps = true;
-  cargandoCal  = true;
-  ahora        = new Date();
+  cargando = true;
+  ahora    = new Date();
 
-  // ── KPIs ──────────────────────────────────────────────────────────────
+  // ── KPIs principales ─────────────────────────────────────────────────
   kpis = {
-    total: 0, estatal: 0, federal: 0, fideicomiso: 0, concurrente: 0, propio: 0,
-    contratos: 0, monto: 0,
+    total: 0, contratos: 0, monto: 0, dependencias: 0,
     registradas: 0, estudio: 0, afectacion: 0, contratacion: 0, adjudicacion: 0,
+    estatal: 0, federal: 0, fideicomiso: 0, concurrente: 0, propio: 0,
   };
 
-  // ── Gráficas ──────────────────────────────────────────────────────────
-  chartEtapas: ApexOptions | null = null;
-  chartOrigen: ApexOptions | null = null;
+  // ── Detalle por origen ────────────────────────────────────────────────
+  origenDetalle: {
+    id: number; nombre: string;
+    solicitudes: number; contratos: number;
+    monto: number; pct_formalizacion: number;
+  }[] = [];
 
   // ── Top dependencias ──────────────────────────────────────────────────
   topSolicitudes: { nombre: string; total: number }[] = [];
   topMonto:       { nombre: string; monto: number }[] = [];
 
-  // ── Calendario ────────────────────────────────────────────────────────
-  calAnio  = this.ahora.getFullYear();
-  calMes   = this.ahora.getMonth() + 1;
-  calDias: { fecha: Date | null; solicitudes: number; contratos: number; adjudicaciones: number }[] = [];
-  calSeleccionado: Date | null = null;
+  // ── Tabla ejecutiva ───────────────────────────────────────────────────
+  tablaResumen: {
+    nombre: string; solicitudes: number;
+    contratos: number; monto: number; principal_origen: string;
+  }[] = [];
 
-  readonly DIAS_SEM   = ['L','M','X','J','V','S','D'];
-  readonly MESES_NOM  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                         'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  // ── Tendencia mensual ─────────────────────────────────────────────────
+  evolucionData: {
+    anio: number; categorias: string[];
+    solicitudes: number[]; contratos: number[]; montos: number[];
+  } | null = null;
+
+  // ── Gráficas ──────────────────────────────────────────────────────────
+  chartContratosPorOrigen:   ApexOptions | null = null;
+  chartTopSolicitudes:       ApexOptions | null = null;
+  chartTopMonto:             ApexOptions | null = null;
+  chartMontoOrigen:          ApexOptions | null = null;
+  chartTendenciaMensual:     ApexOptions | null = null;
+
+  // ── Paleta por origen del recurso (usada en donut + dots de la lista) ──
+  // Combinación de verde, dorado y azul — sin guinda.
+  readonly ORIGIN_COLORS: Record<number, string> = {
+    1: '#2E8B57', // Estatal     — verde ejecutivo
+    2: '#C89B3C', // Federal     — dorado institucional
+    3: '#355C7D', // Fideicomiso — azul petróleo
+    4: '#4A9E7C', // Concurrente — verde teal
+    5: '#5E6472', // Propio      — gris acero
+  };
+
+  getOriginColor(id: number): string {
+    return this.ORIGIN_COLORS[id] ?? '#5E6472';
+  }
+
+  pctOrigenNum(n: number): number {
+    const total = this.origenDetalle.reduce((s, o) => s + o.solicitudes, 0);
+    return total ? Math.round((n / total) * 100) : 0;
+  }
 
   private svc = inject(RegistroService);
 
   ngOnInit(): void {
-    // KPIs + gráficas
-    this.svc.getKpis().subscribe({
-      next: (r: any) => {
-        if (r?.data) {
-          const d = r.data;
+    forkJoin({
+      kpis:     this.svc.getKpis(),
+      origen:   this.svc.getOrigenDetalle(),
+      tops:     this.svc.getTopDependencias(),
+      tabla:    this.svc.getDependenciasResumen(),
+      evolucion: this.svc.getEvolucionMensual().pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: ({ kpis, origen, tops, tabla, evolucion }) => {
+        if (kpis?.data) {
+          const d = kpis.data;
           this.kpis = {
-            total: d.total ?? 0, estatal: d.estatal ?? 0, federal: d.federal ?? 0,
-            fideicomiso: d.fideicomiso ?? 0, concurrente: d.concurrente ?? 0, propio: d.propio ?? 0,
-            contratos: d.total_contratos ?? 0, monto: d.monto_total ?? 0,
+            total: d.total ?? 0, contratos: d.total_contratos ?? 0,
+            monto: d.monto_total ?? 0, dependencias: d.dependencias_participantes ?? 0,
             registradas: d.registradas ?? 0, estudio: d.estudio ?? 0,
             afectacion: d.afectacion ?? 0, contratacion: d.contratacion ?? 0,
             adjudicacion: d.adjudicacion ?? 0,
+            estatal: d.estatal ?? 0, federal: d.federal ?? 0,
+            fideicomiso: d.fideicomiso ?? 0, concurrente: d.concurrente ?? 0,
+            propio: d.propio ?? 0,
           };
-          this.buildCharts();
         }
+        if (origen?.data)    this.origenDetalle  = origen.data;
+        if (tops?.data)      { this.topSolicitudes = tops.data.porSolicitudes ?? []; this.topMonto = tops.data.porMonto ?? []; }
+        if (tabla?.data)     this.tablaResumen   = tabla.data;
+        if (evolucion?.data) this.evolucionData  = evolucion.data;
+
+        this.buildCharts();
         this.cargando = false;
       },
       error: () => { this.cargando = false; },
     });
-
-    // Top dependencias
-    this.svc.getTopDependencias().subscribe({
-      next: (r: any) => {
-        if (r?.data) {
-          this.topSolicitudes = r.data.porSolicitudes ?? [];
-          this.topMonto       = r.data.porMonto       ?? [];
-        }
-        this.cargandoDeps = false;
-      },
-      error: () => { this.cargandoDeps = false; },
-    });
-
-    // Calendario
-    this.cargarCal();
   }
 
-  // ── Helpers KPI ───────────────────────────────────────────────────────
+  // ── Helpers ───────────────────────────────────────────────────────────
   pct(n: number): string {
     if (!this.kpis.total) return '0%';
     return Math.round((n / this.kpis.total) * 100) + '%';
@@ -91,116 +118,167 @@ export class DashboardComponent implements OnInit {
 
   pesos(n: number): string {
     if (!n) return '$0';
-    if (n >= 1_000_000_000) return '$' + (n / 1_000_000_000).toFixed(1) + ' MMM';
-    if (n >= 1_000_000)     return '$' + (n / 1_000_000).toFixed(1) + ' M';
+    // Mostrar monto completo con separadores de miles — sin etiquetas MDP/MXN
+    // (la unidad "MXN · IVA incluido" ya aparece en el subtexto del KPI)
     return '$' + Math.round(n).toLocaleString('es-MX');
-  }
-
-  barWidth(n: number, list: {total:number}[]): string {
-    const max = list[0]?.total ?? 1;
-    return Math.min(Math.round((n / max) * 100), 100) + '%';
-  }
-
-  barWidthMonto(n: number): string {
-    const max = this.topMonto[0]?.monto ?? 1;
-    return Math.min(Math.round((n / max) * 100), 100) + '%';
   }
 
   // ── Gráficas ──────────────────────────────────────────────────────────
   private buildCharts(): void {
-    const k = this.kpis;
-    this.chartEtapas = {
-      series: [k.registradas, k.estudio, k.afectacion, k.contratacion, k.adjudicacion],
-      labels: ['Registrada','Estudio de Mercado','Afectación Presupuestal','Adquisición','Adjudicación'],
-      chart:  { type: 'donut', height: 260, toolbar: { show: false } },
-      colors: ['#64748b','#d97706','#1e40af','#0d9488','#15803d'],
-      plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', color: '#64748b', formatter: () => k.total.toString() } } } } },
+    // ── Paleta semántica por tipo de métrica ──────────────────────────────
+    // Azul petróleo → solicitudes     (información/demanda)
+    // Verde ejecutivo → contratos     (proceso completado)
+    // Dorado → monto adjudicado       (resultado financiero)
+    // Guinda → KPIs y acentos solo    (no en gráficas de barras o dona)
+    const AZUL_P = '#355C7D'; // solicitudes
+    const DORADO = '#C89B3C'; // monto adjudicado
+    const GRIS   = '#64748B';
+
+    const oriColors  = this.origenDetalle.map(o => this.getOriginColor(o.id));
+    const oriNames   = this.origenDetalle.map(o => o.nombre);
+
+    const LABEL_STYLE = { fontSize: '11px', fontFamily: 'inherit', colors: GRIS };
+    const GRID_CFG    = {
+      borderColor: '#F1F5F9',
+      xaxis: { lines: { show: true } },
+      yaxis: { lines: { show: false } },
+    };
+
+    // ── Donut: contratos por origen ───────────────────────────────────────
+    // Reducido a 210 px — no debe dominar la fila.
+    this.chartContratosPorOrigen = {
+      series:  this.origenDetalle.map(o => o.contratos),
+      labels:  oriNames,
+      chart:   { type: 'donut', height: 210, toolbar: { show: false } },
+      colors:  oriColors,
+      plotOptions: { pie: { donut: { size: '60%', labels: {
+        show: true,
+        total: {
+          show:      true,
+          label:     'Contratos',
+          color:     GRIS,
+          fontSize:  '11px',
+          formatter: () => this.origenDetalle.reduce((s, o) => s + o.contratos, 0).toString(),
+        },
+      } } } },
       dataLabels: { enabled: false },
-      legend: { position: 'bottom', fontSize: '11px', fontFamily: 'inherit', labels: { colors: '#64748b' } },
-      stroke: { width: 2 },
+      legend: {
+        position:   'bottom',
+        fontSize:   '11px',
+        fontFamily: 'inherit',
+        labels:     { colors: GRIS },
+        markers:    { size: 7 } as any,
+      },
+      stroke:  { width: 2, colors: ['#fff'] },
+      tooltip: { y: { formatter: (v: number) => v + ' contratos' } },
+    };
+
+    // chartSolicitudesPorOrigen ya no es una gráfica — se muestra como lista.
+
+    // ── Barras: top 5 solicitudes por dependencia ─────────────────────────
+    // Azul petróleo → identidad visual "solicitudes" coherente con la lista.
+    const t5n = this.topSolicitudes.map(d => this.shortName(d.nombre));
+    this.chartTopSolicitudes = {
+      series: [{ name: 'Solicitudes', data: this.topSolicitudes.map(d => d.total) }],
+      chart:  { type: 'bar', height: 230, toolbar: { show: false } },
+      colors: [AZUL_P],
+      plotOptions: { bar: { horizontal: true, borderRadius: 3, barHeight: '48%' } },
+      dataLabels:  { enabled: true, style: { fontSize: '11px', colors: ['#fff'] } },
+      xaxis: {
+        categories: t5n,
+        labels:     { style: LABEL_STYLE },
+        axisBorder: { show: false },
+        axisTicks:  { show: false },
+      },
+      yaxis: { labels: { style: LABEL_STYLE } },
+      grid:  GRID_CFG,
       tooltip: { y: { formatter: (v: number) => v + ' solicitudes' } },
     };
 
-    this.chartOrigen = {
-      series: [{ name: 'Solicitudes', data: [k.estatal, k.federal, k.fideicomiso, k.concurrente, k.propio] }],
-      chart:  { type: 'bar', height: 260, toolbar: { show: false } },
-      colors: ['#7a001f'],
-      plotOptions: { bar: { horizontal: true, borderRadius: 4, barHeight: '55%' } },
-      dataLabels: { enabled: true, style: { fontSize: '11px', colors: ['#fff'] } },
-      xaxis: { categories: ['Estatal','Federal','Fideicomiso','Concurrente','Propio'], labels: { style: { fontSize: '11px', colors: '#64748b' } }, axisBorder: { show: false } },
-      yaxis: { labels: { style: { fontSize: '11px', colors: '#64748b' } } },
-      grid:  { borderColor: '#f1f5f9', xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
-      tooltip: { y: { formatter: (v: number) => v + ' solicitudes' } },
+    // ── Barras: top 5 monto adjudicado por dependencia ────────────────────
+    // Dorado → identidad visual "monto adjudicado" inmediatamente reconocible.
+    const m5n = this.topMonto.map(d => this.shortName(d.nombre));
+    const m5v = this.topMonto.map(d => +(d.monto / 1_000_000).toFixed(1));
+    this.chartTopMonto = {
+      series: [{ name: 'Millones MXN', data: m5v }],
+      chart:  { type: 'bar', height: 230, toolbar: { show: false } },
+      colors: [DORADO],
+      plotOptions: { bar: { horizontal: true, borderRadius: 3, barHeight: '48%' } },
+      dataLabels: {
+        enabled:   true,
+        style:     { fontSize: '11px', colors: ['#fff'] },
+        formatter: (v: number) => '$' + v.toLocaleString('es-MX') + ' M',
+      },
+      xaxis: {
+        categories: m5n,
+        labels:     { style: LABEL_STYLE },
+        axisBorder: { show: false },
+        axisTicks:  { show: false },
+      },
+      yaxis: { labels: { style: LABEL_STYLE } },
+      grid:  GRID_CFG,
+      tooltip: { y: { formatter: (v: number) => '$' + v.toLocaleString('es-MX') + ' M MXN' } },
     };
-  }
 
-  // ── Calendario ────────────────────────────────────────────────────────
-  get calTitulo(): string { return `${this.MESES_NOM[this.calMes - 1]} ${this.calAnio}`; }
-
-  calNavegar(d: number): void {
-    this.calMes += d;
-    if (this.calMes > 12) { this.calMes = 1;  this.calAnio++; }
-    if (this.calMes < 1)  { this.calMes = 12; this.calAnio--; }
-    this.calSeleccionado = null;
-    this.cargarCal();
-  }
-
-  seleccionarDia(dia: { fecha: Date | null }): void {
-    if (!dia.fecha) return;
-    const iso = this.isoDate(dia.fecha);
-    this.calSeleccionado = this.calSeleccionado && this.isoDate(this.calSeleccionado) === iso ? null : dia.fecha;
-  }
-
-  get calEventosDia() {
-    if (!this.calSeleccionado) return null;
-    return this.calDias.find(d => d.fecha && this.isoDate(d.fecha) === this.isoDate(this.calSeleccionado!)) ?? null;
-  }
-
-  tieneEventos(d: { solicitudes: number; contratos: number; adjudicaciones: number }) {
-    return d.solicitudes > 0 || d.contratos > 0 || d.adjudicaciones > 0;
-  }
-
-  esHoy(f: Date | null) {
-    if (!f) return false;
-    const h = new Date();
-    return f.getFullYear() === h.getFullYear() && f.getMonth() === h.getMonth() && f.getDate() === h.getDate();
-  }
-
-  esSelec(f: Date | null) {
-    if (!f || !this.calSeleccionado) return false;
-    return this.isoDate(f) === this.isoDate(this.calSeleccionado);
-  }
-
-  private isoDate(d: Date): string {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
-
-  private cargarCal(): void {
-    this.cargandoCal = true;
-    this.svc.getActividadCalendario(this.calAnio, this.calMes).subscribe({
-      next: (r: any) => { this.buildCal(r?.data ?? {}); this.cargandoCal = false; },
-      error: () => { this.buildCal({}); this.cargandoCal = false; },
-    });
-  }
-
-  private buildCal(data: any): void {
-    const toMap = (arr: any[] = []) => new Map<string, number>(arr.map(r => [r.fecha.split('T')[0], Number(r.total)]));
-    const sol = toMap(data.solicitudes);
-    const con = toMap(data.contratos);
-    const adj = toMap(data.adjudicaciones);
-
-    const primer  = new Date(this.calAnio, this.calMes - 1, 1);
-    const dow     = (primer.getDay() + 6) % 7;
-    const enMes   = new Date(this.calAnio, this.calMes, 0).getDate();
-    const celdas: typeof this.calDias = [];
-
-    for (let i = 0; i < dow; i++) celdas.push({ fecha: null, solicitudes: 0, contratos: 0, adjudicaciones: 0 });
-    for (let d = 1; d <= enMes; d++) {
-      const f = new Date(this.calAnio, this.calMes - 1, d);
-      const iso = this.isoDate(f);
-      celdas.push({ fecha: f, solicitudes: sol.get(iso) ?? 0, contratos: con.get(iso) ?? 0, adjudicaciones: adj.get(iso) ?? 0 });
+    // ── Monto adjudicado por origen del recurso ───────────────────────────
+    // Dorado → identidad "monto". Solo orígenes con monto > 0.
+    const conMonto = this.origenDetalle.filter(o => o.monto > 0);
+    if (conMonto.length) {
+      this.chartMontoOrigen = {
+        series: [{ name: 'M MXN', data: conMonto.map(o => +(o.monto / 1_000_000).toFixed(1)) }],
+        chart:  { type: 'bar', height: 230, toolbar: { show: false } },
+        colors: [DORADO],
+        plotOptions: { bar: { horizontal: true, borderRadius: 3, barHeight: '48%' } },
+        dataLabels: {
+          enabled:   true,
+          style:     { fontSize: '11px', colors: ['#fff'] },
+          formatter: (v: number) => '$' + v.toLocaleString('es-MX') + ' M',
+        },
+        xaxis: {
+          categories: conMonto.map(o => o.nombre),
+          labels:     { style: LABEL_STYLE },
+          axisBorder: { show: false },
+          axisTicks:  { show: false },
+        },
+        yaxis: { labels: { style: LABEL_STYLE } },
+        grid:  GRID_CFG,
+        tooltip: { y: { formatter: (v: number) => '$' + v.toLocaleString('es-MX') + ' M MXN' } },
+      };
     }
-    while (celdas.length % 7 !== 0) celdas.push({ fecha: null, solicitudes: 0, contratos: 0, adjudicaciones: 0 });
-    this.calDias = celdas;
+
+    // ── Tendencia mensual de solicitudes y contratos ───────────────────────
+    // Barras (azul) = solicitudes · Línea (verde) = contratos.
+    if (this.evolucionData) {
+      const ev = this.evolucionData;
+      this.chartTendenciaMensual = {
+        series: [
+          { name: 'Solicitudes', type: 'column', data: ev.solicitudes },
+          { name: 'Contratos',   type: 'line',   data: ev.contratos   },
+        ],
+        chart:  { type: 'line', height: 230, toolbar: { show: false } },
+        colors: [AZUL_P, '#2E8B57'],
+        stroke: { width: [0, 2.5], curve: 'smooth' },
+        plotOptions: { bar: { columnWidth: '55%', borderRadius: 2 } },
+        dataLabels: { enabled: false },
+        xaxis: {
+          categories: ev.categorias,
+          labels:     { style: LABEL_STYLE },
+          axisBorder: { show: false },
+          axisTicks:  { show: false },
+        },
+        yaxis: { labels: { style: LABEL_STYLE } },
+        grid:  GRID_CFG,
+        legend: {
+          show: true, position: 'bottom', fontSize: '11px',
+          fontFamily: 'inherit', labels: { colors: GRIS },
+        },
+        markers: { size: [0, 4] } as any,
+        tooltip: { shared: true, intersect: false },
+      };
+    }
+  }
+
+  private shortName(s: string): string {
+    return s.length > 30 ? s.substring(0, 28) + '…' : s;
   }
 }

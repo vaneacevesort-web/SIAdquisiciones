@@ -1,0 +1,481 @@
+// ═══════════════════════════════════════════════════════════════════════════
+//  Paleta institucional — vino elegante referencia Oficialía Mayor
+// ═══════════════════════════════════════════════════════════════════════════
+$vino:       #741530;   // vino institucional: profundo, no saturado, match referencia
+$vino-dark:  #5A0F23;   // hover / activo
+$vino-tint:  #F8F1F3;   // fondo secciones: casi blanco, apenas rosado
+$vino-pale:  #EFD8DF;   // borde / badge light
+$oro:        #B08025;   // dorado institucional
+$oro-hover:  #8C6418;
+
+$blanco:     #FFFFFF;
+$gris-pg:    #F3F4F7;   // fondo de toda la página
+$gris-row:   #F8F9FB;   // fila alterna: gris neutro puro
+$gris-brd:   #DDE2EC;   // bordes generales
+$gris-th-bg: #F0F2F7;   // fondo th tabla (cuando no es vino)
+
+$txt-dark:   #1A2035;
+$txt-mid:    #4B5563;
+$txt-light:  #9CA3AF;
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Página
+// ═══════════════════════════════════════════════════════════════════════════
+.rep-page {
+  background: $gris-pg;
+  min-height: 100%;
+  font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+  color: $txt-dark;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Encabezado institucional
+// ═══════════════════════════════════════════════════════════════════════════
+.rep-header {
+  background: $vino;
+  color: $blanco;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1.75rem;
+  gap: 1rem;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  &__logo {
+    height: 44px;
+    width: auto;
+    // convierte el SVG a blanco sobre fondo vino
+    filter: brightness(0) invert(1);
+    flex-shrink: 0;
+  }
+
+  &__texts { display: flex; flex-direction: column; }
+
+  &__org {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+  }
+
+  &__sub {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    font-style: italic;
+    margin-top: 1px;
+  }
+}
+
+// Botón "QUITAR FILTROS" en el encabezado
+.rep-btn-clear {
+  background: transparent;
+  color: $blanco;
+  border: 1.5px solid rgba(255,255,255,0.55);
+  border-radius: 20px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  &:hover { background: rgba(255,255,255,0.15); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Título en cápsula centrada
+// ═══════════════════════════════════════════════════════════════════════════
+.rep-title-row {
+  background: $blanco;
+  border-bottom: 1px solid $gris-brd;
+  padding: 1rem 1.75rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.rep-title-capsule {
+  display: inline-block;
+  margin: 0;
+  padding: 0.45rem 2.25rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: $vino;
+  letter-spacing: 0.05em;
+  border: 2px solid $vino;
+  border-radius: 40px;        // cápsula/ovalado
+  background: $vino-tint;
+  white-space: nowrap;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Estados de carga y error
+// ═══════════════════════════════════════════════════════════════════════════
+.rep-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: $txt-mid;
+  font-size: 0.875rem;
+  &--error { color: $vino; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Barra de controles: filtro · KPIs · PDF
+// ═══════════════════════════════════════════════════════════════════════════
+.rep-controls {
+  background: $blanco;
+  border-bottom: 1px solid $gris-brd;
+  padding: 0.7rem 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+// ── Filtro dropdown ──────────────────────────────────────────────────────
+.rep-filter {
+  flex-shrink: 0;
+}
+
+.rep-filter__btn {
+  background: $vino;
+  color: $blanco;
+  border: none;
+  border-radius: 20px;
+  padding: 0.42rem 1.1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: background 0.13s;
+
+  &::after { border-top-color: $blanco; }
+  &:hover  { background: $vino-dark; }
+
+  // clase Bootstrap dropdown-toggle — sobrescribir color del caret
+  &.show { background: $vino-dark; }
+}
+
+.rep-filter__menu {
+  min-width: 300px;
+  max-height: 360px;
+  overflow-y: auto;
+  font-size: 0.82rem;
+  border: 1px solid $gris-brd;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.1);
+  padding: 0.25rem 0;
+}
+
+.rep-filter__all {
+  color: $txt-mid;
+  font-style: italic;
+}
+
+.rep-filter__menu .dropdown-item.active {
+  background: $vino;
+  color: $blanco;
+}
+
+.rep-filter__menu .dropdown-item:hover:not(.active) {
+  background: $vino-tint;
+  color: $vino;
+}
+
+// ── KPI ovalados ─────────────────────────────────────────────────────────
+.rep-kpis {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  // centra entre filtro y botón PDF
+  flex: 1;
+  justify-content: center;
+}
+
+.rep-kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 1.2rem;
+  border: 2px solid $vino;
+  border-radius: 40px;       // mismo ovalado que el título
+  background: $blanco;
+  min-width: 120px;
+
+  &__val {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: $vino;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  &__lbl {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: $txt-mid;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: 1px;
+  }
+
+  &--monto {
+    border-color: $oro;
+    .rep-kpi__val { color: $oro; }
+  }
+}
+
+// ── Botón PDF (dorado) ────────────────────────────────────────────────────
+.rep-btn-pdf {
+  background: $oro;
+  color: $blanco;
+  border: none;
+  border-radius: 6px;
+  padding: 0.48rem 1.15rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: background 0.13s;
+  &:hover { background: $oro-hover; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Cuerpo del reporte
+// ═══════════════════════════════════════════════════════════════════════════
+.rep-body {
+  margin: 1.25rem 1.5rem;
+  background: $blanco;
+  border: 1px solid $gris-brd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+
+// ── Estado vacío ─────────────────────────────────────────────────────────
+.rep-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3.5rem;
+  color: $txt-light;
+  i { font-size: 2rem; opacity: 0.5; }
+  p { font-size: 0.875rem; margin: 0; }
+}
+
+// ── Tabla (compartida entre vista general y concentrada) ─────────────────
+.rep-table-wrap {
+  overflow-x: auto;
+}
+
+.rep-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+
+  thead tr {
+    background: $vino;
+  }
+
+  th {
+    color: $blanco;
+    font-weight: 700;
+    font-size: 9.5px;
+    letter-spacing: 0.04em;
+    padding: 0.55rem 0.65rem;
+    text-align: center;
+    vertical-align: middle;
+    border-right: 1px solid rgba(255,255,255,0.15);
+    white-space: normal;
+    line-height: 1.3;
+    &:last-child { border-right: none; }
+  }
+
+  td {
+    padding: 0.45rem 0.65rem;
+    vertical-align: top;
+    line-height: 1.45;
+    border-bottom: 1px solid $gris-brd;
+    border-right: 1px solid $gris-brd;
+    color: $txt-dark;
+    &:last-child { border-right: none; }
+  }
+
+  tbody tr {
+    background: $blanco;
+    &.row-alt td { background: $gris-row; }
+    &:hover td   { background: $vino-tint !important; }
+  }
+}
+
+// Columnas específicas — vista general
+.th-desc, .td-desc { max-width: 280px; font-size: 11px; }
+.th-monto, .td-monto { text-align: right; white-space: nowrap; font-weight: 600; }
+.td-dep      { font-weight: 600; min-width: 150px; }
+.td-contrato { font-weight: 600; color: $vino; white-space: nowrap; }
+
+// Columnas específicas — vista concentrada
+.th-prov, .td-prov { min-width: 160px; font-size: 11px; }
+.td-fecha   { white-space: nowrap; text-align: center; color: $txt-mid; }
+.td-sm      { font-size: 11px; }
+
+// ── Fila de totales (vista general) ─────────────────────────────────────
+.rep-totals {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 1rem;
+  border-top: 1px solid $gris-brd;
+  background: $gris-pg;
+  font-size: 0.75rem;
+  color: $txt-mid;
+
+  &__total {
+    font-size: 0.82rem;
+    color: $txt-dark;
+    strong { color: $vino; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Secciones por dependencia (vista concentrada con filtro)
+// ═══════════════════════════════════════════════════════════════════════════
+.rep-section {
+  margin: 1.25rem 1.5rem 0;
+  background: $blanco;
+  border: 1px solid $gris-brd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+
+  // Nombre de la dependencia — fondo vino tenue
+  &__title {
+    background: $vino-tint;
+    border-bottom: 2px solid $vino-pale;
+    padding: 0.55rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: $vino;
+    letter-spacing: 0.03em;
+  }
+
+  // Pie de sección con paginación y total
+  &__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.42rem 1rem;
+    border-top: 1px solid $gris-brd;
+    background: $gris-pg;
+    font-size: 0.72rem;
+    color: $txt-mid;
+  }
+
+  &__foot-total {
+    font-size: 0.78rem;
+    color: $txt-dark;
+    strong { color: $vino; }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Pie del documento
+// ═══════════════════════════════════════════════════════════════════════════
+.rep-footer {
+  margin: 1.25rem 1.5rem 1.75rem;
+  padding: 0.65rem 1rem;
+  background: $blanco;
+  border: 1px solid $gris-brd;
+  border-radius: 6px;
+
+  p {
+    font-size: 0.7rem;
+    color: $txt-light;
+    margin: 0.1rem 0;
+    font-style: italic;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Impresión
+// ═══════════════════════════════════════════════════════════════════════════
+.print-only { display: none !important; }
+
+@media print {
+  .no-print   { display: none !important; }
+  .print-only { display: flex !important; }
+
+  // Encabezado institucional de impresión
+  .rep-print-header {
+    align-items: center;
+    gap: 0.75rem;
+    padding: 6px 0 8px;
+    border-bottom: 2px solid $vino;
+    margin-bottom: 8px;
+
+    &__logo  { height: 34px; width: auto; }
+    &__org   { font-size: 10.5pt; font-weight: bold; color: $vino; }
+    &__sub   { font-size: 8pt; color: $txt-mid; font-style: italic; }
+  }
+
+  .rep-page   { background: white; }
+
+  .rep-title-row     { padding: 6px 0; border: none; background: none; }
+  .rep-title-capsule { font-size: 9.5pt; padding: 3px 18px; }
+
+  .rep-controls { padding: 4px 0 6px; border: none; background: none; }
+  .rep-kpi {
+    padding: 2px 8px;
+    &__val { font-size: 9pt; }
+    &__lbl { font-size: 6.5pt; }
+  }
+
+  // Vista general
+  .rep-body  { margin: 0; border: none; box-shadow: none; border-radius: 0; }
+
+  // Vista concentrada — cada sección en hoja nueva
+  .rep-section {
+    margin: 0 0 4px;
+    border-radius: 0;
+    box-shadow: none;
+    page-break-inside: avoid;
+
+    &:not(.rep-section--first) { page-break-before: always; }
+
+    &__title { padding: 4px 8px; }
+    &__foot  { padding: 3px 8px; }
+  }
+
+  .rep-table {
+    font-size: 7.5pt;
+    th { font-size: 7pt; padding: 3px 5px; }
+    td { padding: 3px 5px; }
+  }
+
+  .rep-totals { padding: 3px 8px; }
+
+  .rep-footer {
+    margin: 6px 0 0;
+    border: none;
+    p { font-size: 7pt; }
+  }
+}

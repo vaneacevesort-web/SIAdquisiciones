@@ -11,12 +11,18 @@
         <p class="gl-subtitle">Vista centralizada de todas las etapas del proceso adquisitivo</p>
       </div>
     </div>
-    @if (puedeCrear()) {
-      <button class="btn gl-btn-new" routerLink="/solicitud/nuevo">
-        <i class="feather icon-plus"></i>
-        <span>Nueva solicitud</span>
+    <div class="gl-header-actions">
+      <button class="btn gl-btn-export" (click)="descargarExcel()" [disabled]="exportando">
+        <i class="feather" [class.icon-download]="!exportando" [class.icon-loader]="exportando"></i>
+        <span>{{ exportando ? 'Generando...' : 'Exportar Excel' }}</span>
       </button>
-    }
+      @if (puedeCrear()) {
+        <button class="btn gl-btn-new" routerLink="/solicitud/nuevo">
+          <i class="feather icon-plus"></i>
+          <span>Nueva solicitud</span>
+        </button>
+      }
+    </div>
   </div>
   <!-- ════════════════════════════════════════════════════════════════════ -->
 

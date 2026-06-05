@@ -122,6 +122,29 @@ export class RegistroService {
   getSemaforo(): Observable<any> {
     return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/semaforo`);
   }
+
+  getOrigenDetalle(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/origen-detalle`);
+  }
+
+  getDependenciasResumen(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/dependencias-resumen`);
+  }
+
+  getInformeContratos(): Observable<any> {
+    return this.http.get<any>(`${this.myAppUrl}${this.myAPIUrl}/informe-contratos`);
+  }
+
+  exportarExcelGestion(busqueda?: string, estatus?: string): Observable<Blob> {
+    const params: string[] = [];
+    if (busqueda) params.push(`busqueda=${encodeURIComponent(busqueda)}`);
+    if (estatus)  params.push(`estatus=${encodeURIComponent(estatus)}`);
+    const qs = params.length ? `?${params.join('&')}` : '';
+    return this.http.get(
+      `${this.myAppUrl}${this.myAPIUrl}/exportar-excel${qs}`,
+      { responseType: 'blob' }
+    );
+  }
 }
 
 

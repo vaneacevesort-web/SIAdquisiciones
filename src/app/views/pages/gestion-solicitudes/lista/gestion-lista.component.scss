@@ -65,6 +65,49 @@ $radius:     10px;
   margin: 0;
 }
 
+// ── Grupo de acciones del encabezado ─────────────────────────────────────
+.gl-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+// ── Botón "Exportar Excel" ────────────────────────────────────────────────
+.gl-btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #fff;
+  border: 1.5px solid $vino-bdr;
+  color: $vino;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 1.1rem;
+  border-radius: 8px;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+
+  i { font-size: 0.9rem; }
+
+  &:hover:not(:disabled) {
+    background: $vino-light;
+    border-color: $vino;
+    box-shadow: 0 4px 12px rgba(155,0,63,0.12);
+    transform: translateY(-1px);
+    color: $vino-dark;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
 // ── Botón "Nueva solicitud" ───────────────────────────────────────────────
 .gl-btn-new {
   display: inline-flex;

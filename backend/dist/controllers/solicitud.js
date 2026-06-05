@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSolicitudesAfectacion = exports.getSolicitudesCola = exports.getActividadCalendario = exports.getSemaforo = exports.exportarExcelGestion = exports.getEvolucionMensual = exports.getTopDependencias = exports.getKpis = exports.saveAdjudicacion = exports.getAdjudicacionById = exports.saveProcedimientoAdquisitivo = exports.getProcedimientoById = exports.saveAfectacionPresupuestal = exports.getAfectacionById = exports.createEstudioMercado = exports.getEstudioMercadoById = exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
+exports.getInformeContratos = exports.getSolicitudesAfectacion = exports.getSolicitudesCola = exports.getActividadCalendario = exports.getOrigenDetalle = exports.getDependenciasResumen = exports.getSemaforo = exports.exportarExcelGestion = exports.getEvolucionMensual = exports.getTopDependencias = exports.getKpis = exports.saveAdjudicacion = exports.getAdjudicacionById = exports.saveProcedimientoAdquisitivo = exports.getProcedimientoById = exports.saveAfectacionPresupuestal = exports.getAfectacionById = exports.createEstudioMercado = exports.getEstudioMercadoById = exports.getestatus = exports.getSolicitudes = exports.putRegistro = exports.saveRegistro = exports.deleteRegistro = exports.getRegistro = exports.getRegistros = void 0;
 const AdqDependencias_1 = __importDefault(require("../models/AdqDependencias"));
 const AdqCentrosCosto_1 = __importDefault(require("../models/AdqCentrosCosto"));
 const AdqOrganismosOPDS_1 = __importDefault(require("../models/AdqOrganismosOPDS"));
@@ -43,6 +43,7 @@ const AdqBienesServicios_1 = __importDefault(require("../models/AdqBienesServici
 const AdqAfectacionFuentes_1 = __importDefault(require("../models/AdqAfectacionFuentes"));
 const AdqProcedimientoAdquisitivo_1 = __importDefault(require("../models/AdqProcedimientoAdquisitivo"));
 const AdqEstudioMercado_1 = __importDefault(require("../models/AdqEstudioMercado"));
+const adq_cat_fuentes_financiamiento_1 = __importDefault(require("../models/adq_cat_fuentes_financiamiento"));
 const exceljs_1 = __importDefault(require("exceljs"));
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
@@ -597,7 +598,7 @@ const saveAdjudicacion = (req, res) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.saveAdjudicacion = saveAdjudicacion;
 const getKpis = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b, _c;
     try {
         // ── Conteo por etapa (estatus_id) ─────────────────────────────────────
         const estatusFilas = yield AdqSolicitudes_1.default.findAll({
@@ -616,7 +617,8 @@ const getKpis = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
         });
         const origenes = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         origenFilas.forEach((f) => { origenes[Number(f.id_origen_recurso)] = Number(f.total); });
-        // ── Contratos y monto adjudicado ──────────────────────────────────────
+        // ── Contratos, monto y dependencias participantes ─────────────────────
+        const seq2 = AdqSolicitudes_1.default.sequelize;
         const totalContratos = yield AdqProcedimientoAdquisitivo_1.default.count({
             where: { no_contrato: { [sequelize_1.Op.not]: null } },
         });
@@ -625,6 +627,12 @@ const getKpis = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
             raw: true,
         });
         const montoTotal = Number((_a = montoRow === null || montoRow === void 0 ? void 0 : montoRow.monto) !== null && _a !== void 0 ? _a : 0);
+        const [depRow] = yield seq2.query(`
+      SELECT COUNT(DISTINCT COALESCE(id_dependencia, id_opd)) AS total
+      FROM adq_solicitudes
+      WHERE id_dependencia IS NOT NULL OR id_opd IS NOT NULL
+    `);
+        const depParticipantes = Number((_c = (_b = depRow[0]) === null || _b === void 0 ? void 0 : _b.total) !== null && _c !== void 0 ? _c : 0);
         return res.json({
             ok: true,
             data: {
@@ -644,6 +652,7 @@ const getKpis = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 // financiero
                 total_contratos: totalContratos,
                 monto_total: montoTotal,
+                dependencias_participantes: depParticipantes,
             },
         });
     }
@@ -786,103 +795,141 @@ function formatFechaExcel(fecha) {
         return '—';
     const d = new Date(fecha);
     if (isNaN(d.getTime()))
-        return fecha;
+        return String(fecha);
     return d.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 function applyBorder(cell, color = 'CCCCCC') {
     const thin = { style: 'thin', color: { argb: color } };
     cell.border = { top: thin, bottom: thin, left: thin, right: thin };
 }
+// ─── Exportar Excel completo (todas las etapas, 65 columnas) ─────────────────
 const exportarExcelGestion = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { busqueda, estatus } = req.query;
-        // Obtener y enriquecer datos (igual que getRegistros)
-        const listSolicitudes = yield AdqSolicitudes_1.default.findAll({
-            order: [['id_solicitud', 'ASC']]
-        });
-        let data = yield Promise.all(listSolicitudes.map((solicitud) => __awaiter(void 0, void 0, void 0, function* () {
-            const item = solicitud.toJSON();
-            const [dependencia, centroCosto, opd] = yield Promise.all([
-                item.id_dependencia ? AdqDependencias_1.default.findByPk(item.id_dependencia) : null,
-                item.id_centro_costo ? AdqCentrosCosto_1.default.findByPk(item.id_centro_costo) : null,
-                item.id_opd ? AdqOrganismosOPDS_1.default.findByPk(item.id_opd) : null,
-            ]);
-            return Object.assign(Object.assign({}, item), { origen_recurso_nombre: getOrigenRecursoNombre(item.id_origen_recurso), dependencia_nombre: (dependencia === null || dependencia === void 0 ? void 0 : dependencia.getDataValue('nombre')) || '', opd_nombre: opd
-                    ? `${opd.getDataValue('codigo')} - ${opd.getDataValue('nombre')}`
-                    : '' });
-        })));
-        // Aplicar filtros si los hay
-        if (busqueda) {
-            const texto = busqueda.toLowerCase();
-            data = data.filter((row) => Object.values(row).some(v => v && v.toString().toLowerCase().includes(texto)));
+        // ── 1. Obtener todos los datos en paralelo ─────────────────────────────
+        const [listSolicitudes, listEstudios, listAfectaciones, listBienes, listProcs, listDependencias, listCentrosCosto, listOPDs, listCapitulos, listSubcapitulos, listPartidasEspecificas, listFuentes,] = yield Promise.all([
+            AdqSolicitudes_1.default.findAll({ order: [['id_solicitud', 'ASC']] }),
+            AdqEstudioMercado_1.default.findAll({ raw: true }),
+            AdqAfectacionPresupuestal_1.default.findAll({ raw: true }),
+            AdqBienesServicios_1.default.findAll({ raw: true }),
+            AdqProcedimientoAdquisitivo_1.default.findAll({ raw: true }),
+            AdqDependencias_1.default.findAll({ raw: true }),
+            AdqCentrosCosto_1.default.findAll({ raw: true }),
+            AdqOrganismosOPDS_1.default.findAll({ raw: true }),
+            AdqCatCapitulos_1.default.findAll({ raw: true }),
+            AdqCatSubcapitulos_1.default.findAll({ raw: true }),
+            AdqCatPartidasEspecificas_1.default.findAll({ raw: true }),
+            adq_cat_fuentes_financiamiento_1.default.findAll({ raw: true }),
+        ]);
+        // ── 2. Construir mapas de búsqueda ─────────────────────────────────────
+        const mkMap = (list, key) => new Map(list.map(r => [Number(r[key]), r]));
+        const mapEstudios = mkMap(listEstudios, 'id_solicitud');
+        const mapAfectacion = mkMap(listAfectaciones, 'id_solicitud');
+        const mapBienes = mkMap(listBienes, 'id_solicitud');
+        const mapProcs = mkMap(listProcs, 'id_solicitud');
+        const mapDeps = mkMap(listDependencias, 'id_dependencia');
+        const mapCCs = mkMap(listCentrosCosto, 'id_centro_costo');
+        const mapOPDs = mkMap(listOPDs, 'id_organismo_opds');
+        const mapCaps = mkMap(listCapitulos, 'id_capitulo');
+        const mapSubs = mkMap(listSubcapitulos, 'id_subcapitulo');
+        const mapPEs = mkMap(listPartidasEspecificas, 'id_partida_especifica');
+        const mapFuentes = mkMap(listFuentes, 'id_fuente_financiamiento');
+        // ── 3. Enriquecer y filtrar ────────────────────────────────────────────
+        let data = listSolicitudes.map(s => {
+            var _a, _b, _c, _d;
+            const item = s.toJSON ? s.toJSON() : s;
+            const id = Number(item.id_solicitud);
+            return {
+                item,
+                est: (_a = mapEstudios.get(id)) !== null && _a !== void 0 ? _a : {},
+                afe: (_b = mapAfectacion.get(id)) !== null && _b !== void 0 ? _b : {},
+                bs: (_c = mapBienes.get(id)) !== null && _c !== void 0 ? _c : {},
+                proc: (_d = mapProcs.get(id)) !== null && _d !== void 0 ? _d : {},
+                dep: item.id_dependencia ? mapDeps.get(Number(item.id_dependencia)) : null,
+                cc: item.id_centro_costo ? mapCCs.get(Number(item.id_centro_costo)) : null,
+                opd: item.id_opd ? mapOPDs.get(Number(item.id_opd)) : null,
+                cap: item.id_capitulo ? mapCaps.get(Number(item.id_capitulo)) : null,
+                sub: item.id_subcapitulo ? mapSubs.get(Number(item.id_subcapitulo)) : null,
+                pe: item.id_partida_especifica ? mapPEs.get(Number(item.id_partida_especifica)) : null,
+            };
+        }).map(row => (Object.assign(Object.assign({}, row), { fue: row.afe.id_fuente_financiamiento
+                ? mapFuentes.get(Number(row.afe.id_fuente_financiamiento))
+                : null })));
+        if (busqueda || estatus) {
+            data = data.filter(({ item }) => {
+                if (estatus && Number(item.estatus_id) !== Number(estatus))
+                    return false;
+                if (busqueda) {
+                    const txt = busqueda.toLowerCase();
+                    return Object.values(item).some(v => v && String(v).toLowerCase().includes(txt));
+                }
+                return true;
+            });
         }
-        if (estatus) {
-            data = data.filter((row) => Number(row.estatus_id) === Number(estatus));
-        }
-        // ── Construir Excel ────────────────────────────────────────────────────
+        // ── 4. Construir workbook ──────────────────────────────────────────────
         const workbook = new exceljs_1.default.Workbook();
         workbook.creator = 'SIAdquisiciones';
         workbook.created = new Date();
-        const ws = workbook.addWorksheet('Gestión de Solicitudes', {
-            pageSetup: {
-                paperSize: 9,
-                orientation: 'landscape',
-                fitToPage: true,
-                fitToWidth: 1,
-                fitToHeight: 0,
-            },
+        const ws = workbook.addWorksheet('Solicitudes', {
+            pageSetup: { paperSize: 9, orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
         });
+        // Paleta
         const GUINDA = '6B0F2A';
         const GUINDA_L = 'F7E6EA';
         const WHITE = 'FFFFFF';
         const GRAY = 'F4F4F4';
         const TEXT = '2C2C2C';
-        // Anchos de columna
-        ws.getColumn(1).width = 5;
-        ws.getColumn(2).width = 22;
-        ws.getColumn(3).width = 16;
-        ws.getColumn(4).width = 14;
-        ws.getColumn(5).width = 38;
-        ws.getColumn(6).width = 20;
-        ws.getColumn(7).width = 24;
-        ws.getColumn(8).width = 22;
-        ws.getColumn(9).width = 16;
-        // ── Fila 1: Logo + nombre institución ─────────────────────────────────
+        // Colores por sección (row 6)
+        const C_SOL = '6B0F2A'; // guinda
+        const C_EST = '0D3B6E'; // azul marino
+        const C_AFE = '7B3800'; // naranja oscuro
+        const C_BS = '1A5F2A'; // verde oscuro
+        const C_ADQ = '3B0D69'; // púrpura
+        const C_ADJ = '0A5F5F'; // teal
+        const C_CIE = '2D3748'; // gris
+        // 65 columnas: anchos
+        //  Solicitud (1-9): A-I
+        //  Estudio de mercado (10-21): J-U
+        //  Afectación (22-28): V-AB
+        //  Bienes/servicios (29-33): AC-AG
+        //  Adquisición (34-51): AH-AY
+        //  Adjudicación (52-64): AZ-BL
+        //  Cierre (65): BM
+        const COL_WIDTHS = [
+            8, 14, 12, 16, 30, 22, 20, 24, 24, // Solicitud 1-9
+            14, 16, 16, 20, 16, 14, 32, 14, 12, 12, 12, 12, // Estudio 10-21
+            18, 14, 22, 14, 26, 16, 18, // Afectación 22-28
+            18, 30, 14, 10, 10, // Bienes 29-33
+            20, 12, 22, 20, 28, 20, // Adquisición 34-39
+            14, 10, 14, 10, 14, 10, 14, 10, 14, 10, 14, 10, // Fechas/horas 40-51
+            28, 18, 16, 18, 16, 18, 14, 14, 22, 14, 22, 24, 16, // Adjudicación 52-64
+            12, // Cierre 65
+        ];
+        COL_WIDTHS.forEach((w, i) => { ws.getColumn(i + 1).width = w; });
+        // ── Filas 1-4: Encabezado institucional ───────────────────────────────
         ws.getRow(1).height = 40;
-        ws.mergeCells('A1:A4');
-        ws.mergeCells('B1:I1');
+        ws.mergeCells(1, 1, 4, 1); // A1:A4
+        ws.mergeCells(1, 2, 1, 65); // B1:BM1
         const logoPath = path_1.default.join(__dirname, '../../src/assets/acusederegistro.png');
         if (fs_1.default.existsSync(logoPath)) {
             const imageId = workbook.addImage({ filename: logoPath, extension: 'png' });
-            ws.addImage(imageId, {
-                tl: { col: 0, row: 0 },
-                ext: { width: 80, height: 80 },
-            });
+            ws.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: 80, height: 80 } });
         }
-        const b1 = ws.getCell('B1');
-        b1.value = 'SISTEMA DE INFORMACIÓN DE ADQUISICIONES';
-        b1.font = { name: 'Calibri', size: 13, bold: true, color: { argb: GUINDA } };
-        b1.alignment = { vertical: 'middle', horizontal: 'center' };
-        b1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: WHITE } };
-        // ── Fila 2: Título principal ───────────────────────────────────────────
+        const stHeader = (cell, val, size, bold, fgColor, fontColor, italic = false) => {
+            cell.value = val;
+            cell.font = { name: 'Calibri', size, bold, italic, color: { argb: fontColor } };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fgColor } };
+        };
+        stHeader(ws.getCell('B1'), 'SISTEMA DE INFORMACIÓN DE ADQUISICIONES', 13, true, WHITE, GUINDA);
         ws.getRow(2).height = 30;
-        ws.mergeCells('B2:I2');
-        const b2 = ws.getCell('B2');
-        b2.value = 'Gestión de Solicitudes';
-        b2.font = { name: 'Calibri', size: 16, bold: true, color: { argb: WHITE } };
-        b2.alignment = { vertical: 'middle', horizontal: 'center' };
-        b2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GUINDA } };
-        // ── Fila 3: Subtítulo ──────────────────────────────────────────────────
+        ws.mergeCells(2, 2, 2, 65);
+        stHeader(ws.getCell('B2'), 'Reporte General de Solicitudes', 16, true, GUINDA, WHITE);
         ws.getRow(3).height = 20;
-        ws.mergeCells('B3:I3');
-        const b3 = ws.getCell('B3');
-        b3.value = 'Vista centralizada de todas las etapas del proceso adquisitivo';
-        b3.font = { name: 'Calibri', size: 11, italic: true, color: { argb: GUINDA } };
-        b3.alignment = { vertical: 'middle', horizontal: 'center' };
-        b3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GUINDA_L } };
-        // ── Fila 4: Fecha de generación + filtros ──────────────────────────────
+        ws.mergeCells(3, 2, 3, 65);
+        stHeader(ws.getCell('B3'), 'Vista completa del proceso adquisitivo — todas las etapas', 11, false, GUINDA_L, GUINDA, true);
         ws.getRow(4).height = 18;
-        ws.mergeCells('B4:I4');
+        ws.mergeCells(4, 2, 4, 65);
         const now = new Date();
         const fechaStr = now.toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' });
         const horaStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
@@ -897,81 +944,203 @@ const exportarExcelGestion = (req, res) => __awaiter(void 0, void 0, void 0, fun
         b4.alignment = { vertical: 'middle', horizontal: 'right' };
         b4.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GRAY } };
         ws.getCell('A1').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: WHITE } };
-        // ── Fila 5: Espaciador ────────────────────────────────────────────────
-        ws.getRow(5).height = 6;
-        ws.mergeCells('A5:I5');
-        // ── Fila 6: Encabezados de tabla ──────────────────────────────────────
-        ws.getRow(6).height = 22;
-        const headers = [
-            '#', 'Folio', 'Fecha Ingreso', 'Semáforo',
-            'Dependencia / OPD', 'Origen del Recurso',
-            'Estatus', 'Etapa Actual', 'Días Transcurridos',
+        // ── Fila 5: Espaciador ─────────────────────────────────────────────────
+        ws.getRow(5).height = 5;
+        ws.mergeCells(5, 1, 5, 65);
+        // ── Fila 6: Etiquetas de sección ───────────────────────────────────────
+        ws.getRow(6).height = 16;
+        const sections = [
+            { label: 'SOLICITUD INICIAL', s: 1, e: 9, c: C_SOL },
+            { label: 'ESTUDIO DE MERCADO', s: 10, e: 21, c: C_EST },
+            { label: 'AFECTACIÓN PRESUPUESTAL', s: 22, e: 28, c: C_AFE },
+            { label: 'BIENES / SERVICIOS', s: 29, e: 33, c: C_BS },
+            { label: 'ADQUISICIÓN', s: 34, e: 51, c: C_ADQ },
+            { label: 'ADJUDICACIÓN', s: 52, e: 64, c: C_ADJ },
+            { label: 'CIERRE', s: 65, e: 65, c: C_CIE },
         ];
-        headers.forEach((h, i) => {
-            const c = ws.getCell(6, i + 1);
-            c.value = h;
-            c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: WHITE } };
-            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GUINDA } };
-            c.alignment = { vertical: 'middle', horizontal: 'center', wrapText: false };
-            applyBorder(c, '8B2040');
+        sections.forEach(({ label, s, e, c }) => {
+            if (s !== e)
+                ws.mergeCells(6, s, 6, e);
+            const cell = ws.getCell(6, s);
+            cell.value = label;
+            cell.font = { name: 'Calibri', size: 9, bold: true, color: { argb: WHITE } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: c } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
         });
-        // ── Filas de datos ────────────────────────────────────────────────────
-        const semColors = {
-            'en-tiempo': '1B5E20',
-            'atrasado': 'B71C1C',
-            'rechazado': '424242',
-            'concluido': '0D47A1',
-        };
-        data.forEach((row, idx) => {
+        // ── Fila 7: Encabezados de columna ─────────────────────────────────────
+        ws.getRow(7).height = 38;
+        const COL_HEADERS = [
+            // Solicitud (1-9)
+            'Folio Interno', 'Fecha Ingreso', 'Semáforo', 'Origen del Recurso',
+            'Dependencia / OPD', 'Centro de Costo', 'Capítulo',
+            'Concepto del Gasto', 'Giro / Partida Específica',
+            // Estudio de Mercado (10-21)
+            'Tipo Contratación', 'Valor Estudio de Mercado', 'Estatus del Estudio',
+            'Estado General', 'Tipo de Solicitud', 'Monto SABYS',
+            'Descripción del Bien o Servicio', 'Contratación Plurianual',
+            'Monto 2026', 'Monto 2027', 'Monto 2028', 'Monto 2029',
+            // Afectación Presupuestal (22-28)
+            'Folio Adquisición', 'Fecha Liberación Estudio',
+            'Testigo Social', 'Tipo de Gasto', 'Fuente de Financiamiento',
+            'Importe Suficiencia Presupuestal', 'Oficio Suficiencia',
+            // Bienes / Servicios (29-33)
+            'Clave de Verificación', 'Descripción Clave Verificación',
+            'Unidad de Medida', '¿Contrato Abierto?', '¿Consolidado?',
+            // Adquisición (34-51)
+            'Modalidad', 'Dictamen de Procedencia', 'Responsable',
+            'No. de Procedimiento', 'Convocatoria / Invitación (URL)', 'Medio de Publicación',
+            'F. Junta de Aclaración', 'H. Junta de Aclaración',
+            'F. Presentación y Apertura', 'H. Presentación y Apertura',
+            'F. Sesión Comité Análisis', 'H. Sesión Comité Análisis',
+            'F. Contra Oferta', 'H. Contra Oferta',
+            'F. Dictaminación', 'H. Dictaminación',
+            'F. Fallo', 'H. Fallo',
+            // Adjudicación (52-64)
+            'Razón Social / Proveedor', 'RFC', 'Representación Legal',
+            'Documento (URL)', 'Monto Total Adjudicado c/IVA',
+            'No. de Contrato', 'Inicio de Vigencia', 'Término de Vigencia',
+            'Testimonio Testigo Social (URL)', 'Remanente Suficiencia',
+            'Nombre Responsable Procedimiento', 'Comentarios', 'Estatus Adjudicación',
+            // Cierre (65)
+            'Días Transcurridos',
+        ];
+        // Mapa sección-color para encabezados
+        const secColorMap = new Map();
+        sections.forEach(({ s, e, c }) => {
+            for (let i = s; i <= e; i++)
+                secColorMap.set(i, c);
+        });
+        COL_HEADERS.forEach((h, i) => {
             var _a;
-            const rowNum = idx + 7;
+            const colNum = i + 1;
+            const c = ws.getCell(7, colNum);
+            c.value = h;
+            c.font = { name: 'Calibri', size: 9, bold: true, color: { argb: WHITE } };
+            c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: (_a = secColorMap.get(colNum)) !== null && _a !== void 0 ? _a : GUINDA } };
+            c.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+            applyBorder(c, '8B8B8B');
+        });
+        // ── Filas de datos ─────────────────────────────────────────────────────
+        const SEM_COLORS = {
+            'en-tiempo': '1B5E20', 'atrasado': 'B71C1C',
+            'rechazado': '424242', 'concluido': '0D47A1',
+        };
+        // Columnas con formato moneda (1-indexed)
+        const CURRENCY_COLS = new Set([11, 15, 18, 19, 20, 21, 27, 55, 60]);
+        const n = (v) => v !== null && v !== void 0 ? v : '—';
+        const fb = (v) => (v === true || v === 1) ? 'Sí' : ((v === false || v === 0) ? 'No' : '—');
+        data.forEach(({ item, est, afe, bs, proc, dep, cc, opd, cap, sub, pe, fue }, idx) => {
+            var _a;
+            const rowNum = idx + 8;
             const rowBg = idx % 2 === 1 ? GUINDA_L : WHITE;
             ws.getRow(rowNum).height = 18;
-            const sem = calcularSemaforoExcel(row);
-            const diasText = sem.dias !== null ? `${sem.dias} d` : '—';
-            const etapa = getEstatusLabelExcel(Number(row.estatus_id));
-            const values = [
-                idx + 1,
-                row.folio || '—',
-                formatFechaExcel(row.fecha_ingreso),
+            const sem = calcularSemaforoExcel(item);
+            const rowValues = [
+                // Solicitud (1-9)
+                n(item.folio),
+                formatFechaExcel(item.fecha_ingreso),
                 sem.label,
-                row.dependencia_nombre || row.opd_nombre || '—',
-                row.origen_recurso_nombre || '—',
-                etapa,
-                etapa,
-                diasText,
+                getOrigenRecursoNombre(item.id_origen_recurso) || '—',
+                (dep === null || dep === void 0 ? void 0 : dep.nombre) || (opd ? `${opd.codigo} - ${opd.nombre}` : '—'),
+                cc ? `${cc.codigo} - ${cc.nombre}` : '—',
+                cap ? `${cap.codigo} - ${cap.nombre}` : '—',
+                sub ? `${sub.codigo} - ${sub.nombre}` : '—',
+                pe ? `${pe.codigo} - ${pe.nombre}` : '—',
+                // Estudio de Mercado (10-21)
+                n(est.tipo_contratacion),
+                est.valor_estudio_mercado != null ? Number(est.valor_estudio_mercado) : '—',
+                n(est.estatus_estudio),
+                getEstatusLabelExcel(Number(item.estatus_id)),
+                n(item.tipo_solicitud),
+                est.monto_sabys != null ? Number(est.monto_sabys) : '—',
+                n(est.descripcion_bien_servicio),
+                n(est.contratacion_plurianual),
+                est.monto_2026 != null ? Number(est.monto_2026) : '—',
+                est.monto_2027 != null ? Number(est.monto_2027) : '—',
+                est.monto_2028 != null ? Number(est.monto_2028) : '—',
+                est.monto_2029 != null ? Number(est.monto_2029) : '—',
+                // Afectación Presupuestal (22-28)
+                n(item.folio),
+                formatFechaExcel(proc.fecha_liberacion_mercado),
+                n(afe.nombre_testigo_social),
+                n(afe.tipo_gasto),
+                fue ? `${fue.codigo} - ${fue.nombre}` : '—',
+                afe.importe_suficiencia != null ? Number(afe.importe_suficiencia) : '—',
+                n(afe.oficio_suficiencia_path),
+                // Bienes / Servicios (29-33)
+                n(bs.clave_verificacion),
+                n(bs.descripcion_clave_verificacion),
+                n(bs.unidad_medida),
+                fb(bs.contrato_abierto),
+                fb(bs.consolidado),
+                // Adquisición (34-51)
+                n(proc.modalidad),
+                fb(proc.dictamen_procedencia),
+                n(proc.responsable),
+                n(proc.no_procedimiento),
+                n(proc.convocatoria_url),
+                n(proc.medio_publicacion),
+                formatFechaExcel(proc.fecha_junta_aclaracion),
+                n(proc.hora_junta_aclaracion),
+                formatFechaExcel(proc.fecha_presentacion_apertura),
+                n(proc.hora_presentacion_apertura),
+                formatFechaExcel(proc.fecha_sesion_comite_analisis),
+                n(proc.hora_sesion_comite_analisis),
+                formatFechaExcel(proc.fecha_contraoferta),
+                n(proc.hora_contraoferta),
+                formatFechaExcel(proc.fecha_dictaminacion_comite),
+                n(proc.hora_dictaminacion_comite),
+                formatFechaExcel(proc.fecha_fallo),
+                n(proc.hora_fallo),
+                // Adjudicación (52-64)
+                n(proc.proveedor_razon_social),
+                n(proc.proveedor_rfc),
+                '—',
+                n(proc.dictamen_procedencia_path),
+                proc.monto_total_adjudicado_iva != null ? Number(proc.monto_total_adjudicado_iva) : '—',
+                n(proc.no_contrato),
+                formatFechaExcel(proc.vigencia_inicio),
+                formatFechaExcel(proc.vigencia_termino),
+                n(proc.url_testimonio_testigo_social),
+                proc.remanente_suficiencia_presupuestal != null ? Number(proc.remanente_suficiencia_presupuestal) : '—',
+                n(proc.responsable),
+                n(proc.comentarios_adjudicacion),
+                n(proc.estatus_adjudicacion),
+                // Cierre (65)
+                sem.dias !== null ? sem.dias : '—',
             ];
-            values.forEach((val, colIdx) => {
-                const c = ws.getCell(rowNum, colIdx + 1);
+            rowValues.forEach((val, colIdx) => {
+                const colNum = colIdx + 1;
+                const c = ws.getCell(rowNum, colNum);
                 c.value = val;
-                c.font = { name: 'Calibri', size: 10, color: { argb: TEXT } };
+                c.font = { name: 'Calibri', size: 9, color: { argb: TEXT } };
                 c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
-                c.alignment = {
-                    vertical: 'middle',
-                    horizontal: colIdx === 0 || colIdx === 8 ? 'center' : 'left',
-                    wrapText: colIdx === 4,
-                };
+                c.alignment = { vertical: 'middle', horizontal: 'left', wrapText: false };
                 applyBorder(c);
+                if (CURRENCY_COLS.has(colNum) && typeof val === 'number') {
+                    c.numFmt = '$#,##0.00';
+                    c.alignment = { vertical: 'middle', horizontal: 'right' };
+                }
+                if (colNum === 65) {
+                    c.alignment = { vertical: 'middle', horizontal: 'center' };
+                }
             });
-            // Color semáforo según estado
-            const semCell = ws.getCell(rowNum, 4);
-            semCell.font = {
-                name: 'Calibri',
-                size: 10,
-                bold: true,
-                color: { argb: (_a = semColors[sem.estado]) !== null && _a !== void 0 ? _a : TEXT },
+            // Color del semáforo (col 3)
+            ws.getCell(rowNum, 3).font = {
+                name: 'Calibri', size: 9, bold: true,
+                color: { argb: (_a = SEM_COLORS[sem.estado]) !== null && _a !== void 0 ? _a : TEXT },
             };
         });
-        // ── Fila de pie ───────────────────────────────────────────────────────
-        const footerRow = data.length + 7;
+        // ── Pie de reporte ─────────────────────────────────────────────────────
+        const footerRow = data.length + 8;
         ws.getRow(footerRow).height = 14;
-        ws.mergeCells(`A${footerRow}:I${footerRow}`);
-        const fc = ws.getCell(`A${footerRow}`);
+        ws.mergeCells(footerRow, 1, footerRow, 65);
+        const fc = ws.getCell(footerRow, 1);
         fc.value = `Total de registros: ${data.length}`;
         fc.font = { name: 'Calibri', size: 9, bold: true, color: { argb: GUINDA } };
         fc.alignment = { horizontal: 'right', vertical: 'middle' };
         fc.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: GUINDA_L } };
-        // ── Enviar respuesta ──────────────────────────────────────────────────
+        // ── Respuesta ──────────────────────────────────────────────────────────
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', 'attachment; filename="solicitudes_SIAdquisiciones.xlsx"');
         yield workbook.xlsx.write(res);
@@ -1046,6 +1215,91 @@ const getSemaforo = (_req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.getSemaforo = getSemaforo;
+const getDependenciasResumen = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const seq = AdqSolicitudes_1.default.sequelize;
+        const [rows] = yield seq.query(`
+      SELECT
+        COALESCE(d.nombre, oop.nombre, 'Sin asignar')            AS nombre,
+        COUNT(DISTINCT s.id_solicitud)                            AS solicitudes,
+        COUNT(DISTINCT CASE WHEN pa.no_contrato IS NOT NULL
+                            THEN pa.id_proc END)                  AS contratos,
+        COALESCE(SUM(CASE WHEN pa.no_contrato IS NOT NULL
+                          THEN pa.monto_total_adjudicado_iva END), 0) AS monto,
+        (SELECT s2.id_origen_recurso
+         FROM   adq_solicitudes s2
+         WHERE  (s2.id_dependencia = s.id_dependencia
+                 OR (s.id_dependencia IS NULL AND s2.id_opd = s.id_opd))
+         GROUP  BY s2.id_origen_recurso
+         ORDER  BY COUNT(*) DESC
+         LIMIT  1)                                                AS principal_origen
+      FROM adq_solicitudes s
+      LEFT JOIN adq_dependencias   d   ON d.id_dependencia    = s.id_dependencia
+      LEFT JOIN adq_organismosOPDS oop ON oop.id_organismo_opds = s.id_opd
+      LEFT JOIN adq_procedimiento_adquisitivo pa ON pa.id_solicitud = s.id_solicitud
+      GROUP BY s.id_dependencia, s.id_opd, d.nombre, oop.nombre
+      ORDER BY monto DESC, solicitudes DESC
+      LIMIT 15
+    `);
+        const ORIG = {
+            1: 'Estatal', 2: 'Federal', 3: 'Fideicomiso', 4: 'Concurrente', 5: 'Propio',
+        };
+        const data = rows.map((r) => {
+            var _a;
+            return ({
+                nombre: r.nombre,
+                solicitudes: Number(r.solicitudes),
+                contratos: Number(r.contratos),
+                monto: Number(r.monto),
+                principal_origen: (_a = ORIG[Number(r.principal_origen)]) !== null && _a !== void 0 ? _a : '—',
+            });
+        });
+        return res.json({ ok: true, data });
+    }
+    catch (error) {
+        console.error('ERROR getDependenciasResumen =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al obtener resumen de dependencias' });
+    }
+});
+exports.getDependenciasResumen = getDependenciasResumen;
+const getOrigenDetalle = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const seq = AdqSolicitudes_1.default.sequelize;
+        const [rows] = yield seq.query(`
+      SELECT
+        s.id_origen_recurso,
+        COUNT(DISTINCT s.id_solicitud) AS solicitudes,
+        COUNT(DISTINCT CASE WHEN pa.no_contrato IS NOT NULL THEN pa.id_proc END) AS contratos,
+        COALESCE(SUM(CASE WHEN pa.no_contrato IS NOT NULL THEN pa.monto_total_adjudicado_iva END), 0) AS monto
+      FROM adq_solicitudes s
+      LEFT JOIN adq_procedimiento_adquisitivo pa ON pa.id_solicitud = s.id_solicitud
+      GROUP BY s.id_origen_recurso
+      ORDER BY s.id_origen_recurso
+    `);
+        const NOMBRES = {
+            1: 'Estatal', 2: 'Federal', 3: 'Fideicomiso', 4: 'Concurrente', 5: 'Propio',
+        };
+        const data = rows.map((r) => {
+            var _a;
+            const sol = Number(r.solicitudes);
+            const con = Number(r.contratos);
+            return {
+                id: Number(r.id_origen_recurso),
+                nombre: (_a = NOMBRES[Number(r.id_origen_recurso)]) !== null && _a !== void 0 ? _a : `Origen ${r.id_origen_recurso}`,
+                solicitudes: sol,
+                contratos: con,
+                monto: Number(r.monto),
+                pct_formalizacion: sol > 0 ? Math.round((con / sol) * 1000) / 10 : 0,
+            };
+        });
+        return res.json({ ok: true, data });
+    }
+    catch (error) {
+        console.error('ERROR getOrigenDetalle =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al obtener detalle por origen' });
+    }
+});
+exports.getOrigenDetalle = getOrigenDetalle;
 const getActividadCalendario = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const anio = Number(req.query.anio) || new Date().getFullYear();
@@ -1126,6 +1380,88 @@ const getSolicitudesAfectacion = (req, res) => __awaiter(void 0, void 0, void 0,
     }
 });
 exports.getSolicitudesAfectacion = getSolicitudesAfectacion;
+const getInformeContratos = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const seq = AdqSolicitudes_1.default.sequelize;
+        const totalSolicitudes = yield AdqSolicitudes_1.default.count();
+        const [contratos] = yield seq.query(`
+      SELECT
+        s.id_solicitud,
+        s.folio                               AS no_solicitud,
+        s.id_dependencia,
+        s.id_opd,
+        s.id_origen_recurso,
+        COALESCE(d.nombre, o.nombre)          AS dependencia_nombre,
+        pa.no_procedimiento,
+        pa.no_contrato,
+        pa.fecha_fallo                        AS fecha_adjudicacion,
+        pa.proveedor_razon_social,
+        CAST(pa.monto_total_adjudicado_iva AS DECIMAL(18,2)) AS monto,
+        em.descripcion_bien_servicio          AS descripcion,
+        CASE WHEN sub.codigo IS NOT NULL
+          THEN CONCAT(sub.codigo, ' – ', sub.nombre) ELSE NULL END AS partida,
+        CASE WHEN pg.codigo IS NOT NULL
+          THEN CONCAT(pg.codigo, ' ', pg.nombre) ELSE NULL END     AS giro
+      FROM adq_solicitudes s
+      INNER JOIN adq_procedimiento_adquisitivo pa
+        ON pa.id_solicitud = s.id_solicitud AND pa.no_contrato IS NOT NULL
+      LEFT JOIN adq_dependencias d
+        ON d.id_dependencia = s.id_dependencia
+      LEFT JOIN adq_organismosOPDS o
+        ON o.id_organismo_opds = s.id_opd
+      LEFT JOIN adq_estudio_mercado em
+        ON em.id_solicitud = s.id_solicitud
+      LEFT JOIN adq_cat_subcapitulos sub
+        ON sub.id_subcapitulo = s.id_subcapitulo
+      LEFT JOIN adq_cat_partidas_genericas pg
+        ON pg.id_partida_generica = s.id_partida_generica
+      ORDER BY COALESCE(d.nombre, o.nombre), pa.fecha_fallo
+    `);
+        const [dependencias] = yield seq.query(`
+      SELECT DISTINCT
+        COALESCE(s.id_dependencia, 0)   AS id_dependencia,
+        COALESCE(s.id_opd, 0)           AS id_opd,
+        COALESCE(d.nombre, o.nombre)    AS nombre
+      FROM adq_solicitudes s
+      INNER JOIN adq_procedimiento_adquisitivo pa
+        ON pa.id_solicitud = s.id_solicitud AND pa.no_contrato IS NOT NULL
+      LEFT JOIN adq_dependencias d ON d.id_dependencia = s.id_dependencia
+      LEFT JOIN adq_organismosOPDS o ON o.id_organismo_opds = s.id_opd
+      HAVING nombre IS NOT NULL
+      ORDER BY nombre
+    `);
+        const [solPorDep] = yield seq.query(`
+      SELECT
+        COALESCE(d.nombre, o.nombre) AS dep_nombre,
+        COUNT(s.id_solicitud)        AS total
+      FROM adq_solicitudes s
+      LEFT JOIN adq_dependencias d ON d.id_dependencia = s.id_dependencia
+      LEFT JOIN adq_organismosOPDS o ON o.id_organismo_opds = s.id_opd
+      GROUP BY COALESCE(d.nombre, o.nombre)
+      HAVING dep_nombre IS NOT NULL
+    `);
+        const solicitudesPorDep = {};
+        solPorDep.forEach((r) => { solicitudesPorDep[r.dep_nombre] = Number(r.total); });
+        const contratosFormateados = contratos.map((r) => {
+            var _a;
+            return (Object.assign(Object.assign({}, r), { monto: Number((_a = r.monto) !== null && _a !== void 0 ? _a : 0), origen_recurso: getOrigenRecursoNombre(Number(r.id_origen_recurso)) }));
+        });
+        return res.json({
+            ok: true,
+            data: {
+                total_solicitudes: totalSolicitudes,
+                contratos: contratosFormateados,
+                dependencias,
+                solicitudes_por_dep: solicitudesPorDep,
+            },
+        });
+    }
+    catch (error) {
+        console.error('ERROR getInformeContratos =>', error);
+        return res.status(500).json({ ok: false, msg: 'Error al obtener informe de contratos' });
+    }
+});
+exports.getInformeContratos = getInformeContratos;
 function generarHtmlCorreo(contenidoHtml) {
     return `
     <html>

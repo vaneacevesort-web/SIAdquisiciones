@@ -30,7 +30,8 @@ export class GestionListaComponent implements OnInit {
   rows:         any[] = [];
   temp:         any[] = [];
   originalData: any[] = [];
-  loading = true;
+  loading      = true;
+  exportando   = false;
   textoBusqueda = '';
   filtroEstatus = '';
 
@@ -177,5 +178,24 @@ export class GestionListaComponent implements OnInit {
     const d = new Date(fecha);
     if (isNaN(d.getTime())) return fecha;
     return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  descargarExcel(): void {
+    this.exportando = true;
+    this.registroService.exportarExcelGestion(
+      this.textoBusqueda || undefined,
+      this.filtroEstatus  || undefined
+    ).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = 'solicitudes_SIAdquisiciones.xlsx';
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.exportando = false;
+      },
+      error: () => { this.exportando = false; }
+    });
   }
 }

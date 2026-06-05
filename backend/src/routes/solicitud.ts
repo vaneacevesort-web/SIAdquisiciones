@@ -20,9 +20,12 @@ import {
   getEvolucionMensual,
   getActividadCalendario,
   getSemaforo,
+  getOrigenDetalle,
+  getDependenciasResumen,
   getAdjudicacionById,
   saveAdjudicacion,
   exportarExcelGestion,
+  getInformeContratos,
 } from "../controllers/solicitud";
 
 const router = Router();
@@ -41,6 +44,8 @@ router.get("/api/solicitud/top-dependencias", getTopDependencias);
 router.get("/api/solicitud/evolucion-mensual", getEvolucionMensual);
 router.get("/api/solicitud/actividad-calendario", getActividadCalendario);
 router.get("/api/solicitud/semaforo", getSemaforo);
+router.get("/api/solicitud/origen-detalle", getOrigenDetalle);
+router.get("/api/solicitud/dependencias-resumen", getDependenciasResumen);
 router.get("/api/solicitud/cola/:estatus", getSolicitudesCola);
 router.get("/api/solicitud/afectacion-presupuestal", getSolicitudesAfectacion);
 router.get("/api/solicitud/afectacion-presupuestal/:id", getAfectacionById);
@@ -49,4 +54,7 @@ router.get("/api/solicitud/adquisicion/:id", getProcedimientoById);
 router.post("/api/solicitud/adquisicion/:id", saveProcedimientoAdquisitivo);
 router.get("/api/solicitud/adjudicacion/:id", getAdjudicacionById);
 router.post("/api/solicitud/adjudicacion/:id", saveAdjudicacion);
-router.get("/api/solici
+router.get("/api/solicitud/exportar-excel", exportarExcelGestion);
+router.get("/api/solicitud/informe-contratos", getInformeContratos);
+
+export default router

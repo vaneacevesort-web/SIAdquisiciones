@@ -1,318 +1,340 @@
-$vino:      #7a001f;
-$vino-pale: #fdf2f5;
-$green:     #15803d;
-$green-bg:  #f0fdf4;
-$amber:     #b45309;
-$amber-bg:  #fffbeb;
-$red:       #b91c1c;
-$red-bg:    #fef2f2;
-$text-h:    #0f172a;
-$text-m:    #64748b;
-$text-s:    #94a3b8;
-$border:    #e2e8f0;
-$bg:        #f8fafc;
-$card:      #ffffff;
-$radius:    14px;
-$shadow:    0 1px 4px rgba(0,0,0,.06);
+// ── Tokens institucionales ────────────────────────────────────────────────────
+// Guinda → solo KPIs, títulos, acentos. No en barras ni dona.
+$guinda:    #8B1538;
+$guinda-l:  #FBF0F3;
+$guinda-b:  #D9A0B2;
 
-// ── Wrapper ───────────────────────────────────────────────────────────────
-.exec-wrapper {
-  background:  $bg;
-  min-height:  100%;
-  padding:     2rem 2.25rem;
-  max-width:   900px;
-  margin:      0 auto;
+// Paleta funcional por tipo de métrica
+$azul-p:    #355C7D;   // solicitudes
+$verde-e:   #2E8B57;   // contratos / completado
+$dorado:    #C89B3C;   // monto adjudicado
+$naranja:   #D97706;   // proceso en curso (etapas)
+$gris:      #64748B;   // secundario / neutral
 
-  @media (max-width: 600px) { padding: 1.25rem; }
+// Texto
+$txt-h:  #0F172A;
+$txt-m:  #64748B;
+$txt-s:  #94A3B8;
+
+// Estructura — bordes finos, fondo limpio
+$border: #E8ECF1;      // más suave que E2E8F0
+$bg:     #F8FAFC;
+$white:  #FFFFFF;
+$r:      10px;
+$sh:     0 1px 2px rgba(0,0,0,.04);                           // sombra base muy suave
+$sh-h:   0 4px 16px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.04); // sombra hover
+
+// ── Contenedor ────────────────────────────────────────────────────────────────
+.xd-wrap {
+  background: $bg;
+  min-height: 100%;
+  padding:    1.5rem 1.75rem;
+  display:    flex;
+  flex-direction: column;
+  gap:        1.25rem;   // más espacio entre secciones
+
+  @media (max-width: 768px) { padding: 1rem; gap: 1rem; }
 }
 
-// ── Cabecera ──────────────────────────────────────────────────────────────
-.exec-header {
-  display:         flex;
-  align-items:     center;
-  justify-content: space-between;
-  gap:             1rem;
-  margin-bottom:   2.25rem;
-  flex-wrap:       wrap;
-
-  &__brand { display: flex; align-items: center; gap: .85rem; }
-  &__logo  { height: 46px; width: auto; flex-shrink: 0; }
-
-  &__title {
-    font-size:      1.1rem;
-    font-weight:    800;
-    color:          $text-h;
-    margin:         0 0 .1rem;
-    letter-spacing: -.02em;
-  }
-
-  &__org { font-size: .72rem; color: $text-m; margin: 0; }
-
-  &__ts {
-    font-size:   .78rem;
-    color:       $text-s;
-    font-weight: 500;
-    white-space: nowrap;
-    text-transform: capitalize;
-  }
-}
-
-// ── Loading ───────────────────────────────────────────────────────────────
-.exec-loading {
+// ── Encabezado de página ──────────────────────────────────────────────────────
+.xd-head {
   display:     flex;
   align-items: center;
-  padding:     5rem;
+  gap:         .85rem;
+  flex-wrap:   wrap;
+
+  &__icon {
+    width:           40px;
+    height:          40px;
+    border-radius:   10px;
+    background:      $guinda-l;
+    border:          1px solid $guinda-b;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    flex-shrink:     0;
+    i { font-size: 1rem; color: $guinda; }
+  }
+
+  &__text { flex: 1; min-width: 0; }
+
+  &__title {
+    font-size:      1.05rem;
+    font-weight:    700;
+    color:          $txt-h;
+    margin:         0 0 .1rem;
+    letter-spacing: -.01em;
+  }
+
+  &__sub  { font-size: .75rem; color: $txt-m; margin: 0; }
+
+  &__date {
+    margin-left: auto;
+    font-size:   .73rem;
+    color:       $txt-s;
+    white-space: nowrap;
+  }
+}
+
+// ── Estado de carga ───────────────────────────────────────────────────────────
+.xd-loading {
+  display:     flex;
+  align-items: center;
   justify-content: center;
+  padding:     4rem;
+  color:       $txt-m;
   font-size:   .875rem;
-  color:       $text-m;
 }
 
-// ── Headline: 2 números grandes ───────────────────────────────────────────
-.exec-headline {
-  background:    $card;
-  border-radius: $radius;
-  box-shadow:    $shadow;
-  border:        1px solid $border;
-  display:       flex;
-  align-items:   center;
-  padding:       2rem 2.5rem;
-  gap:           2.5rem;
-  margin-bottom: 1rem;
+.xd-spinner { color: $guinda; }
+.xd-empty   { font-size: .78rem; color: $txt-s; text-align: center; padding: 1.5rem 0; margin: 0; }
 
-  @media (max-width: 600px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1.5rem;
-    padding: 1.5rem;
-  }
-}
-
-.exec-num-card {
-  display:        flex;
-  flex-direction: column;
-  gap:            .3rem;
-
-  &__value {
-    font-size:      3rem;
-    font-weight:    900;
-    line-height:    1;
-    color:          $text-h;
-    letter-spacing: -.04em;
-  }
-
-  &__label {
-    font-size:  .72rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .07em;
-    color:      $text-m;
-  }
-
-  &--monto &__value {
-    font-size: 2.2rem;
-    color:     $vino;
-  }
-}
-
-.exec-num-divider {
-  width:      1px;
-  height:     60px;
-  background: $border;
-  flex-shrink: 0;
-
-  @media (max-width: 600px) { display: none; }
-}
-
-// ── Semáforo ──────────────────────────────────────────────────────────────
-.exec-semaforo {
+// ── Fila de KPIs ──────────────────────────────────────────────────────────────
+.xd-kpis {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: .75rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
 
-  @media (max-width: 600px) { grid-template-columns: 1fr; }
+  @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 560px)  { grid-template-columns: 1fr; }
 }
 
-.exec-sem {
-  background:    $card;
-  border-radius: $radius;
+// Tarjeta KPI — fondo blanco, sin borde de color, jerarquía por tamaño.
+.xd-kpi {
+  background:    $white;
+  border-radius: $r;
+  box-shadow:    $sh;
   border:        1px solid $border;
-  box-shadow:    $shadow;
-  padding:       1.4rem 1.5rem;
+  padding:       .85rem 1.15rem;
   display:       flex;
   align-items:   flex-start;
-  gap:           1rem;
-  transition:    box-shadow .2s;
+  gap:           .75rem;
+  transition:    box-shadow .2s ease, transform .15s ease;
 
-  &__indicator {
-    width:         12px;
-    height:        12px;
-    border-radius: 50%;
-    flex-shrink:   0;
-    margin-top:    .35rem;
+  &:hover {
+    box-shadow: $sh-h;
+    transform:  translateY(-1px);
   }
 
-  &__body {
-    display:        flex;
-    flex-direction: column;
-    gap:            .2rem;
+  // Ícono — fondo gris muy claro, ícono guinda
+  &__ico {
+    width:           34px;
+    height:          34px;
+    border-radius:   8px;
+    background:      #F4F6F9;
+    border:          1px solid $border;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    flex-shrink:     0;
+    i { font-size: .9rem; color: $guinda; }
   }
 
-  &__count {
-    font-size:   2rem;
-    font-weight: 800;
-    line-height: 1;
+  // Número — guinda para las 3 métricas principales
+  &__val {
+    font-size:      1.95rem;
+    font-weight:    800;
+    line-height:    1;
+    color:          $guinda;
     letter-spacing: -.03em;
+
+    &--sm { font-size: 1.35rem; }
+    &--xs { font-size: 1.05rem; }
   }
 
-  &__label {
-    font-size:  .72rem;
-    font-weight: 700;
+  &__lbl {
+    font-size:      .66rem;
+    font-weight:    600;
     text-transform: uppercase;
     letter-spacing: .06em;
+    color:          $txt-m;
+    margin-top:     .2rem;
   }
 
-  &__desc { font-size: .68rem; color: $text-s; }
+  &__sub { font-size: .67rem; color: $txt-s; margin-top: .08rem; }
 
-  // ── Variantes ──
-  &--green {
-    border-top: 3px solid $green;
-    .exec-sem__indicator { background: $green; }
-    .exec-sem__count     { color: $green; }
-    .exec-sem__label     { color: darken($green, 5%); }
-  }
-
-  &--amber {
-    border-top: 3px solid $amber;
-    .exec-sem__indicator { background: $amber; }
-    .exec-sem__count     { color: $amber; }
-    .exec-sem__label     { color: darken($amber, 5%); }
-  }
-
-  &--red {
-    border-top: 3px solid #e5e7eb;
-    .exec-sem__indicator { background: #d1d5db; }
-    .exec-sem__count     { color: $text-s; }
-    .exec-sem__label     { color: $text-m; }
-  }
-
-  // Rojo activo solo si hay urgentes > 0
-  &--red-alert {
-    border-top: 3px solid $red;
-    background: $red-bg;
-    border-color: #fecaca;
-    border-top-color: $red;
-    box-shadow: 0 0 0 3px rgba(185,28,28,.08);
-    .exec-sem__indicator { background: $red; }
-    .exec-sem__count     { color: $red; }
-    .exec-sem__label     { color: darken($red, 5%); }
-    .exec-sem__desc      { color: lighten($red, 15%); }
+  // Dato secundario — número en gris, menor tamaño
+  &--secondary {
+    .xd-kpi__val { color: $gris; font-size: 1.6rem; font-weight: 700; }
+    .xd-kpi__ico i { color: $gris; }
   }
 }
 
-// ── Comparativa mensual ───────────────────────────────────────────────────
-.exec-comparativa {
-  background:    $card;
-  border-radius: $radius;
+// ── Tarjeta estándar ──────────────────────────────────────────────────────────
+.xd-card {
+  background:    $white;
+  border-radius: $r;
+  box-shadow:    $sh;
   border:        1px solid $border;
-  box-shadow:    $shadow;
-  padding:       1.4rem 1.75rem;
-  margin-bottom: 1rem;
-}
+  overflow:      hidden;
+  transition:    box-shadow .2s ease, transform .15s ease;
 
-.exec-comp {
-  &__title {
+  &:hover {
+    box-shadow: $sh-h;
+    transform:  translateY(-1px);
+  }
+
+  // Encabezado — tinte guinda muy tenue, ícono guinda
+  &__head {
+    background:     rgba(139, 21, 56, .03);
+    border-bottom:  1px solid rgba(139, 21, 56, .08);
+    color:          $txt-m;
     font-size:      .68rem;
     font-weight:    700;
     text-transform: uppercase;
-    letter-spacing: .08em;
-    color:          $text-m;
-    margin:         0 0 1rem;
+    letter-spacing: .07em;
+    padding:        .6rem 1rem .5rem;
+    display:        flex;
+    align-items:    center;
+    gap:            .4rem;
+
+    i { font-size: .78rem; color: $guinda; }
   }
 
-  &__row {
-    display:     grid;
-    grid-template-columns: 90px 1fr 80px;
-    align-items: center;
-    gap:         .85rem;
-    margin-bottom: .65rem;
-
-    &:last-child { margin-bottom: 0; }
-  }
-
-  &__mes {
-    font-size:  .75rem;
-    color:      $text-m;
-    font-weight: 500;
-  }
-
-  &__bar-wrap {
-    height:        8px;
-    background:    #f1f5f9;
-    border-radius: 99px;
-    overflow:      hidden;
-  }
-
-  &__bar {
-    height:        100%;
-    border-radius: 99px;
-    transition:    width .7s ease;
-    min-width:     3px;
-
-    &--actual   { background: $vino;  }
-    &--anterior { background: #cbd5e1; }
-  }
-
-  &__val {
-    font-size:   .82rem;
-    font-weight: 700;
-    color:       $text-h;
-    text-align:  right;
-    display:     flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap:         .35rem;
-  }
-
-  &__tag {
-    font-size:     .66rem;
-    font-weight:   700;
-    padding:       .1rem .35rem;
-    border-radius: 99px;
-
-    &--up   { background: $green-bg; color: $green; }
-    &--down { background: $red-bg;   color: $red;   }
-  }
+  &--full { width: 100%; }
 }
 
-// ── Footer de accesos ─────────────────────────────────────────────────────
-.exec-footer {
-  display:    flex;
-  gap:        1rem;
-  padding-top: .5rem;
-  flex-wrap:  wrap;
+// ── Grid de 2 columnas ────────────────────────────────────────────────────────
+.xd-row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
 }
 
-.exec-footer__link {
-  display:         flex;
-  align-items:     center;
-  gap:             .4rem;
+// ── Tabla ejecutiva ───────────────────────────────────────────────────────────
+.xd-table-wrap { overflow-x: auto; }
+
+.xd-table {
+  width:           100%;
+  border-collapse: collapse;
   font-size:       .78rem;
-  font-weight:     600;
-  color:           $text-m;
-  text-decoration: none;
-  padding:         .45rem .85rem;
-  border:          1px solid $border;
-  border-radius:   8px;
-  background:      $card;
-  transition:      color .15s, border-color .15s, background .15s;
 
-  i { font-size: .8rem; }
-
-  &:hover {
-    color:        $vino;
-    border-color: $vino;
-    background:   $vino-pale;
-    text-decoration: none;
+  thead tr {
+    background:    #F6F8FA;
+    border-bottom: 1px solid $border;
   }
+
+  th {
+    padding:        .55rem 1rem;
+    font-size:      .67rem;
+    font-weight:    700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color:          $txt-m;
+    white-space:    nowrap;
+    text-align:     left;
+  }
+
+  td {
+    padding:       .5rem 1rem;
+    color:         $txt-h;
+    border-bottom: 1px solid $border;
+  }
+
+  tbody tr:nth-child(even) { background: #FAFBFC; }
+
+  tbody tr {
+    transition: background .12s;
+    &:hover { background: rgba($azul-p, .04); }
+  }
+}
+
+.xd-th-num { text-align: right; }
+
+.xd-td-num {
+  text-align:  right;
+  font-weight: 600;
+  font-size:   .76rem;
+  color:       $guinda;
+}
+
+.xd-td-name {
+  max-width:     240px;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+  white-space:   nowrap;
+  font-weight:   500;
+}
+
+// ── Gráficas ──────────────────────────────────────────────────────────────────
+apx-chart {
+  display: block;
+  padding: .75rem .5rem .5rem;
+}
+
+// ── Lista ejecutiva de origen del recurso ─────────────────────────────────────
+.xd-origin-list {
+  padding: .9rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+}
+
+.xd-origin-row {
+  display:     grid;
+  grid-template-columns: 8px 1fr 90px 38px 34px;
+  align-items: center;
+  gap:         .55rem;
+}
+
+.xd-origin-dot {
+  width:         8px;
+  height:        8px;
+  border-radius: 50%;
+  flex-shrink:   0;
+}
+
+.xd-origin-name {
+  font-size:     .79rem;
+  font-weight:   500;
+  color:         $txt-h;
+  white-space:   nowrap;
+  overflow:      hidden;
+  text-overflow: ellipsis;
+}
+
+.xd-origin-track {
+  height:        5px;
+  background:    $border;
+  border-radius: 99px;
+  overflow:      hidden;
+}
+
+// Barra de solicitudes — azul petróleo fijo (métrica "solicitudes")
+.xd-origin-fill {
+  height:           100%;
+  border-radius:    99px;
+  min-width:        2px;
+  background:       $azul-p;
+  transition:       width .4s ease;
+}
+
+// Número de solicitudes — azul petróleo (coherente con las barras)
+.xd-origin-count {
+  text-align:  right;
+  font-size:   .78rem;
+  font-weight: 700;
+  color:       $azul-p;
+}
+
+.xd-origin-pct {
+  text-align: right;
+  font-size:  .72rem;
+  color:      $txt-s;
+}
+
+// ── Badge ─────────────────────────────────────────────────────────────────────
+.xd-badge {
+  font-size:      .64rem;
+  font-weight:    600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding:        .2rem .55rem;
+  border-radius:  99px;
+  background:     $guinda-l;
+  color:          $guinda;
+  border:         1px solid $guinda-b;
+  white-space:    nowrap;
 }

@@ -4,7 +4,7 @@ export const MENU: MenuItem[] = [
 
   // Dashboard ejecutivo — visible para todos
   {
-    label: 'Inicio',
+    label: 'Dashboard',
     icon: 'home',
     link: '/dashboard',
   },
@@ -45,11 +45,11 @@ export const MENU: MenuItem[] = [
     ]
   },
 
-  // Sin restricción de rol → todos pueden consultar informes detallados
+  // Seguimiento de contratos — link directo, sin paso intermedio por indicadores
   {
     label: 'Informes',
     icon: 'bar-chart-2',
-    link: '/reportes',
+    link: '/informe-contratos',
   },
 
   // Solo el Administrador puede hacer carga masiva

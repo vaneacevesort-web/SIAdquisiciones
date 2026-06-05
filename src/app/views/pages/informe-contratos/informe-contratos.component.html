@@ -1,0 +1,250 @@
+<div class="rep-page">
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       ENCABEZADO INSTITUCIONAL — pantalla
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <header class="rep-header no-print">
+    <div class="rep-header__left">
+      <img src="/images/oficialia_mayor.svg"
+           class="rep-header__logo"
+           alt="Oficialía Mayor"
+           onerror="this.onerror=null;this.src='/images/oficialia_mayor.png'">
+      <div class="rep-header__texts">
+        <span class="rep-header__org">OFICIALÍA MAYOR</span>
+        <span class="rep-header__sub">
+          Seguimiento al Proceso de Adquisición y Contratación de Servicios.
+        </span>
+      </div>
+    </div>
+    @if (filtroDepNombre) {
+      <button class="rep-btn-clear" (click)="quitarFiltros()">QUITAR FILTROS</button>
+    }
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       ENCABEZADO SOLO IMPRESIÓN
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <header class="rep-print-header print-only">
+    <img src="/images/oficialia_mayor.svg"
+         class="rep-print-header__logo"
+         alt="Oficialía Mayor"
+         onerror="this.onerror=null;this.src='/images/oficialia_mayor.png'">
+    <div>
+      <div class="rep-print-header__org">OFICIALÍA MAYOR</div>
+      <div class="rep-print-header__sub">
+        Seguimiento al Proceso de Adquisición y Contratación de Servicios
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TÍTULO CENTRADO EN CÁPSULA
+  ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="rep-title-row">
+    <h2 class="rep-title-capsule">
+      CONTRATOS ESTATALES POR DEPENDENCIA {{ anioActual }}
+    </h2>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       LOADING / ERROR
+  ═══════════════════════════════════════════════════════════════════════ -->
+  @if (cargando) {
+    <div class="rep-state">
+      <div class="spinner-border spinner-border-sm me-2" style="color:#741530"></div>
+      <span>Cargando informe...</span>
+    </div>
+  } @else if (error) {
+    <div class="rep-state rep-state--error">
+      <i class="feather icon-alert-circle me-2"></i>{{ error }}
+    </div>
+  } @else {
+
+    <!-- ════════════════════════════════════════════════════════════════
+         BARRA DE CONTROLES: filtro · KPIs · botón PDF
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div class="rep-controls">
+
+      <!-- Filtro dependencia -->
+      <div class="rep-filter no-print">
+        <div class="dropdown">
+          <button class="rep-filter__btn dropdown-toggle" type="button"
+                  data-bs-toggle="dropdown" aria-expanded="false">
+            DEPENDENCIA
+          </button>
+          <ul class="dropdown-menu rep-filter__menu">
+            <li>
+              <button class="dropdown-item rep-filter__all" (click)="quitarFiltros()">
+                — Todas las dependencias —
+              </button>
+            </li>
+            <li><hr class="dropdown-divider my-1"></li>
+            @for (dep of dependencias; track dep.nombre) {
+              <li>
+                <button class="dropdown-item"
+                        [class.active]="filtroDepNombre === dep.nombre"
+                        (click)="seleccionarDep(dep.nombre)">
+                  {{ dep.nombre }}
+                </button>
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+
+      <!-- KPI ovalados -->
+      <div class="rep-kpis">
+        <div class="rep-kpi">
+          <span class="rep-kpi__val">{{ totalSolicitudes }}</span>
+          <span class="rep-kpi__lbl">TOTAL DE SOLICITUDES</span>
+        </div>
+        <div class="rep-kpi">
+          <span class="rep-kpi__val">{{ totalContratos }}</span>
+          <span class="rep-kpi__lbl">TOTAL DE CONTRATOS</span>
+        </div>
+        <div class="rep-kpi rep-kpi--monto">
+          <span class="rep-kpi__val">{{ pesos(montoTotal) }}</span>
+          <span class="rep-kpi__lbl">MONTO TOTAL</span>
+        </div>
+      </div>
+
+      <!-- Botón PDF -->
+      <button class="rep-btn-pdf no-print" (click)="imprimirPDF()">
+        <i class="feather icon-printer me-1"></i>IMPRIMIR INFORME EN PDF
+      </button>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         CUERPO — vista general (sin filtro): tabla plana
+    ═══════════════════════════════════════════════════════════════════ -->
+    @if (!filtroDepNombre) {
+
+      <div class="rep-body">
+        @if (gruposDependencia.length === 0) {
+          <div class="rep-empty">
+            <i class="feather icon-inbox"></i>
+            <p>No hay contratos registrados en el sistema.</p>
+          </div>
+        } @else {
+          <div class="rep-table-wrap">
+            <table class="rep-table">
+              <thead>
+                <tr>
+                  <th>DEPENDENCIA</th>
+                  <th>No. CONTRATO</th>
+                  <th>NO. CA</th>
+                  <th class="th-desc">DESCRIPCIÓN DE CLAVE DE VERIFICACIÓN</th>
+                  <th class="th-monto">MONTO DEL CONTRATO</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of contratosFiltrados; track c.id_solicitud; let i = $index) {
+                  <tr [class.row-alt]="i % 2 !== 0">
+                    <td class="td-dep">{{ c.dependencia_nombre || '—' }}</td>
+                    <td class="td-contrato">{{ c.no_contrato || '—' }}</td>
+                    <td>{{ c.no_solicitud || '—' }}</td>
+                    <td class="td-desc">{{ c.descripcion || '—' }}</td>
+                    <td class="td-monto">{{ pesos(c.monto) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Totales al pie -->
+          <div class="rep-totals">
+            <span>{{ contratosFiltrados.length }} – {{ contratosFiltrados.length }} / {{ contratosFiltrados.length }}</span>
+            <span class="rep-totals__total">
+              TOTAL: &nbsp;<strong>{{ pesos(montoTotal) }}</strong>
+            </span>
+          </div>
+        }
+      </div>
+
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════
+         CUERPO — vista concentrada (con filtro): secciones por dep
+    ═══════════════════════════════════════════════════════════════════ -->
+    @if (filtroDepNombre) {
+
+      @if (gruposDependencia.length === 0) {
+        <div class="rep-empty">
+          <i class="feather icon-inbox"></i>
+          <p>No hay contratos para la dependencia seleccionada.</p>
+        </div>
+      }
+
+      @for (grupo of gruposDependencia; track grupo.nombre; let first = $first) {
+
+        <div class="rep-section" [class.rep-section--first]="first">
+
+          <!-- Nombre de la dependencia -->
+          <div class="rep-section__title">{{ grupo.nombre | uppercase }}</div>
+
+          <!-- Tabla concentrada (todas las columnas) -->
+          <div class="rep-table-wrap">
+            <table class="rep-table">
+              <thead>
+                <tr>
+                  <th>No. PROCEDIMIENTO</th>
+                  <th>No. CONTRATO</th>
+                  <th>No. SOLICITUD</th>
+                  <th>FECHA DE ADJUDICACIÓN</th>
+                  <th class="th-desc">DESCRIPCIÓN DE CLAVE DE VERIFICACIÓN</th>
+                  <th>PARTIDA</th>
+                  <th>GIRO</th>
+                  <th class="th-prov">NOMBRE O RAZÓN SOCIAL DEL PROVEEDOR ADJUDICADO</th>
+                  <th class="th-monto">MONTO DEL CONTRATO</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of grupo.contratos; track c.id_solicitud; let i = $index) {
+                  <tr [class.row-alt]="i % 2 !== 0">
+                    <td>{{ c.no_procedimiento || '—' }}</td>
+                    <td class="td-contrato">{{ c.no_contrato || '—' }}</td>
+                    <td>{{ c.no_solicitud || '—' }}</td>
+                    <td class="td-fecha">{{ formatFecha(c.fecha_adjudicacion) }}</td>
+                    <td class="td-desc">{{ c.descripcion || '—' }}</td>
+                    <td class="td-sm">{{ c.partida || '—' }}</td>
+                    <td class="td-sm">{{ c.giro || '—' }}</td>
+                    <td class="td-prov">{{ c.proveedor_razon_social || '—' }}</td>
+                    <td class="td-monto">{{ pesos(c.monto) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pie de sección -->
+          <div class="rep-section__foot">
+            <span>1 – {{ grupo.contratos.length }} / {{ grupo.contratos.length }}</span>
+            <span class="rep-section__foot-total">
+              TOTAL: &nbsp;<strong>{{ pesos(grupo.monto) }}</strong>
+            </span>
+          </div>
+
+        </div>
+
+      }
+
+    }
+
+    <!-- ════════════════════════════════════════════════════════════════
+         PIE DEL DOCUMENTO
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div class="rep-footer">
+      <p>
+        <strong>Fuente:</strong> Tabla realizada con base en información obtenida
+        por la Dirección de Recursos Materiales.
+      </p>
+      <p>
+        <strong>Nota:</strong> Dependencias enlistadas conforme al Artículo 23
+        de la Ley Orgánica de la Administración Pública del Estado de México.
+      </p>
+    </div>
+
+  }
+
+</div>

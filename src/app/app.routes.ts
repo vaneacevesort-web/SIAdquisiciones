@@ -44,11 +44,14 @@ export const routes: Routes = [
         loadChildren: () => import('./views/pages/validadores/validadores.route')
       },
 
+      // /reportes redirige a /informe-contratos — el dashboard de KPIs fue eliminado de Informes
+      { path: 'reportes', redirectTo: 'informe-contratos', pathMatch: 'full' },
+
       {
-        path: 'reportes',
+        path: 'informe-contratos',
         loadComponent: () =>
-          import('./views/pages/reportes/reportes.component')
-            .then(c => c.ReportesComponent)
+          import('./views/pages/informe-contratos/informe-contratos.component')
+            .then(c => c.InformeContratosComponent)
       },
 
       {
