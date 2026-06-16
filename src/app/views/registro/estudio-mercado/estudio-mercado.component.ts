@@ -20,7 +20,6 @@ export class EstudioMercadoComponent implements OnInit {
   form!: FormGroup;
 
   estadoEstudioOptions = [
-    { value: 'ADJUDICADO', label: 'Adjudicado' },
     { value: 'CONCLUIDO',  label: 'Concluido'  },
     { value: 'DESIERTA',   label: 'Desierta'   },
     { value: 'PROCESO',    label: 'En Proceso' },

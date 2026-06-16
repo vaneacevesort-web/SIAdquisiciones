@@ -126,11 +126,12 @@
       <!-- Mini-breadcrumb del tab activo -->
       <div class="gd-content-header">
         <div class="gd-content-title">
-          @for (tab of tabs; track tab.key) {
-            @if (tab.key === activeTab) {
-              <i class="feather {{ tab.icon }} me-2 gd-content-icon"></i>
-              {{ tab.label }}
-            }
+          @switch (activeTab) {
+            @case ('info')        { <i class="feather icon-file-text    me-2 gd-content-icon"></i>Info General }
+            @case ('estudio')     { <i class="feather icon-search       me-2 gd-content-icon"></i>Estudio de Mercado }
+            @case ('afectacion')  { <i class="feather icon-dollar-sign  me-2 gd-content-icon"></i>Afectación Presupuestal }
+            @case ('adquisicion') { <i class="feather icon-shopping-cart me-2 gd-content-icon"></i>Adquisición }
+            @case ('adjudicacion'){ <i class="feather icon-award        me-2 gd-content-icon"></i>Adjudicación }
           }
         </div>
         @if (isTabEditable(activeTab)) {

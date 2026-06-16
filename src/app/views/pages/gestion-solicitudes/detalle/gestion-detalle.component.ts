@@ -1,6 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { combineLatest } from 'rxjs';
 import { RegistroService } from '../../../../service/registro.service';
 import { PermissionService } from '../../../../service/permission.service';
 import { calcularSemaforo, SemaforoInfo } from '../../../../utils/semaforo';
@@ -18,13 +20,13 @@ interface TabDef {
   minEstatus: number;
 }
 
-const TABS: TabDef[] = [
+const TABS: TabDef[] = Object.freeze([
   { key: 'info',        label: 'Info General',            icon: 'icon-file-text',  minEstatus: 1 },
   { key: 'estudio',     label: 'Estudio de Mercado',      icon: 'icon-search',     minEstatus: 1 },
   { key: 'afectacion',  label: 'Afectación Presupuestal', icon: 'icon-dollar-sign',minEstatus: 2 },
   { key: 'adquisicion', label: 'Adquisición',             icon: 'icon-shopping-cart', minEstatus: 3 },
   { key: 'adjudicacion',label: 'Adjudicación',            icon: 'icon-award',      minEstatus: 4 },
-];
+]) as TabDef[];
 
 @Component({
   selector: 'app-gestion-detalle',
@@ -61,19 +63,23 @@ export class GestionDetalleComponent implements OnInit {
   private registroService   = inject(RegistroService);
   private permissionService = inject(PermissionService);
 
-  ngOnInit(): void {
-    // Capturar tab solicitado desde la lista (?tab=estudio)
-    this.route.queryParams.subscribe(qp => {
-      if (qp['tab']) this.pendingTab = qp['tab'];
-    });
+  constructor() {
+    // takeUntilDestroyed() sin argumento requiere contexto de inyección (constructor)
+    combineLatest([this.route.queryParams, this.route.params])
+      .pipe(takeUntilDestroyed())
+      .subscribe(([qp, params]) => {
+        // pendingTab se fija ANTES de que resuelva la carga HTTP
+        this.pendingTab = qp['tab'] ?? null;
 
-    this.route.params.subscribe(params => {
-      this.idSolicitud = parseInt(params['id'], 10);
-      if (!isNaN(this.idSolicitud)) {
-        this.cargarSolicitud();
-      }
-    });
+        const id = parseInt(params['id'], 10);
+        if (!isNaN(id) && id !== this.idSolicitud) {
+          this.idSolicitud = id;
+          this.cargarSolicitud();
+        }
+      });
   }
+
+  ngOnInit(): void {}
 
   cargarSolicitud(): void {
     this.loading = true;
