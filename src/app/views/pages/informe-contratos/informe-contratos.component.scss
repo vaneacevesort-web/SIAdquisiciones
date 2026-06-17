@@ -1,18 +1,17 @@
 // ═══════════════════════════════════════════════════════════════════════════
-//  Paleta institucional — vino elegante referencia Oficialía Mayor
+//  Paleta institucional — homologada con el resto del sistema
 // ═══════════════════════════════════════════════════════════════════════════
-$vino:       #741530;   // vino institucional: profundo, no saturado, match referencia
-$vino-dark:  #5A0F23;   // hover / activo
-$vino-tint:  #F8F1F3;   // fondo secciones: casi blanco, apenas rosado
-$vino-pale:  #EFD8DF;   // borde / badge light
-$oro:        #B08025;   // dorado institucional
+$vino:       #741530;
+$vino-dark:  #5A0F23;
+$vino-tint:  #F8F1F3;
+$vino-pale:  #EFD8DF;
+$oro:        #B08025;
 $oro-hover:  #8C6418;
 
 $blanco:     #FFFFFF;
-$gris-pg:    #F3F4F7;   // fondo de toda la página
-$gris-row:   #F8F9FB;   // fila alterna: gris neutro puro
-$gris-brd:   #DDE2EC;   // bordes generales
-$gris-th-bg: #F0F2F7;   // fondo th tabla (cuando no es vino)
+$gris-pg:    #F3F4F7;
+$gris-row:   #F8F9FB;
+$gris-brd:   #DDE2EC;
 
 $txt-dark:   #1A2035;
 $txt-mid:    #4B5563;
@@ -23,125 +22,124 @@ $txt-light:  #9CA3AF;
 // ═══════════════════════════════════════════════════════════════════════════
 .rep-page {
   background: $gris-pg;
-  min-height: 100%;
   font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
   color: $txt-dark;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  Encabezado institucional
+//  Encabezado institucional (pantalla)
+//  Fondo blanco, borde inferior guinda — logo a color, título a la derecha.
 // ═══════════════════════════════════════════════════════════════════════════
 .rep-header {
-  background: $vino;
-  color: $blanco;
+  background: $blanco;
+  border-bottom: 3px solid $vino;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.6rem 1.75rem;
-  gap: 1rem;
+  padding: 0.55rem 1.5rem;
+  gap: 1.5rem;
 
   &__left {
     display: flex;
     align-items: center;
-    gap: 0.9rem;
+    gap: 0.75rem;
+    flex-shrink: 0;
   }
 
   &__logo {
     height: 44px;
     width: auto;
-    // convierte el SVG a blanco sobre fondo vino
-    filter: brightness(0) invert(1);
     flex-shrink: 0;
   }
 
   &__texts { display: flex; flex-direction: column; }
 
   &__org {
-    font-size: 1rem;
+    font-size: 0.92rem;
     font-weight: 700;
+    color: $vino;
     letter-spacing: 0.05em;
     line-height: 1.2;
   }
 
   &__sub {
-    font-size: 0.7rem;
-    opacity: 0.8;
+    font-size: 0.67rem;
+    color: $txt-mid;
     font-style: italic;
     margin-top: 1px;
   }
-}
 
-// Botón "QUITAR FILTROS" en el encabezado
-.rep-btn-clear {
-  background: transparent;
-  color: $blanco;
-  border: 1.5px solid rgba(255,255,255,0.55);
-  border-radius: 20px;
-  padding: 0.3rem 0.85rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s;
-  &:hover { background: rgba(255,255,255,0.15); }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  Título en cápsula centrada
-// ═══════════════════════════════════════════════════════════════════════════
-.rep-title-row {
-  background: $blanco;
-  border-bottom: 1px solid $gris-brd;
-  padding: 1rem 1.75rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.rep-title-capsule {
-  display: inline-block;
-  margin: 0;
-  padding: 0.45rem 2.25rem;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: $vino;
-  letter-spacing: 0.05em;
-  border: 2px solid $vino;
-  border-radius: 40px;        // cápsula/ovalado
-  background: $vino-tint;
-  white-space: nowrap;
+  &__title {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: $vino;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: right;
+    line-height: 1.45;
+    flex-shrink: 0;
+    border-left: 2px solid $vino-pale;
+    padding-left: 1.25rem;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  Estados de carga y error
+//  Estados carga / error / vacío
 // ═══════════════════════════════════════════════════════════════════════════
 .rep-state {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: 3.5rem 2rem;
   color: $txt-mid;
   font-size: 0.875rem;
   &--error { color: $vino; }
 }
 
+.rep-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3rem;
+  color: $txt-light;
+  i { font-size: 2rem; opacity: 0.5; }
+  p { font-size: 0.875rem; margin: 0; }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
-//  Barra de controles: filtro · KPIs · PDF
+//  Fila de KPIs — centrada, fondo blanco con borde inferior sutil
+// ═══════════════════════════════════════════════════════════════════════════
+.rep-kpis-bar {
+  background: $blanco;
+  border-bottom: 1px solid $gris-brd;
+  padding: 0.6rem 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 2rem;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Barra de controles — CSS grid 2 columnas: [filtro · limpiar] | [Exportar PDF]
 // ═══════════════════════════════════════════════════════════════════════════
 .rep-controls {
   background: $blanco;
   border-bottom: 1px solid $gris-brd;
-  padding: 0.7rem 1.75rem;
+  padding: 0.5rem 1.5rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
-  flex-wrap: wrap;
 }
 
-// ── Filtro dropdown ──────────────────────────────────────────────────────
-.rep-filter {
-  flex-shrink: 0;
+// ── Columna izquierda: filtro ──────────────────────────────────────────
+.rep-filter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .rep-filter__btn {
@@ -149,32 +147,125 @@ $txt-light:  #9CA3AF;
   color: $blanco;
   border: none;
   border-radius: 20px;
-  padding: 0.42rem 1.1rem;
-  font-size: 0.72rem;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
   transition: background 0.13s;
+  max-width: 240px;
 
-  &::after { border-top-color: $blanco; }
-  &:hover  { background: $vino-dark; }
+  &:hover { background: $vino-dark; }
 
-  // clase Bootstrap dropdown-toggle — sobrescribir color del caret
-  &.show { background: $vino-dark; }
+  &--active { background: $vino-dark; }
+
+  &-text {
+    display: inline-block;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
 }
 
-.rep-filter__menu {
-  min-width: 300px;
-  max-height: 360px;
-  overflow-y: auto;
-  font-size: 0.82rem;
-  border: 1px solid $gris-brd;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.1);
-  padding: 0.25rem 0;
+.rep-filter__chevron {
+  font-size: 0.65rem;
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+  &--open { transform: rotate(180deg); }
+}
+
+.rep-btn-clear {
+  background: $vino-tint;
+  color: $vino;
+  border: 1.5px solid $vino-pale;
+  border-radius: 20px;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  transition: background 0.13s;
+  &:hover { background: $vino-pale; }
+}
+
+// ── Columna derecha: botón PDF ────────────────────────────────────────
+.rep-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rep-dropdown {
+  position: relative;
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 1050;
+    background: $blanco;
+    border: 1px solid $gris-brd;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    min-width: 300px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 0.25rem 0;
+    list-style: none;
+    margin: 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.38rem 1rem;
+    font-size: 0.82rem;
+    color: $txt-dark;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &:hover:not(.active) { background: $vino-tint; color: $vino; }
+    &.active             { background: $vino-tint; color: $vino; font-weight: 600; }
+  }
+
+  &__check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid $vino-pale;
+    border-radius: 3px;
+    flex-shrink: 0;
+    font-size: 0.6rem;
+    color: $vino;
+
+    .active & {
+      background: $vino;
+      border-color: $vino;
+      color: $blanco;
+    }
+  }
+
+  &__divider {
+    margin: 0.25rem 0;
+    border: none;
+    border-top: 1px solid $gris-brd;
+  }
 }
 
 .rep-filter__all {
@@ -182,69 +273,56 @@ $txt-light:  #9CA3AF;
   font-style: italic;
 }
 
-.rep-filter__menu .dropdown-item.active {
-  background: $vino;
-  color: $blanco;
-}
-
-.rep-filter__menu .dropdown-item:hover:not(.active) {
-  background: $vino-tint;
-  color: $vino;
-}
-
-// ── KPI ovalados ─────────────────────────────────────────────────────────
-.rep-kpis {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  // centra entre filtro y botón PDF
-  flex: 1;
-  justify-content: center;
-}
-
+// ── KPI cards — tarjetas ejecutivas en fila propia ───────────────────────
 .rep-kpi {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0.35rem 1.2rem;
-  border: 2px solid $vino;
-  border-radius: 40px;       // mismo ovalado que el título
+  padding: 0.42rem 1.5rem;
+  border: 1.5px solid $vino;
+  border-radius: 10px;
   background: $blanco;
-  min-width: 120px;
+  min-width: 130px;
+  box-shadow: 0 1px 6px rgba(116, 21, 48, 0.08);
 
   &__val {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-size: 1.15rem;
+    font-weight: 800;
     color: $vino;
     line-height: 1.2;
     white-space: nowrap;
+    letter-spacing: -0.01em;
   }
 
   &__lbl {
-    font-size: 0.6rem;
+    font-size: 0.56rem;
     font-weight: 600;
-    color: $txt-mid;
-    letter-spacing: 0.05em;
+    color: $txt-light;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
     text-align: center;
-    margin-top: 1px;
+    margin-top: 2px;
   }
 
   &--monto {
     border-color: $oro;
+    box-shadow: 0 1px 6px rgba(176, 128, 37, 0.10);
+    min-width: 200px;
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
     .rep-kpi__val { color: $oro; }
   }
 }
 
-// ── Botón PDF (dorado) ────────────────────────────────────────────────────
+// ── Botón PDF ─────────────────────────────────────────────────────────────
 .rep-btn-pdf {
   background: $oro;
   color: $blanco;
   border: none;
   border-radius: 6px;
-  padding: 0.48rem 1.15rem;
-  font-size: 0.7rem;
+  padding: 0.42rem 1rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   white-space: nowrap;
@@ -258,50 +336,70 @@ $txt-light:  #9CA3AF;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  Cuerpo del reporte
+//  Cuerpo de secciones (pantalla)
 // ═══════════════════════════════════════════════════════════════════════════
 .rep-body {
-  margin: 1.25rem 1.5rem;
+  padding: 0.75rem 1.25rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+// Nombre de dependencia — texto plano SOBRE la tarjeta, sin fondo de color
+.rep-dep-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: $txt-dark;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.85rem 0.15rem 0.3rem;
+
+  &:first-child { padding-top: 0.1rem; }
+}
+
+// Tarjeta con tabla — borde izquierdo guinda, esquinas redondeadas
+.rep-card {
   background: $blanco;
   border: 1px solid $gris-brd;
+  border-left: 3px solid $vino;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
+  margin-bottom: 0.2rem;
 }
 
-// ── Estado vacío ─────────────────────────────────────────────────────────
-.rep-empty {
+.rep-card__foot {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 3.5rem;
-  color: $txt-light;
-  i { font-size: 2rem; opacity: 0.5; }
-  p { font-size: 0.875rem; margin: 0; }
+  justify-content: space-between;
+  padding: 0.38rem 1rem;
+  border-top: 1px solid $gris-brd;
+  background: $gris-pg;
+  font-size: 0.7rem;
+  color: $txt-mid;
+
+  &-total {
+    font-size: 0.76rem;
+    color: $txt-dark;
+    strong { color: $vino; }
+  }
 }
 
-// ── Tabla (compartida entre vista general y concentrada) ─────────────────
-.rep-table-wrap {
-  overflow-x: auto;
-}
+// ── Tabla (pantalla) ─────────────────────────────────────────────────────
+.rep-table-wrap { overflow-x: auto; }
 
 .rep-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 11.5px;
 
-  thead tr {
-    background: $vino;
-  }
+  thead tr { background: $vino; }
 
   th {
     color: $blanco;
     font-weight: 700;
     font-size: 9.5px;
     letter-spacing: 0.04em;
-    padding: 0.55rem 0.65rem;
+    padding: 0.5rem 0.65rem;
     text-align: center;
     vertical-align: middle;
     border-right: 1px solid rgba(255,255,255,0.15);
@@ -311,7 +409,7 @@ $txt-light:  #9CA3AF;
   }
 
   td {
-    padding: 0.45rem 0.65rem;
+    padding: 0.4rem 0.65rem;
     vertical-align: top;
     line-height: 1.45;
     border-bottom: 1px solid $gris-brd;
@@ -327,88 +425,27 @@ $txt-light:  #9CA3AF;
   }
 }
 
-// Columnas específicas — vista general
-.th-desc, .td-desc { max-width: 280px; font-size: 11px; }
+// Columnas tabla pantalla (5 cols: Dependencia | Contrato | CA | Descripción | Monto)
+.th-dep, .td-dep     { max-width: 220px; font-size: 11px; text-align: center; }
+.th-desc, .td-desc   { max-width: 300px; font-size: 11px; }
 .th-monto, .td-monto { text-align: right; white-space: nowrap; font-weight: 600; }
-.td-dep      { font-weight: 600; min-width: 150px; }
-.td-contrato { font-weight: 600; color: $vino; white-space: nowrap; }
-
-// Columnas específicas — vista concentrada
-.th-prov, .td-prov { min-width: 160px; font-size: 11px; }
-.td-fecha   { white-space: nowrap; text-align: center; color: $txt-mid; }
-.td-sm      { font-size: 11px; }
-
-// ── Fila de totales (vista general) ─────────────────────────────────────
-.rep-totals {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.45rem 1rem;
-  border-top: 1px solid $gris-brd;
-  background: $gris-pg;
-  font-size: 0.75rem;
-  color: $txt-mid;
-
-  &__total {
-    font-size: 0.82rem;
-    color: $txt-dark;
-    strong { color: $vino; }
-  }
-}
+.td-contrato         { font-weight: 600; color: $vino; white-space: nowrap; }
+.td-ca               { text-align: center; color: $txt-mid; font-size: 11px; white-space: nowrap; }
+// Separador visual entre grupos de dependencia
+.row-grupo td        { border-top: 2px solid $vino-pale !important; }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  Secciones por dependencia (vista concentrada con filtro)
-// ═══════════════════════════════════════════════════════════════════════════
-.rep-section {
-  margin: 1.25rem 1.5rem 0;
-  background: $blanco;
-  border: 1px solid $gris-brd;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0,0,0,.05);
-
-  // Nombre de la dependencia — fondo vino tenue
-  &__title {
-    background: $vino-tint;
-    border-bottom: 2px solid $vino-pale;
-    padding: 0.55rem 1rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: $vino;
-    letter-spacing: 0.03em;
-  }
-
-  // Pie de sección con paginación y total
-  &__foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.42rem 1rem;
-    border-top: 1px solid $gris-brd;
-    background: $gris-pg;
-    font-size: 0.72rem;
-    color: $txt-mid;
-  }
-
-  &__foot-total {
-    font-size: 0.78rem;
-    color: $txt-dark;
-    strong { color: $vino; }
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  Pie del documento
+//  Pie del documento (pantalla)
 // ═══════════════════════════════════════════════════════════════════════════
 .rep-footer {
-  margin: 1.25rem 1.5rem 1.75rem;
-  padding: 0.65rem 1rem;
+  margin: 0.6rem 1.25rem 1rem;
+  padding: 0.55rem 1rem;
   background: $blanco;
   border: 1px solid $gris-brd;
   border-radius: 6px;
 
   p {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     color: $txt-light;
     margin: 0.1rem 0;
     font-style: italic;
@@ -416,66 +453,438 @@ $txt-light:  #9CA3AF;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  Impresión
+//  Ocultar en pantalla / mostrar solo en impresión
 // ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════
+//  Pestañas de vista
+// ═══════════════════════════════════════════════════════════════════════════
+.rep-tabs {
+  background: $blanco;
+  border-bottom: 2px solid $gris-brd;
+  display: flex;
+  gap: 0;
+  padding: 0 1.5rem;
+}
+
+.rep-tab {
+  padding: 0.55rem 1.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: $txt-mid;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: color 0.13s, border-color 0.13s;
+
+  &:hover { color: $vino; }
+
+  &--active {
+    color: $vino;
+    border-bottom-color: $vino;
+    background: $vino-tint;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  Vista Detalle por Dependencia (pantalla)
+// ═══════════════════════════════════════════════════════════════════════════
+.det-dep-section {
+  margin-bottom: 0.75rem;
+}
+
+.det-dep-hdr {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.2rem 0.3rem;
+
+  &__name {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: $vino;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__stats {
+    font-size: 0.7rem;
+    color: $txt-mid;
+    white-space: nowrap;
+    strong { color: $txt-dark; }
+  }
+}
+
+// Tabla detalle 9 columnas (pantalla) — fuente más pequeña, scroll horizontal
+.det-table {
+  font-size: 10.5px;
+
+  th { font-size: 9px; }
+
+  .dt-proc  { width: 9%;  white-space: nowrap; }
+  .dt-cont  { width: 10%; white-space: nowrap; font-weight: 600; color: $vino; }
+  .dt-ca    { width: 7%;  text-align: center; color: $txt-mid; white-space: nowrap; }
+  .dt-fecha { width: 8%;  white-space: nowrap; text-align: center; }
+  .dt-desc  { width: 22%; }
+  .dt-part  { width: 7%;  text-align: center; }
+  .dt-giro  { width: 9%;  }
+  .dt-prov  { width: 18%; }
+  .dt-monto { width: 10%; text-align: right; font-weight: 600; white-space: nowrap; }
+}
+
 .print-only { display: none !important; }
 
+// ═══════════════════════════════════════════════════════════════════════════
+//  IMPRESIÓN / PDF
+// ═══════════════════════════════════════════════════════════════════════════
 @media print {
+  // Sin size: el navegador mantiene activa la opción Vertical/Horizontal en el cuadro de impresión.
+  @page {
+    margin: 10mm;
+  }
+
+  .rep-page {
+    background: white;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
   .no-print   { display: none !important; }
-  .print-only { display: flex !important; }
+  .print-only { display: block !important; }
 
-  // Encabezado institucional de impresión
-  .rep-print-header {
+  // ── Hoja PDF ──────────────────────────────────────────────────────────
+  // height: auto garantiza que la hoja solo ocupe lo que su contenido requiere.
+  // El salto de página se genera SOLO al pasar a la siguiente hoja lógica,
+  // no por relleno de espacio vacío.
+  .pdf-page {
+    width: 100%;
+    height: auto !important;
+    min-height: 0 !important;
+    &:not(.pdf-page--last) {
+      page-break-after: always;
+      break-after: page;
+    }
+  }
+
+  // ── Nombre de dependencia — texto plano encima de la tarjeta ─────────
+  .pdf-dep-name {
+    font-size: 8pt;
+    font-weight: 800;
+    color: $txt-dark;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 5pt 0 2pt;
+  }
+
+  .pdf-dep-name__cont {
+    font-size: 6pt;
+    font-weight: 400;
+    color: $txt-mid;
+    font-style: italic;
+    margin-left: 4pt;
+  }
+
+  // ── Tarjeta con borde izquierdo guinda ────────────────────────────────
+  .pdf-card {
+    background: white;
+    border: 0.75pt solid $gris-brd;
+    border-left: 2.5pt solid $vino;
+    border-radius: 4pt;
+    overflow: hidden;
+    margin-bottom: 5pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .pdf-card__foot {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.75rem;
-    padding: 6px 0 8px;
-    border-bottom: 2px solid $vino;
-    margin-bottom: 8px;
+    padding: 2pt 4pt;
+    background: $gris-pg !important;
+    border-top: 0.5pt solid $gris-brd;
+    font-size: 5.5pt;
+    color: $txt-light;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 
-    &__logo  { height: 34px; width: auto; }
-    &__org   { font-size: 10.5pt; font-weight: bold; color: $vino; }
-    &__sub   { font-size: 8pt; color: $txt-mid; font-style: italic; }
+    &-total {
+      font-size: 6.5pt;
+      color: $txt-dark;
+      font-family: 'Courier New', monospace;
+    }
   }
 
-  .rep-page   { background: white; }
+  // ── Encabezado institucional por hoja ─────────────────────────────────
+  // Fondo blanco con borde inferior guinda — logotipos en color original.
+  .pdf-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    background: white !important;
+    border-bottom: 2pt solid $vino;
+    padding: 3pt 4pt 2.5pt;
+    margin-bottom: 3pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 
-  .rep-title-row     { padding: 6px 0; border: none; background: none; }
-  .rep-title-capsule { font-size: 9.5pt; padding: 3px 18px; }
+    &__left {
+      display: flex;
+      align-items: center;
+      gap: 5pt;
+    }
 
-  .rep-controls { padding: 4px 0 6px; border: none; background: none; }
-  .rep-kpi {
-    padding: 2px 8px;
-    &__val { font-size: 9pt; }
-    &__lbl { font-size: 6.5pt; }
+    &__logo {
+      height: 22pt;
+      width: auto;
+      // Sin filtro: colores institucionales originales del escudo y logotipo
+    }
+
+    &__texts { display: flex; flex-direction: column; }
+
+    &__org {
+      font-size: 7pt;
+      font-weight: bold;
+      color: $vino !important;
+      letter-spacing: 0.04em;
+      line-height: 1.2;
+    }
+
+    &__sub {
+      font-size: 5pt;
+      color: $txt-mid !important;
+      font-style: italic;
+      margin-top: 0.5pt;
+    }
+
+    &__title {
+      font-size: 6.5pt;
+      font-weight: 700;
+      color: $vino !important;
+      letter-spacing: 0.04em;
+      text-align: right;
+      max-width: 40%;
+      line-height: 1.3;
+    }
   }
 
-  // Vista general
-  .rep-body  { margin: 0; border: none; box-shadow: none; border-radius: 0; }
-
-  // Vista concentrada — cada sección en hoja nueva
-  .rep-section {
-    margin: 0 0 4px;
-    border-radius: 0;
-    box-shadow: none;
-    page-break-inside: avoid;
-
-    &:not(.rep-section--first) { page-break-before: always; }
-
-    &__title { padding: 4px 8px; }
-    &__foot  { padding: 3px 8px; }
+  // ── KPIs por hoja ─────────────────────────────────────────────────────
+  .pdf-kpis {
+    display: flex !important;
+    gap: 4pt;
+    justify-content: center;
+    margin: 2pt 0 3pt;
   }
 
-  .rep-table {
-    font-size: 7.5pt;
-    th { font-size: 7pt; padding: 3px 5px; }
-    td { padding: 3px 5px; }
+  .pdf-kpi {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5pt 7pt;
+    border: 1.5pt solid $vino;
+    border-radius: 20pt;
+    background: white;
+    min-width: 70pt;
+
+    &__val {
+      font-size: 8pt;
+      font-weight: bold;
+      color: $vino;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    &__lbl {
+      font-size: 4.5pt;
+      font-weight: 600;
+      color: $txt-mid;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    &--monto {
+      border-color: $oro;
+      .pdf-kpi__val { color: $oro; font-size: 7pt; }
+    }
   }
 
-  .rep-totals { padding: 3px 8px; }
+  // ── Tabla PDF (5 columnas: Dependencia | Contrato | CA | Descripción | Monto) ──
+  .pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 6.5pt;
+    margin-bottom: 0;
+    table-layout: fixed;  // fija anchos declarados para evitar desbordamientos
 
-  .rep-footer {
-    margin: 6px 0 0;
-    border: none;
-    p { font-size: 7pt; }
+    thead tr {
+      background: $vino !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    th {
+      color: white;
+      font-size: 6pt;
+      font-weight: bold;
+      letter-spacing: 0.02em;
+      padding: 2pt 2.5pt;
+      text-align: center;
+      vertical-align: middle;
+      border-right: 0.5pt solid rgba(255,255,255,0.2);
+      white-space: normal;
+      line-height: 1.2;
+      word-break: break-word;
+      &:last-child { border-right: none; }
+    }
+
+    td {
+      padding: 1.5pt 2.5pt;
+      vertical-align: top;
+      border-bottom: 0.5pt solid $gris-brd;
+      border-right: 0.5pt solid $gris-brd;
+      color: $txt-dark;
+      line-height: 1.25;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      &:last-child { border-right: none; }
+    }
+
+    tbody tr {
+      background: white;
+      &.row-alt td {
+        background: $gris-row !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  }
+
+  // Anchos de columna PDF (5 cols con DEPENDENCIA — optimizados para Letter portrait 192mm útil)
+  .pdf-th-dep,      .pdf-td-dep      { width: 27%; font-size: 6pt; text-align: center; }
+  .pdf-th-contrato, .pdf-td-contrato { width: 13%; color: $vino; font-weight: 600; font-size: 6pt; }
+  .pdf-th-ca,       .pdf-td-ca       { width: 9%;  text-align: center; color: $txt-mid; font-size: 6pt; }
+  .pdf-th-desc,     .pdf-td-desc     { width: 35%; font-size: 6pt; }
+  .pdf-th-monto,    .pdf-td-monto    { width: 16%; text-align: right; font-weight: 600; font-size: 6pt; white-space: nowrap; }
+
+  // ── Detalle por Dependencia — encabezado de sección ──────────────────
+  .pdf-det-dep-hdr {
+    display: flex !important;
+    align-items: baseline;
+    gap: 6pt;
+    background: $vino !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 2pt 4pt;
+    border-radius: 2pt;
+    margin-bottom: 2pt;
+
+    &__name {
+      font-size: 7pt;
+      font-weight: bold;
+      color: white !important;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    &__cont {
+      font-size: 5.5pt;
+      color: rgba(255,255,255,0.75) !important;
+      font-style: italic;
+    }
+  }
+
+  // ── Tabla PDF Detalle (9 columnas) ───────────────────────────────────
+  .pdf-det-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 5.5pt;
+    table-layout: fixed;
+    margin-bottom: 0;
+
+    thead tr {
+      background: $vino !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    th {
+      color: white;
+      font-size: 5pt;
+      font-weight: bold;
+      letter-spacing: 0.02em;
+      padding: 2pt 2pt;
+      text-align: center;
+      vertical-align: middle;
+      border-right: 0.5pt solid rgba(255,255,255,0.2);
+      white-space: normal;
+      line-height: 1.15;
+      word-break: break-word;
+      &:last-child { border-right: none; }
+    }
+
+    td {
+      padding: 1.5pt 2pt;
+      vertical-align: top;
+      border-bottom: 0.5pt solid $gris-brd;
+      border-right: 0.5pt solid $gris-brd;
+      color: $txt-dark;
+      line-height: 1.2;
+      word-break: break-word;
+      overflow-wrap: break-word;
+      &:last-child { border-right: none; }
+    }
+
+    tbody tr {
+      background: white;
+      &.row-alt td {
+        background: $gris-row !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  }
+
+  // Anchos columnas PDF Detalle (9 cols, Letter portrait ~192mm útil)
+  .pdt-proc  { width: 9%;  }
+  .pdt-cont  { width: 10%; color: $vino; font-weight: 600; }
+  .pdt-ca    { width: 7%;  text-align: center; color: $txt-mid; }
+  .pdt-fecha { width: 8%;  text-align: center; }
+  .pdt-desc  { width: 22%; }
+  .pdt-part  { width: 7%;  text-align: center; }
+  .pdt-giro  { width: 9%;  }
+  .pdt-prov  { width: 18%; }
+  .pdt-monto { width: 10%; text-align: right; font-weight: 600; white-space: nowrap; }
+
+  // ── Pie de página con numeración ──────────────────────────────────────
+  .pdf-footer {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-top: 0.5pt solid $gris-brd;
+    padding-top: 2.5pt;
+    margin-top: 3pt;
+
+    &__source {
+      font-size: 5pt;
+      color: $txt-light;
+      font-style: italic;
+      max-width: 75%;
+      line-height: 1.3;
+    }
+
+    &__page {
+      font-size: 6.5pt;
+      font-weight: bold;
+      color: $vino;
+      white-space: nowrap;
+    }
   }
 }

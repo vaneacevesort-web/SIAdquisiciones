@@ -1,8 +1,6 @@
 <div class="rep-page">
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       ENCABEZADO INSTITUCIONAL — pantalla
-  ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ══ Encabezado institucional ════════════════════════════════════════ -->
   <header class="rep-header no-print">
     <div class="rep-header__left">
       <img src="/images/oficialia_mayor.svg"
@@ -16,39 +14,10 @@
         </span>
       </div>
     </div>
-    @if (filtroDepNombre) {
-      <button class="rep-btn-clear" (click)="quitarFiltros()">QUITAR FILTROS</button>
-    }
+    <h2 class="rep-header__title" [innerHTML]="tituloEncabezado"></h2>
   </header>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       ENCABEZADO SOLO IMPRESIÓN
-  ═══════════════════════════════════════════════════════════════════════ -->
-  <header class="rep-print-header print-only">
-    <img src="/images/oficialia_mayor.svg"
-         class="rep-print-header__logo"
-         alt="Oficialía Mayor"
-         onerror="this.onerror=null;this.src='/images/oficialia_mayor.png'">
-    <div>
-      <div class="rep-print-header__org">OFICIALÍA MAYOR</div>
-      <div class="rep-print-header__sub">
-        Seguimiento al Proceso de Adquisición y Contratación de Servicios
-      </div>
-    </div>
-  </header>
-
-  <!-- ══════════════════════════════════════════════════════════════════════
-       TÍTULO CENTRADO EN CÁPSULA
-  ═══════════════════════════════════════════════════════════════════════ -->
-  <div class="rep-title-row">
-    <h2 class="rep-title-capsule">
-      CONTRATOS ESTATALES POR DEPENDENCIA {{ anioActual }}
-    </h2>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════════════════════
-       LOADING / ERROR
-  ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ══ Loading / Error ═══════════════════════════════════════════════════ -->
   @if (cargando) {
     <div class="rep-state">
       <div class="spinner-border spinner-border-sm me-2" style="color:#741530"></div>
@@ -60,181 +29,401 @@
     </div>
   } @else {
 
-    <!-- ════════════════════════════════════════════════════════════════
-         BARRA DE CONTROLES: filtro · KPIs · botón PDF
-    ═══════════════════════════════════════════════════════════════════ -->
-    <div class="rep-controls">
+    <!-- ══ Indicadores ═══════════════════════════════════════════════════ -->
+    <div class="rep-kpis-bar no-print">
+      <div class="rep-kpi">
+        <span class="rep-kpi__val">{{ totalSolicitudes }}</span>
+        <span class="rep-kpi__lbl">TOTAL DE SOLICITUDES</span>
+      </div>
+      <div class="rep-kpi">
+        <span class="rep-kpi__val">{{ totalContratos }}</span>
+        <span class="rep-kpi__lbl">TOTAL DE CONTRATOS</span>
+      </div>
+      <div class="rep-kpi rep-kpi--monto">
+        <span class="rep-kpi__val">{{ pesos(montoTotal) }}</span>
+        <span class="rep-kpi__lbl">MONTO TOTAL CONTRATADO</span>
+      </div>
+    </div>
 
-      <!-- Filtro dependencia -->
-      <div class="rep-filter no-print">
-        <div class="dropdown">
-          <button class="rep-filter__btn dropdown-toggle" type="button"
-                  data-bs-toggle="dropdown" aria-expanded="false">
-            DEPENDENCIA
+    <!-- ══ Pestañas ═══════════════════════════════════════════════════════ -->
+    <div class="rep-tabs no-print">
+      <button class="rep-tab" [class.rep-tab--active]="vistaActiva === 'concentrado'"
+              (click)="cambiarVista('concentrado')">
+        <i class="feather icon-list me-1"></i>Concentrado Estatales
+      </button>
+      <button class="rep-tab" [class.rep-tab--active]="vistaActiva === 'federal'"
+              (click)="cambiarVista('federal')">
+        <i class="feather icon-globe me-1"></i>Concentrado Federal
+      </button>
+      <button class="rep-tab" [class.rep-tab--active]="vistaActiva === 'detalle'"
+              (click)="cambiarVista('detalle')">
+        <i class="feather icon-layers me-1"></i>Detalle por Dependencias Estatales
+      </button>
+    </div>
+
+    <!-- ══ Controles: filtro · botón PDF ══════════════════════════════════ -->
+    <div class="rep-controls no-print">
+
+      <div class="rep-filter-wrap">
+        <div class="rep-dropdown">
+          <button class="rep-filter__btn" type="button" (click)="toggleMenuDep()"
+                  [class.rep-filter__btn--active]="filtroActivo">
+            <i class="feather icon-filter me-1"></i>
+            <span class="rep-filter__btn-text">{{ etiquetaFiltro }}</span>
+            <i class="feather icon-chevron-down ms-1 rep-filter__chevron"
+               [class.rep-filter__chevron--open]="mostrarMenuDep"></i>
           </button>
-          <ul class="dropdown-menu rep-filter__menu">
-            <li>
-              <button class="dropdown-item rep-filter__all" (click)="quitarFiltros()">
-                — Todas las dependencias —
-              </button>
-            </li>
-            <li><hr class="dropdown-divider my-1"></li>
-            @for (dep of dependencias; track dep.nombre) {
+          @if (mostrarMenuDep) {
+            <ul class="rep-dropdown__menu">
               <li>
-                <button class="dropdown-item"
-                        [class.active]="filtroDepNombre === dep.nombre"
-                        (click)="seleccionarDep(dep.nombre)">
-                  {{ dep.nombre }}
+                <button class="rep-dropdown__item rep-filter__all" (click)="quitarFiltros()">
+                  — Todas las dependencias —
                 </button>
               </li>
-            }
-          </ul>
+              <li><hr class="rep-dropdown__divider"></li>
+              @for (nombre of dependenciasUnicas; track nombre) {
+                <li>
+                  <button class="rep-dropdown__item"
+                          [class.active]="esDependenciaSeleccionada(nombre)"
+                          (click)="toggleDep(nombre)">
+                    <span class="rep-dropdown__check">
+                      @if (esDependenciaSeleccionada(nombre)) {
+                        <i class="feather icon-check"></i>
+                      }
+                    </span>
+                    {{ nombre }}
+                  </button>
+                </li>
+              }
+            </ul>
+          }
         </div>
+        @if (filtroActivo) {
+          <button class="rep-btn-clear" (click)="quitarFiltros()">
+            <i class="feather icon-x me-1"></i>LIMPIAR
+          </button>
+        }
       </div>
 
-      <!-- KPI ovalados -->
-      <div class="rep-kpis">
-        <div class="rep-kpi">
-          <span class="rep-kpi__val">{{ totalSolicitudes }}</span>
-          <span class="rep-kpi__lbl">TOTAL DE SOLICITUDES</span>
-        </div>
-        <div class="rep-kpi">
-          <span class="rep-kpi__val">{{ totalContratos }}</span>
-          <span class="rep-kpi__lbl">TOTAL DE CONTRATOS</span>
-        </div>
-        <div class="rep-kpi rep-kpi--monto">
-          <span class="rep-kpi__val">{{ pesos(montoTotal) }}</span>
-          <span class="rep-kpi__lbl">MONTO TOTAL</span>
-        </div>
+      <div class="rep-actions">
+        <button class="rep-btn-pdf" (click)="imprimirPDF()">
+          <i class="feather icon-printer me-1"></i>EXPORTAR PDF
+        </button>
       </div>
-
-      <!-- Botón PDF -->
-      <button class="rep-btn-pdf no-print" (click)="imprimirPDF()">
-        <i class="feather icon-printer me-1"></i>IMPRIMIR INFORME EN PDF
-      </button>
 
     </div>
 
-    <!-- ════════════════════════════════════════════════════════════════
-         CUERPO — vista general (sin filtro): tabla plana
-    ═══════════════════════════════════════════════════════════════════ -->
-    @if (!filtroDepNombre) {
 
-      <div class="rep-body">
-        @if (gruposDependencia.length === 0) {
+    <!-- ══════════════════════════════════════════════════════════════════════
+         VISTAS CONCENTRADO (Estatales y Federal) — misma estructura de tabla
+    ════════════════════════════════════════════════════════════════════════ -->
+    @if (vistaActiva === 'concentrado' || vistaActiva === 'federal') {
+
+      <!-- Tabla pantalla -->
+      <div class="rep-body no-print">
+        @if (contratosOrdenados.length === 0) {
           <div class="rep-empty">
             <i class="feather icon-inbox"></i>
-            <p>No hay contratos registrados en el sistema.</p>
+            <p>
+              No hay contratos {{ vistaActiva === 'federal' ? 'federales' : 'estatales' }}
+              registrados{{ filtroActivo ? ' para las dependencias seleccionadas' : '' }}.
+            </p>
           </div>
         } @else {
-          <div class="rep-table-wrap">
-            <table class="rep-table">
-              <thead>
-                <tr>
-                  <th>DEPENDENCIA</th>
-                  <th>No. CONTRATO</th>
-                  <th>NO. CA</th>
-                  <th class="th-desc">DESCRIPCIÓN DE CLAVE DE VERIFICACIÓN</th>
-                  <th class="th-monto">MONTO DEL CONTRATO</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (c of contratosFiltrados; track c.id_solicitud; let i = $index) {
-                  <tr [class.row-alt]="i % 2 !== 0">
-                    <td class="td-dep">{{ c.dependencia_nombre || '—' }}</td>
-                    <td class="td-contrato">{{ c.no_contrato || '—' }}</td>
-                    <td>{{ c.no_solicitud || '—' }}</td>
-                    <td class="td-desc">{{ c.descripcion || '—' }}</td>
-                    <td class="td-monto">{{ pesos(c.monto) }}</td>
+          <div class="rep-card">
+            <div class="rep-table-wrap">
+              <table class="rep-table">
+                <thead>
+                  <tr>
+                    <th class="th-dep">DEPENDENCIA</th>
+                    <th class="th-contrato">No. DE CONTRATO</th>
+                    <th class="th-ca">No. CA</th>
+                    <th class="th-desc">DESCRIPCIÓN DE LA CLAVE DE VERIFICACIÓN</th>
+                    <th class="th-monto">MONTO DEL CONTRATO</th>
                   </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Totales al pie -->
-          <div class="rep-totals">
-            <span>{{ contratosFiltrados.length }} – {{ contratosFiltrados.length }} / {{ contratosFiltrados.length }}</span>
-            <span class="rep-totals__total">
-              TOTAL: &nbsp;<strong>{{ pesos(montoTotal) }}</strong>
-            </span>
+                </thead>
+                <tbody>
+                  @for (c of contratosOrdenados; track c.id_solicitud; let i = $index) {
+                    <tr [class.row-alt]="i % 2 !== 0"
+                        [class.row-grupo]="esCambioDeGrupo(i)">
+                      <td class="td-dep">{{ c.dependencia_nombre || '—' }}</td>
+                      <td class="td-contrato">{{ c.no_contrato || '—' }}</td>
+                      <td class="td-ca">{{ c.no_solicitud || '—' }}</td>
+                      <td class="td-desc">{{ c.descripcion || '—' }}</td>
+                      <td class="td-monto">{{ pesos(c.monto) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="rep-card__foot">
+              <span>{{ contratosOrdenados.length }} registro(s)</span>
+              <span class="rep-card__foot-total">
+                MONTO TOTAL:&nbsp;&nbsp;<strong>{{ pesos(montoTotal) }}</strong>
+              </span>
+            </div>
           </div>
         }
       </div>
 
-    }
+      <!-- PDF páginas — Concentrado (título dinámico según vista) -->
+      @for (pg of paginasPDF; track $index; let last = $last) {
+        <div class="pdf-page print-only" [class.pdf-page--last]="last">
 
-    <!-- ════════════════════════════════════════════════════════════════
-         CUERPO — vista concentrada (con filtro): secciones por dep
-    ═══════════════════════════════════════════════════════════════════ -->
-    @if (filtroDepNombre) {
+          <div class="pdf-header">
+            <div class="pdf-header__left">
+              <img src="/images/oficialia_mayor.svg" class="pdf-header__logo" alt="Oficialía Mayor"
+                   onerror="this.onerror=null;this.src='/images/oficialia_mayor.png'">
+              <div class="pdf-header__texts">
+                <div class="pdf-header__org">OFICIALÍA MAYOR</div>
+                <div class="pdf-header__sub">
+                  Seguimiento al Proceso de Adquisición y Contratación de Servicios.
+                </div>
+              </div>
+            </div>
+            <div class="pdf-header__title">{{ tituloPDF }}</div>
+          </div>
 
-      @if (gruposDependencia.length === 0) {
-        <div class="rep-empty">
-          <i class="feather icon-inbox"></i>
-          <p>No hay contratos para la dependencia seleccionada.</p>
-        </div>
-      }
+          <div class="pdf-kpis">
+            <div class="pdf-kpi">
+              <span class="pdf-kpi__val">{{ totalSolicitudes }}</span>
+              <span class="pdf-kpi__lbl">TOTAL DE SOLICITUDES</span>
+            </div>
+            <div class="pdf-kpi">
+              <span class="pdf-kpi__val">{{ totalContratos }}</span>
+              <span class="pdf-kpi__lbl">TOTAL DE CONTRATOS</span>
+            </div>
+            <div class="pdf-kpi pdf-kpi--monto">
+              <span class="pdf-kpi__val">{{ pesos(montoTotal) }}</span>
+              <span class="pdf-kpi__lbl">MONTO TOTAL CONTRATADO</span>
+            </div>
+          </div>
 
-      @for (grupo of gruposDependencia; track grupo.nombre; let first = $first) {
-
-        <div class="rep-section" [class.rep-section--first]="first">
-
-          <!-- Nombre de la dependencia -->
-          <div class="rep-section__title">{{ grupo.nombre | uppercase }}</div>
-
-          <!-- Tabla concentrada (todas las columnas) -->
-          <div class="rep-table-wrap">
-            <table class="rep-table">
+          <div class="pdf-card">
+            <table class="pdf-table">
               <thead>
                 <tr>
-                  <th>No. PROCEDIMIENTO</th>
-                  <th>No. CONTRATO</th>
-                  <th>No. SOLICITUD</th>
-                  <th>FECHA DE ADJUDICACIÓN</th>
-                  <th class="th-desc">DESCRIPCIÓN DE CLAVE DE VERIFICACIÓN</th>
-                  <th>PARTIDA</th>
-                  <th>GIRO</th>
-                  <th class="th-prov">NOMBRE O RAZÓN SOCIAL DEL PROVEEDOR ADJUDICADO</th>
-                  <th class="th-monto">MONTO DEL CONTRATO</th>
+                  <th class="pdf-th-dep">DEPENDENCIA</th>
+                  <th class="pdf-th-contrato">No. DE CONTRATO</th>
+                  <th class="pdf-th-ca">No. CA</th>
+                  <th class="pdf-th-desc">DESCRIPCIÓN DE LA CLAVE DE VERIFICACIÓN</th>
+                  <th class="pdf-th-monto">MONTO DEL CONTRATO</th>
                 </tr>
               </thead>
               <tbody>
-                @for (c of grupo.contratos; track c.id_solicitud; let i = $index) {
+                @for (c of pg.registros; track c.id_solicitud; let i = $index) {
                   <tr [class.row-alt]="i % 2 !== 0">
-                    <td>{{ c.no_procedimiento || '—' }}</td>
-                    <td class="td-contrato">{{ c.no_contrato || '—' }}</td>
-                    <td>{{ c.no_solicitud || '—' }}</td>
-                    <td class="td-fecha">{{ formatFecha(c.fecha_adjudicacion) }}</td>
-                    <td class="td-desc">{{ c.descripcion || '—' }}</td>
-                    <td class="td-sm">{{ c.partida || '—' }}</td>
-                    <td class="td-sm">{{ c.giro || '—' }}</td>
-                    <td class="td-prov">{{ c.proveedor_razon_social || '—' }}</td>
-                    <td class="td-monto">{{ pesos(c.monto) }}</td>
+                    <td class="pdf-td-dep">{{ c.dependencia_nombre || '—' }}</td>
+                    <td class="pdf-td-contrato">{{ c.no_contrato || '—' }}</td>
+                    <td class="pdf-td-ca">{{ c.no_solicitud || '—' }}</td>
+                    <td class="pdf-td-desc">{{ c.descripcion || '—' }}</td>
+                    <td class="pdf-td-monto">{{ pesos(c.monto) }}</td>
                   </tr>
                 }
               </tbody>
             </table>
+            <div class="pdf-card__foot">
+              <span>
+                Registros {{ (pg.numPagina - 1) * pageSize + 1 }}
+                – {{ (pg.numPagina - 1) * pageSize + pg.registros.length }}
+                de {{ contratosOrdenados.length }}
+              </span>
+              @if (pg.numPagina === pg.totalPaginas) {
+                <span class="pdf-card__foot-total">
+                  MONTO TOTAL:&nbsp;&nbsp;<strong>{{ pesos(montoTotal) }}</strong>
+                </span>
+              }
+            </div>
           </div>
 
-          <!-- Pie de sección -->
-          <div class="rep-section__foot">
-            <span>1 – {{ grupo.contratos.length }} / {{ grupo.contratos.length }}</span>
-            <span class="rep-section__foot-total">
-              TOTAL: &nbsp;<strong>{{ pesos(grupo.monto) }}</strong>
+          <div class="pdf-footer">
+            <span class="pdf-footer__source">
+              Fuente: Tabla realizada con base en información obtenida por la Dirección de Recursos Materiales.
+              Dependencias conforme al Artículo 23 de la Ley Orgánica de la Administración Pública del Estado de México.
             </span>
+            <span class="pdf-footer__page">Página {{ pg.numPagina }} de {{ pg.totalPaginas }}</span>
           </div>
 
         </div>
-
       }
 
     }
 
-    <!-- ════════════════════════════════════════════════════════════════
-         PIE DEL DOCUMENTO
-    ═══════════════════════════════════════════════════════════════════ -->
-    <div class="rep-footer">
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         VISTA DETALLE POR DEPENDENCIA
+    ════════════════════════════════════════════════════════════════════════ -->
+    @if (vistaActiva === 'detalle') {
+
+      <div class="rep-body no-print">
+        @if (gruposPorDependencia.length === 0) {
+          <div class="rep-empty">
+            <i class="feather icon-inbox"></i>
+            <p>No hay contratos registrados{{ filtroActivo ? ' para las dependencias seleccionadas' : '' }}.</p>
+          </div>
+        } @else {
+          @for (grupo of gruposPorDependencia; track grupo.nombre) {
+            <div class="det-dep-section">
+              <div class="det-dep-hdr">
+                <span class="det-dep-hdr__name">{{ grupo.nombre }}</span>
+                <span class="det-dep-hdr__stats">
+                  {{ grupo.contratos.length }} registro(s) &nbsp;·&nbsp;
+                  {{ grupo.totalContratos }} contrato(s) &nbsp;·&nbsp;
+                  <strong>{{ pesos(grupo.totalMonto) }}</strong>
+                </span>
+              </div>
+              <div class="rep-card">
+                <div class="rep-table-wrap">
+                  <table class="rep-table det-table">
+                    <thead>
+                      <tr>
+                        <th class="dt-proc">No. PROCEDIMIENTO</th>
+                        <th class="dt-cont">No. CONTRATO</th>
+                        <th class="dt-ca">No. CA</th>
+                        <th class="dt-fecha">FECHA ADJ.</th>
+                        <th class="dt-desc">DESCRIPCIÓN</th>
+                        <th class="dt-part">PARTIDA</th>
+                        <th class="dt-giro">GIRO</th>
+                        <th class="dt-prov">PROVEEDOR</th>
+                        <th class="dt-monto">MONTO</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (c of grupo.contratos; track c.id_solicitud; let i = $index) {
+                        <tr [class.row-alt]="i % 2 !== 0">
+                          <td class="dt-proc">{{ c.no_procedimiento || '—' }}</td>
+                          <td class="dt-cont td-contrato">{{ c.no_contrato || '—' }}</td>
+                          <td class="dt-ca td-ca">{{ c.no_solicitud || '—' }}</td>
+                          <td class="dt-fecha">{{ fecha(c.fecha_adjudicacion) }}</td>
+                          <td class="dt-desc">{{ c.descripcion || '—' }}</td>
+                          <td class="dt-part">{{ c.partida || '—' }}</td>
+                          <td class="dt-giro">{{ c.giro || '—' }}</td>
+                          <td class="dt-prov">{{ c.proveedor_razon_social || '—' }}</td>
+                          <td class="dt-monto td-monto">{{ pesos(c.monto) }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                <div class="rep-card__foot">
+                  <span>{{ grupo.contratos.length }} registro(s)</span>
+                  <span class="rep-card__foot-total">
+                    SUBTOTAL:&nbsp;&nbsp;<strong>{{ pesos(grupo.totalMonto) }}</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- PDF páginas — Detalle por Dependencia -->
+      @for (pg of paginasDetallePDF; track $index; let last = $last) {
+        <div class="pdf-page print-only" [class.pdf-page--last]="last">
+
+          <div class="pdf-header">
+            <div class="pdf-header__left">
+              <img src="/images/oficialia_mayor.svg" class="pdf-header__logo" alt="Oficialía Mayor"
+                   onerror="this.onerror=null;this.src='/images/oficialia_mayor.png'">
+              <div class="pdf-header__texts">
+                <div class="pdf-header__org">OFICIALÍA MAYOR</div>
+                <div class="pdf-header__sub">
+                  Seguimiento al Proceso de Adquisición y Contratación de Servicios.
+                </div>
+              </div>
+            </div>
+            <div class="pdf-header__title">
+              DETALLE POR DEPENDENCIA · CONTRATOS ESTATALES {{ anioActual }}
+            </div>
+          </div>
+
+          <div class="pdf-kpis">
+            <div class="pdf-kpi">
+              <span class="pdf-kpi__val">{{ totalSolicitudes }}</span>
+              <span class="pdf-kpi__lbl">TOTAL DE SOLICITUDES</span>
+            </div>
+            <div class="pdf-kpi">
+              <span class="pdf-kpi__val">{{ totalContratos }}</span>
+              <span class="pdf-kpi__lbl">TOTAL DE CONTRATOS</span>
+            </div>
+            <div class="pdf-kpi pdf-kpi--monto">
+              <span class="pdf-kpi__val">{{ pesos(montoTotal) }}</span>
+              <span class="pdf-kpi__lbl">MONTO TOTAL CONTRATADO</span>
+            </div>
+          </div>
+
+          <div class="pdf-det-dep-hdr">
+            <span class="pdf-det-dep-hdr__name">{{ pg.depNombre }}</span>
+            @if (pg.totalPaginasDep > 1) {
+              <span class="pdf-det-dep-hdr__cont">
+                (página {{ pg.numPaginaDep }} de {{ pg.totalPaginasDep }})
+              </span>
+            }
+          </div>
+
+          <div class="pdf-card">
+            <table class="pdf-det-table">
+              <thead>
+                <tr>
+                  <th class="pdt-proc">No. PROC.</th>
+                  <th class="pdt-cont">No. CONTRATO</th>
+                  <th class="pdt-ca">No. CA</th>
+                  <th class="pdt-fecha">FECHA ADJ.</th>
+                  <th class="pdt-desc">DESCRIPCIÓN</th>
+                  <th class="pdt-part">PARTIDA</th>
+                  <th class="pdt-giro">GIRO</th>
+                  <th class="pdt-prov">PROVEEDOR</th>
+                  <th class="pdt-monto">MONTO</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of pg.registros; track c.id_solicitud; let i = $index) {
+                  <tr [class.row-alt]="i % 2 !== 0">
+                    <td class="pdt-proc">{{ c.no_procedimiento || '—' }}</td>
+                    <td class="pdt-cont">{{ c.no_contrato || '—' }}</td>
+                    <td class="pdt-ca">{{ c.no_solicitud || '—' }}</td>
+                    <td class="pdt-fecha">{{ fecha(c.fecha_adjudicacion) }}</td>
+                    <td class="pdt-desc">{{ c.descripcion || '—' }}</td>
+                    <td class="pdt-part">{{ c.partida || '—' }}</td>
+                    <td class="pdt-giro">{{ c.giro || '—' }}</td>
+                    <td class="pdt-prov">{{ c.proveedor_razon_social || '—' }}</td>
+                    <td class="pdt-monto">{{ pesos(c.monto) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            <div class="pdf-card__foot">
+              <span>
+                Registros {{ (pg.numPaginaDep - 1) * pageSizeDetalle + 1 }}
+                – {{ (pg.numPaginaDep - 1) * pageSizeDetalle + pg.registros.length }}
+                de {{ pg.totalMontoDep > 0 ? pg.totalContratosDep : 0 }}
+              </span>
+              @if (pg.esUltimaPaginaDep) {
+                <span class="pdf-card__foot-total">
+                  SUBTOTAL:&nbsp;&nbsp;<strong>{{ pesos(pg.totalMontoDep) }}</strong>
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="pdf-footer">
+            <span class="pdf-footer__source">
+              Fuente: Tabla realizada con base en información obtenida por la Dirección de Recursos Materiales.
+              Dependencias conforme al Artículo 23 de la Ley Orgánica de la Administración Pública del Estado de México.
+            </span>
+            <span class="pdf-footer__page">
+              Página {{ pg.numPaginaGlobal }} de {{ pg.totalPaginasGlobal }}
+            </span>
+          </div>
+
+        </div>
+      }
+
+    }
+
+
+    <!-- ══ Pie del documento (pantalla) ══════════════════════════════════ -->
+    <div class="rep-footer no-print">
       <p>
         <strong>Fuente:</strong> Tabla realizada con base en información obtenida
         por la Dirección de Recursos Materiales.

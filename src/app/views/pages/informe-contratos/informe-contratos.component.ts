@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -28,11 +28,35 @@ interface DepFiltro {
   nombre: string;
 }
 
+interface PaginaPDF {
+  registros: Contrato[];
+  numPagina: number;
+  totalPaginas: number;
+}
+
 interface GrupoDep {
   nombre: string;
   contratos: Contrato[];
-  monto: number;
+  totalMonto: number;
+  totalContratos: number;
 }
+
+interface PaginaDetallePDF {
+  depNombre: string;
+  registros: Contrato[];
+  numPaginaDep: number;
+  totalPaginasDep: number;
+  esUltimaPaginaDep: boolean;
+  totalMontoDep: number;
+  totalContratosDep: number;
+  numPaginaGlobal: number;
+  totalPaginasGlobal: number;
+}
+
+type Vista = 'concentrado' | 'federal' | 'detalle';
+
+const PAGE_SIZE         = 24;
+const PAGE_SIZE_DETALLE = 20;
 
 @Component({
   selector: 'app-informe-contratos',
@@ -45,6 +69,9 @@ export class InformeContratosComponent implements OnInit {
 
   private registroService = inject(RegistroService);
 
+  readonly pageSize        = PAGE_SIZE;
+  readonly pageSizeDetalle = PAGE_SIZE_DETALLE;
+
   cargando = true;
   error = '';
   readonly anioActual = new Date().getFullYear();
@@ -54,16 +81,18 @@ export class InformeContratosComponent implements OnInit {
   dependencias: DepFiltro[] = [];
   solicitudesPorDep: Record<string, number> = {};
 
-  filtroDepNombre = '';
+  filtrosDep: Set<string> = new Set();
+  mostrarMenuDep = false;
+  readonly vistaActiva = signal<Vista>('concentrado');
 
   ngOnInit(): void {
     this.registroService.getInformeContratos().subscribe({
       next: (resp: any) => {
         if (resp?.ok && resp.data) {
-          this.totalSolicitudesGlobal  = resp.data.total_solicitudes  ?? 0;
-          this.contratos               = resp.data.contratos          ?? [];
-          this.dependencias            = resp.data.dependencias       ?? [];
-          this.solicitudesPorDep       = resp.data.solicitudes_por_dep ?? {};
+          this.totalSolicitudesGlobal = resp.data.total_solicitudes   ?? 0;
+          this.contratos              = resp.data.contratos           ?? [];
+          this.dependencias           = resp.data.dependencias        ?? [];
+          this.solicitudesPorDep      = resp.data.solicitudes_por_dep ?? {};
         }
         this.cargando = false;
       },
@@ -74,55 +103,207 @@ export class InformeContratosComponent implements OnInit {
     });
   }
 
-  // ── KPIs reactivos ────────────────────────────────────────────────────────
-
-  get totalSolicitudes(): number {
-    if (!this.filtroDepNombre) return this.totalSolicitudesGlobal;
-    return this.solicitudesPorDep[this.filtroDepNombre] ?? 0;
+  // ── Cierre del menú al clic fuera ────────────────────────────────────────
+  @HostListener('document:click', ['$event.target'])
+  onDocumentClick(target: EventTarget | null): void {
+    if (this.mostrarMenuDep && !(target as HTMLElement)?.closest('.rep-filter-wrap')) {
+      this.mostrarMenuDep = false;
+    }
   }
 
+  // ── Menú filtro ───────────────────────────────────────────────────────────
+
+  get filtroActivo(): boolean { return this.filtrosDep.size > 0; }
+
+  get etiquetaFiltro(): string {
+    const n = this.filtrosDep.size;
+    if (n === 0) return 'DEPENDENCIA';
+    if (n === 1) return Array.from(this.filtrosDep)[0];
+    return `${n} dependencias seleccionadas`;
+  }
+
+  get dependenciasUnicas(): string[] {
+    const nombres = new Set<string>();
+    for (const c of this.contratos) {
+      const n = c.dependencia_nombre?.trim();
+      if (n) nombres.add(n);
+    }
+    return Array.from(nombres).sort((a, b) => a.localeCompare(b, 'es'));
+  }
+
+  esDependenciaSeleccionada(nombre: string): boolean {
+    return this.filtrosDep.has(nombre.trim());
+  }
+
+  // ── Cadena de filtrado ────────────────────────────────────────────────────
+
+  // 1. Filtro de dependencia seleccionada
   get contratosFiltrados(): Contrato[] {
-    if (!this.filtroDepNombre) return this.contratos;
-    return this.contratos.filter(c => c.dependencia_nombre === this.filtroDepNombre);
+    if (!this.filtroActivo) return this.contratos;
+    return this.contratos.filter(c => {
+      const n = c.dependencia_nombre?.trim().toLowerCase();
+      return n ? [...this.filtrosDep].some(f => f.toLowerCase() === n) : false;
+    });
   }
 
+  // 2. Validez de contrato: tiene número real, no es desierto/cancelado, monto > 0
+  private esContratoValido(c: Contrato): boolean {
+    const no = c.no_contrato?.trim().toLowerCase() ?? '';
+    return no.length > 0
+      && no !== 'desierto'
+      && no !== 'cancelado'
+      && no !== 'rechazado'
+      && (c.monto ?? 0) > 0;
+  }
+
+  // 3. Todos los contratos válidos (dep-filtrados)
+  get contratosEfectivos(): Contrato[] {
+    return this.contratosFiltrados.filter(c => this.esContratoValido(c));
+  }
+
+  // 4a. Solo estatales válidos
+  get contratosEstatalesEfectivos(): Contrato[] {
+    return this.contratosEfectivos.filter(
+      c => c.origen_recurso?.toLowerCase().includes('estatal')
+    );
+  }
+
+  // 4b. Solo federales válidos
+  get contratosFederalesEfectivos(): Contrato[] {
+    return this.contratosEfectivos.filter(
+      c => c.origen_recurso?.toLowerCase().includes('federal')
+    );
+  }
+
+  // 5. Dataset de la vista activa (usado por KPIs y tabla)
+  //    'concentrado' y 'detalle' → estatales  |  'federal' → federales
+  get contratosVistaActiva(): Contrato[] {
+    if (this.vistaActiva() === 'federal') return this.contratosFederalesEfectivos;
+    return this.contratosEstatalesEfectivos;
+  }
+
+  // 6. Contratos ordenados — adapta a la vista (base para PDF y tabla)
+  get contratosOrdenados(): Contrato[] {
+    return [...this.contratosVistaActiva].sort((a, b) =>
+      (a.dependencia_nombre || '').localeCompare(b.dependencia_nombre || '', 'es')
+    );
+  }
+
+  // ── KPIs ──────────────────────────────────────────────────────────────────
+
+  // Universo completo de solicitudes del origen activo (incluye desiertos, cancelados)
+  get totalSolicitudes(): number {
+    const origen = this.vistaActiva === 'federal' ? 'federal' : 'estatal';
+    const base = this.contratosFiltrados.filter(
+      c => c.origen_recurso?.toLowerCase().includes(origen)
+    );
+    return new Set(base.map(c => c.id_solicitud)).size;
+  }
+
+  // Solo solicitudes que concluyeron en contrato formalizado (monto > 0, no desierto)
   get totalContratos(): number {
-    return this.contratosFiltrados.length;
+    return this.contratosVistaActiva.length;
   }
 
+  // Suma de montos de contratos formalizados
   get montoTotal(): number {
-    return this.contratosFiltrados.reduce((s, c) => s + (c.monto ?? 0), 0);
+    return this.contratosVistaActiva.reduce((s, c) => s + (c.monto ?? 0), 0);
   }
 
-  // ── Agrupación por dependencia ────────────────────────────────────────────
+  // ── Ayudantes de tabla ────────────────────────────────────────────────────
 
-  get gruposDependencia(): GrupoDep[] {
+  esCambioDeGrupo(index: number): boolean {
+    if (index === 0) return false;
+    const lista = this.contratosOrdenados;
+    return lista[index]?.dependencia_nombre !== lista[index - 1]?.dependencia_nombre;
+  }
+
+  // ── Grupos para vista Detalle ─────────────────────────────────────────────
+  get gruposPorDependencia(): GrupoDep[] {
     const mapa = new Map<string, Contrato[]>();
-    for (const c of this.contratosFiltrados) {
-      const dep = c.dependencia_nombre || 'Sin dependencia asignada';
+    for (const c of this.contratosOrdenados) {
+      const dep = c.dependencia_nombre?.trim() || '(Sin dependencia)';
       if (!mapa.has(dep)) mapa.set(dep, []);
       mapa.get(dep)!.push(c);
     }
     return Array.from(mapa.entries()).map(([nombre, contratos]) => ({
       nombre,
       contratos,
-      monto: contratos.reduce((s, c) => s + c.monto, 0),
+      totalMonto:     contratos.reduce((s, c) => s + (c.monto ?? 0), 0),
+      totalContratos: contratos.filter(c => !!c.no_contrato?.trim()).length,
     }));
+  }
+
+  // ── Paginación PDF — Concentrado (estatales y federal) ────────────────────
+  get paginasPDF(): PaginaPDF[] {
+    const all   = this.contratosOrdenados;
+    const total = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+    return Array.from({ length: total }, (_, i) => ({
+      registros:    all.slice(i * PAGE_SIZE, (i + 1) * PAGE_SIZE),
+      numPagina:    i + 1,
+      totalPaginas: total,
+    }));
+  }
+
+  // ── Paginación PDF — Detalle por Dependencia ──────────────────────────────
+  get paginasDetallePDF(): PaginaDetallePDF[] {
+    const grupos  = this.gruposPorDependencia;
+    const paginas: PaginaDetallePDF[] = [];
+
+    for (const g of grupos) {
+      const totalPagsDep = Math.max(1, Math.ceil(g.contratos.length / PAGE_SIZE_DETALLE));
+      for (let i = 0; i < totalPagsDep; i++) {
+        paginas.push({
+          depNombre:          g.nombre,
+          registros:          g.contratos.slice(i * PAGE_SIZE_DETALLE, (i + 1) * PAGE_SIZE_DETALLE),
+          numPaginaDep:       i + 1,
+          totalPaginasDep:    totalPagsDep,
+          esUltimaPaginaDep:  i === totalPagsDep - 1,
+          totalMontoDep:      g.totalMonto,
+          totalContratosDep:  g.totalContratos,
+          numPaginaGlobal:    paginas.length + 1,
+          totalPaginasGlobal: 0,
+        });
+      }
+    }
+
+    const total = Math.max(1, paginas.length);
+    paginas.forEach(p => p.totalPaginasGlobal = total);
+    return paginas;
+  }
+
+  // ── Títulos dinámicos ─────────────────────────────────────────────────────
+
+  get tituloEncabezado(): string {
+    if (this.vistaActiva === 'federal') return `CONCENTRADO DE CONTRATOS FEDERALES<br>POR DEPENDENCIA ${this.anioActual}`;
+    if (this.vistaActiva === 'detalle') return `DETALLE POR DEPENDENCIA<br>CONTRATOS ESTATALES ${this.anioActual}`;
+    return `CONCENTRADO DE CONTRATOS ESTATALES<br>POR DEPENDENCIA ${this.anioActual}`;
+  }
+
+  get tituloPDF(): string {
+    if (this.vistaActiva === 'federal') return `CONCENTRADO DE CONTRATOS FEDERALES POR DEPENDENCIA ${this.anioActual}`;
+    return `CONCENTRADO DE CONTRATOS ESTATALES POR DEPENDENCIA ${this.anioActual}`;
   }
 
   // ── Acciones ──────────────────────────────────────────────────────────────
 
-  seleccionarDep(nombre: string): void {
-    this.filtroDepNombre = nombre;
+  cambiarVista(v: Vista): void { this.vistaActiva = v; }
+
+  toggleMenuDep(): void { this.mostrarMenuDep = !this.mostrarMenuDep; }
+
+  toggleDep(nombre: string): void {
+    const key = nombre.trim();
+    if (this.filtrosDep.has(key)) this.filtrosDep.delete(key);
+    else this.filtrosDep.add(key);
+    this.filtrosDep = new Set(this.filtrosDep);
   }
 
   quitarFiltros(): void {
-    this.filtroDepNombre = '';
+    this.filtrosDep     = new Set();
+    this.mostrarMenuDep = false;
   }
 
-  imprimirPDF(): void {
-    window.print();
-  }
+  imprimirPDF(): void { window.print(); }
 
   // ── Formateo ──────────────────────────────────────────────────────────────
 
@@ -134,12 +315,9 @@ export class InformeContratosComponent implements OnInit {
     }).format(n);
   }
 
-  formatFecha(f: string | null): string {
-    if (!f) return '—';
-    const d = new Date(f + 'T12:00:00');
-    if (isNaN(d.getTime())) return f;
-    return d.toLocaleDateString('es-MX', {
-      day: '2-digit', month: 'short', year: 'numeric',
-    });
+  fecha(s: string | null): string {
+    if (!s) return '—';
+    const [y, m, d] = s.split('-');
+    return d && m && y ? `${d}/${m}/${y}` : s;
   }
 }
