@@ -44,3 +44,6 @@ Thumbs.db
 backend/dist/uploads
 backend/dist/storage
 backend/storage
+
+# Variables de entorno de producción: nunca deben commitearse con credenciales reales
+backend/.env.production
