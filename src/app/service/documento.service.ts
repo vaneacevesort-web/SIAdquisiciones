@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Documento } from '../interfaces/documento';
 import { Injectable, signal, inject, computed } from '@angular/core';
+import { environment } from '../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
@@ -12,7 +13,7 @@ export class DocumentoService {
   private http = inject( HttpClient );
 
   constructor() {
-    this.myAppUrl = 'http://localhost:3001/'; //'https://dev4.siasaf.gob.mx/'  //'http://localhost:3001/'
+    this.myAppUrl = environment.apiUrl;
     this.myAPIUrl = 'api/documentos';
 
   }

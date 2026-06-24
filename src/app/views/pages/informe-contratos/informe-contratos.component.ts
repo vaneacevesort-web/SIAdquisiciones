@@ -53,7 +53,7 @@ interface PaginaDetallePDF {
   totalPaginasGlobal: number;
 }
 
-type Vista = 'concentrado' | 'federal' | 'detalle';
+type Vista = 'concentrado' | 'federal' | 'detalle' | 'detalle-federal';
 
 const PAGE_SIZE         = 24;
 const PAGE_SIZE_DETALLE = 20;
@@ -176,9 +176,10 @@ export class InformeContratosComponent implements OnInit {
   }
 
   // 5. Dataset de la vista activa (usado por KPIs y tabla)
-  //    'concentrado' y 'detalle' → estatales  |  'federal' → federales
+  //    'concentrado' y 'detalle' → estatales  |  'federal' y 'detalle-federal' → federales
   get contratosVistaActiva(): Contrato[] {
-    if (this.vistaActiva() === 'federal') return this.contratosFederalesEfectivos;
+    const v = this.vistaActiva();
+    if (v === 'federal' || v === 'detalle-federal') return this.contratosFederalesEfectivos;
     return this.contratosEstatalesEfectivos;
   }
 
@@ -193,7 +194,8 @@ export class InformeContratosComponent implements OnInit {
 
   // Universo completo de solicitudes del origen activo (incluye desiertos, cancelados)
   get totalSolicitudes(): number {
-    const origen = this.vistaActiva === 'federal' ? 'federal' : 'estatal';
+    const v = this.vistaActiva();
+    const origen = (v === 'federal' || v === 'detalle-federal') ? 'federal' : 'estatal';
     const base = this.contratosFiltrados.filter(
       c => c.origen_recurso?.toLowerCase().includes(origen)
     );
@@ -275,19 +277,26 @@ export class InformeContratosComponent implements OnInit {
   // ── Títulos dinámicos ─────────────────────────────────────────────────────
 
   get tituloEncabezado(): string {
-    if (this.vistaActiva === 'federal') return `CONCENTRADO DE CONTRATOS FEDERALES<br>POR DEPENDENCIA ${this.anioActual}`;
-    if (this.vistaActiva === 'detalle') return `DETALLE POR DEPENDENCIA<br>CONTRATOS ESTATALES ${this.anioActual}`;
-    return `CONCENTRADO DE CONTRATOS ESTATALES<br>POR DEPENDENCIA ${this.anioActual}`;
+    switch (this.vistaActiva()) {
+      case 'federal':         return `CONCENTRADO DE CONTRATOS FEDERALES<br>POR DEPENDENCIA ${this.anioActual}`;
+      case 'detalle':         return `DETALLE POR DEPENDENCIA<br>CONTRATOS ESTATALES ${this.anioActual}`;
+      case 'detalle-federal': return `DETALLE POR DEPENDENCIA<br>CONTRATOS FEDERALES ${this.anioActual}`;
+      default:                return `CONCENTRADO DE CONTRATOS ESTATALES<br>POR DEPENDENCIA ${this.anioActual}`;
+    }
   }
 
   get tituloPDF(): string {
-    if (this.vistaActiva === 'federal') return `CONCENTRADO DE CONTRATOS FEDERALES POR DEPENDENCIA ${this.anioActual}`;
-    return `CONCENTRADO DE CONTRATOS ESTATALES POR DEPENDENCIA ${this.anioActual}`;
+    switch (this.vistaActiva()) {
+      case 'federal':         return `CONCENTRADO DE CONTRATOS FEDERALES POR DEPENDENCIA ${this.anioActual}`;
+      case 'detalle':         return `DETALLE POR DEPENDENCIA · CONTRATOS ESTATALES ${this.anioActual}`;
+      case 'detalle-federal': return `DETALLE POR DEPENDENCIA · CONTRATOS FEDERALES ${this.anioActual}`;
+      default:                return `CONCENTRADO DE CONTRATOS ESTATALES POR DEPENDENCIA ${this.anioActual}`;
+    }
   }
 
   // ── Acciones ──────────────────────────────────────────────────────────────
 
-  cambiarVista(v: Vista): void { this.vistaActiva = v; }
+  cambiarVista(v: Vista): void { this.vistaActiva.set(v); }
 
   toggleMenuDep(): void { this.mostrarMenuDep = !this.mostrarMenuDep; }
 

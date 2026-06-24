@@ -47,17 +47,21 @@
 
     <!-- ══ Pestañas ═══════════════════════════════════════════════════════ -->
     <div class="rep-tabs no-print">
-      <button class="rep-tab" [class.rep-tab--active]="vistaActiva === 'concentrado'"
+      <button class="rep-tab" [class.rep-tab--active]="vistaActiva() === 'concentrado'"
               (click)="cambiarVista('concentrado')">
         <i class="feather icon-list me-1"></i>Concentrado Estatales
       </button>
-      <button class="rep-tab" [class.rep-tab--active]="vistaActiva === 'federal'"
+      <button class="rep-tab" [class.rep-tab--active]="vistaActiva() === 'federal'"
               (click)="cambiarVista('federal')">
         <i class="feather icon-globe me-1"></i>Concentrado Federal
       </button>
-      <button class="rep-tab" [class.rep-tab--active]="vistaActiva === 'detalle'"
+      <button class="rep-tab" [class.rep-tab--active]="vistaActiva() === 'detalle'"
               (click)="cambiarVista('detalle')">
         <i class="feather icon-layers me-1"></i>Detalle por Dependencias Estatales
+      </button>
+      <button class="rep-tab" [class.rep-tab--active]="vistaActiva() === 'detalle-federal'"
+              (click)="cambiarVista('detalle-federal')">
+        <i class="feather icon-layers me-1"></i>Detalle por Dependencias Federales
       </button>
     </div>
 
@@ -117,7 +121,7 @@
     <!-- ══════════════════════════════════════════════════════════════════════
          VISTAS CONCENTRADO (Estatales y Federal) — misma estructura de tabla
     ════════════════════════════════════════════════════════════════════════ -->
-    @if (vistaActiva === 'concentrado' || vistaActiva === 'federal') {
+    @if (vistaActiva() === 'concentrado' || vistaActiva() === 'federal') {
 
       <!-- Tabla pantalla -->
       <div class="rep-body no-print">
@@ -125,7 +129,7 @@
           <div class="rep-empty">
             <i class="feather icon-inbox"></i>
             <p>
-              No hay contratos {{ vistaActiva === 'federal' ? 'federales' : 'estatales' }}
+              No hay contratos {{ vistaActiva() === 'federal' ? 'federales' : 'estatales' }}
               registrados{{ filtroActivo ? ' para las dependencias seleccionadas' : '' }}.
             </p>
           </div>
@@ -253,7 +257,7 @@
     <!-- ══════════════════════════════════════════════════════════════════════
          VISTA DETALLE POR DEPENDENCIA
     ════════════════════════════════════════════════════════════════════════ -->
-    @if (vistaActiva === 'detalle') {
+    @if (vistaActiva() === 'detalle') {
 
       <div class="rep-body no-print">
         @if (gruposPorDependencia.length === 0) {
@@ -332,9 +336,177 @@
                 </div>
               </div>
             </div>
-            <div class="pdf-header__title">
-              DETALLE POR DEPENDENCIA · CONTRATOS ESTATALES {{ anioActual }}
+            <div class="pdf-header__title">{{ tituloPDF }}</div>
+          </div>
+
+          <div class="pdf-kpis">
+            <div class="pdf-kpi">
+              <span class="pdf-kpi__val">{{ totalSolicitudes }}</span>
+              <span class="pdf-kpi__lbl">TOTAL DE SOLICITUDES</span>
             </div>
+            <div class="pdf-kpi">
+              <span class="pdf-kpi__val">{{ totalContratos }}</span>
+              <span class="pdf-kpi__lbl">TOTAL DE CONTRATOS</span>
+            </div>
+            <div class="pdf-kpi pdf-kpi--monto">
+              <span class="pdf-kpi__val">{{ pesos(montoTotal) }}</span>
+              <span class="pdf-kpi__lbl">MONTO TOTAL CONTRATADO</span>
+            </div>
+          </div>
+
+          <div class="pdf-det-dep-hdr">
+            <span class="pdf-det-dep-hdr__name">{{ pg.depNombre }}</span>
+            @if (pg.totalPaginasDep > 1) {
+              <span class="pdf-det-dep-hdr__cont">
+                (página {{ pg.numPaginaDep }} de {{ pg.totalPaginasDep }})
+              </span>
+            }
+          </div>
+
+          <div class="pdf-card">
+            <table class="pdf-det-table">
+              <thead>
+                <tr>
+                  <th class="pdt-proc">No. PROC.</th>
+                  <th class="pdt-cont">No. CONTRATO</th>
+                  <th class="pdt-ca">No. CA</th>
+                  <th class="pdt-fecha">FECHA ADJ.</th>
+                  <th class="pdt-desc">DESCRIPCIÓN</th>
+                  <th class="pdt-part">PARTIDA</th>
+                  <th class="pdt-giro">GIRO</th>
+                  <th class="pdt-prov">PROVEEDOR</th>
+                  <th class="pdt-monto">MONTO</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of pg.registros; track c.id_solicitud; let i = $index) {
+                  <tr [class.row-alt]="i % 2 !== 0">
+                    <td class="pdt-proc">{{ c.no_procedimiento || '—' }}</td>
+                    <td class="pdt-cont">{{ c.no_contrato || '—' }}</td>
+                    <td class="pdt-ca">{{ c.no_solicitud || '—' }}</td>
+                    <td class="pdt-fecha">{{ fecha(c.fecha_adjudicacion) }}</td>
+                    <td class="pdt-desc">{{ c.descripcion || '—' }}</td>
+                    <td class="pdt-part">{{ c.partida || '—' }}</td>
+                    <td class="pdt-giro">{{ c.giro || '—' }}</td>
+                    <td class="pdt-prov">{{ c.proveedor_razon_social || '—' }}</td>
+                    <td class="pdt-monto">{{ pesos(c.monto) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            <div class="pdf-card__foot">
+              <span>
+                Registros {{ (pg.numPaginaDep - 1) * pageSizeDetalle + 1 }}
+                – {{ (pg.numPaginaDep - 1) * pageSizeDetalle + pg.registros.length }}
+                de {{ pg.totalMontoDep > 0 ? pg.totalContratosDep : 0 }}
+              </span>
+              @if (pg.esUltimaPaginaDep) {
+                <span class="pdf-card__foot-total">
+                  SUBTOTAL:&nbsp;&nbsp;<strong>{{ pesos(pg.totalMontoDep) }}</strong>
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="pdf-footer">
+            <span class="pdf-footer__source">
+              Fuente: Tabla realizada con base en información obtenida por la Dirección de Recursos Materiales.
+              Dependencias conforme al Artículo 23 de la Ley Orgánica de la Administración Pública del Estado de México.
+            </span>
+            <span class="pdf-footer__page">
+              Página {{ pg.numPaginaGlobal }} de {{ pg.totalPaginasGlobal }}
+            </span>
+          </div>
+
+        </div>
+      }
+
+    }
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         VISTA DETALLE POR DEPENDENCIAS FEDERALES
+    ════════════════════════════════════════════════════════════════════════ -->
+    @if (vistaActiva() === 'detalle-federal') {
+
+      <div class="rep-body no-print">
+        @if (gruposPorDependencia.length === 0) {
+          <div class="rep-empty">
+            <i class="feather icon-inbox"></i>
+            <p>No hay contratos federales registrados{{ filtroActivo ? ' para las dependencias seleccionadas' : '' }}.</p>
+          </div>
+        } @else {
+          @for (grupo of gruposPorDependencia; track grupo.nombre) {
+            <div class="det-dep-section">
+              <div class="det-dep-hdr">
+                <span class="det-dep-hdr__name">{{ grupo.nombre }}</span>
+                <span class="det-dep-hdr__stats">
+                  {{ grupo.contratos.length }} registro(s) &nbsp;·&nbsp;
+                  {{ grupo.totalContratos }} contrato(s) &nbsp;·&nbsp;
+                  <strong>{{ pesos(grupo.totalMonto) }}</strong>
+                </span>
+              </div>
+              <div class="rep-card">
+                <div class="rep-table-wrap">
+                  <table class="rep-table det-table">
+                    <thead>
+                      <tr>
+                        <th class="dt-proc">No. PROCEDIMIENTO</th>
+                        <th class="dt-cont">No. CONTRATO</th>
+                        <th class="dt-ca">No. CA</th>
+                        <th class="dt-fecha">FECHA ADJ.</th>
+                        <th class="dt-desc">DESCRIPCIÓN</th>
+                        <th class="dt-part">PARTIDA</th>
+                        <th class="dt-giro">GIRO</th>
+                        <th class="dt-prov">PROVEEDOR</th>
+                        <th class="dt-monto">MONTO</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (c of grupo.contratos; track c.id_solicitud; let i = $index) {
+                        <tr [class.row-alt]="i % 2 !== 0">
+                          <td class="dt-proc">{{ c.no_procedimiento || '—' }}</td>
+                          <td class="dt-cont td-contrato">{{ c.no_contrato || '—' }}</td>
+                          <td class="dt-ca td-ca">{{ c.no_solicitud || '—' }}</td>
+                          <td class="dt-fecha">{{ fecha(c.fecha_adjudicacion) }}</td>
+                          <td class="dt-desc">{{ c.descripcion || '—' }}</td>
+                          <td class="dt-part">{{ c.partida || '—' }}</td>
+                          <td class="dt-giro">{{ c.giro || '—' }}</td>
+                          <td class="dt-prov">{{ c.proveedor_razon_social || '—' }}</td>
+                          <td class="dt-monto td-monto">{{ pesos(c.monto) }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                <div class="rep-card__foot">
+                  <span>{{ grupo.contratos.length }} registro(s)</span>
+                  <span class="rep-card__foot-total">
+                    SUBTOTAL:&nbsp;&nbsp;<strong>{{ pesos(grupo.totalMonto) }}</strong>
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- PDF páginas — Detalle por Dependencias Federales -->
+      @for (pg of paginasDetallePDF; track $index; let last = $last) {
+        <div class="pdf-page print-only" [class.pdf-page--last]="last">
+
+          <div class="pdf-header">
+            <div class="pdf-header__left">
+              <img src="/images/oficialia_mayor.svg" class="pdf-header__logo" alt="Oficialía Mayor"
+                   onerror="this.onerror=null;this.src='/images/oficialia_mayor.png'">
+              <div class="pdf-header__texts">
+                <div class="pdf-header__org">OFICIALÍA MAYOR</div>
+                <div class="pdf-header__sub">
+                  Seguimiento al Proceso de Adquisición y Contratación de Servicios.
+                </div>
+              </div>
+            </div>
+            <div class="pdf-header__title">{{ tituloPDF }}</div>
           </div>
 
           <div class="pdf-kpis">

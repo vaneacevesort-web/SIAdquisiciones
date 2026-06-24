@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,7 @@ export class RegistroService {
   private http = inject(HttpClient);
 
   constructor() {
-    this.myAppUrl = 'http://localhost:3001/';
+    this.myAppUrl = environment.apiUrl;
     this.myAPIUrl = 'api/solicitud';
   }
 

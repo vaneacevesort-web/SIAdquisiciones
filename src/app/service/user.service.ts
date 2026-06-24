@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { User } from '../interfaces/user';
 import { Injectable, signal, inject, computed } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +16,7 @@ export class UserService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor() {
-    this.myAppUrl =  'http://localhost:3001/';  //'http://localhost:3001/'
+    this.myAppUrl = environment.apiUrl;
     this.myAPIUrl = 'api/user';
 
     const storedUser = localStorage.getItem('currentUser');
