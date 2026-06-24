@@ -4,6 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
+    "dev": "tsc || true && cross-env NODE_ENV=development node dist/index.js",
+    "test-env": "tsc || true && cross-env NODE_ENV=testing node dist/index.js",
+    "prod": "tsc || true && cross-env NODE_ENV=production node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -33,6 +37,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/multer": "^1.4.12",
     "@types/pdfkit": "^0.13.9",
+    "cross-env": "^7.0.3",
     "mysql2": "^3.22.0",
     "sequelize-cli": "^6.6.5"
   }

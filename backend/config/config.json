@@ -6,18 +6,18 @@
   "host": "192.168.56.56",
   "dialect": "mysql"
   },
-  "test": {
-    "username": "root",
-    "password": null,
-    "database": "adquisiciones_test",
-    "host": "127.0.0.1",
+  "testing": {
+    "username": "homestead",
+    "password": "secret",
+    "database": "siadquisiciones_testing",
+    "host": "192.168.56.56",
     "dialect": "mysql"
   },
   "production": {
-    "username": "root",
-    "password": null,
+    "username": "CHANGE_ME",
+    "password": "CHANGE_ME",
     "database": "adquisiciones",
-    "host": "127.0.0.1",
+    "host": "CHANGE_ME",
     "dialect": "mysql"
   }
 }
